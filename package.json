@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "serve dist -l $PORT"
+    "start": "node server.js"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -16,7 +16,8 @@
     "lucide-react": "^0.303.0",
     "date-fns": "^3.2.0",
     "react-hot-toast": "^2.4.1",
-    "serve": "^14.2.0"
+    "express": "^4.18.2",
+    "serve-static": "^1.15.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
