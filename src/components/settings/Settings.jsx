@@ -1,0 +1,168 @@
+import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
+import { APIKeyManager } from './APIKeyManager';
+import { IntegrationToggles } from './IntegrationToggles';
+import { TeamManager } from './TeamManager';
+
+const tabs = ['General', 'API Keys', 'Integrations', 'Team', 'Notifications'];
+
+export const Settings = () => {
+  const [activeTab, setActiveTab] = useState('general');
+  const [isDirty, setIsDirty] = useState(false);
+  const [settings, setSettings] = useState({
+    organization: 'Mulbros Entertainment LLC',
+    engagementType: 'AI-Native Multi-Agent System',
+    vendor: 'FSZT Partners LLC',
+    methodology: '4D Framework (Diagnose, Design, Deploy, Defend)'
+  });
+
+  const [notifications, setNotifications] = useState({
+    inApp: true,
+    email: false,
+    slack: false,
+    dailyDigest: true,
+    agentErrors: true,
+    campaignMilestones: true
+  });
+
+  useEffect(() => {
+    const stored = localStorage.getItem('mulbros_settings');
+    if (stored) {
+      setSettings(JSON.parse(stored));
+    }
+  }, []);
+
+  const handleSave = () => {
+    localStorage.setItem('mulbros_settings', JSON.stringify(settings));
+    localStorage.setItem('mulbros_notifications', JSON.stringify(notifications));
+    setIsDirty(false);
+    toast.success('Settings saved successfully');
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="border-b border-zinc-800">
+        <div className="flex gap-4">
+          {tabs.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
+              className={`py-3 px-1 text-sm font-medium transition-all border-b-2 ${
+                activeTab === tab.toLowerCase().replace(' ', '-')
+                  ? 'text-amber-500 border-amber-500'
+                  : 'text-zinc-400 border-transparent hover:text-zinc-100'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === 'general' && (
+        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Organization</label>
+            <input
+              type="text"
+              value={settings.organization}
+              onChange={(e) => {
+                setSettings({ ...settings, organization: e.target.value });
+                setIsDirty(true);
+              }}
+              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Engagement Type</label>
+            <input
+              type="text"
+              value={settings.engagementType}
+              onChange={(e) => {
+                setSettings({ ...settings, engagementType: e.target.value });
+                setIsDirty(true);
+              }}
+              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Vendor</label>
+            <input
+              type="text"
+              value={settings.vendor}
+              onChange={(e) => {
+                setSettings({ ...settings, vendor: e.target.value });
+                setIsDirty(true);
+              }}
+              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-zinc-400 mb-2">Methodology</label>
+            <input
+              type="text"
+              value={settings.methodology}
+              onChange={(e) => {
+                setSettings({ ...settings, methodology: e.target.value });
+                setIsDirty(true);
+              }}
+              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
+            />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'api-keys' && <APIKeyManager />}
+
+      {activeTab === 'integrations' && <IntegrationToggles />}
+
+      {activeTab === 'team' && <TeamManager />}
+
+      {activeTab === 'notifications' && (
+        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+          {[
+            { key: 'inApp', label: 'In-App Notifications', description: 'Show notifications within the app' },
+            { key: 'email', label: 'Email Alerts', description: 'Receive alerts via email' },
+            { key: 'slack', label: 'Slack Notifications', description: 'Send alerts to Slack channel' },
+            { key: 'dailyDigest', label: 'Daily Digest', description: 'Receive daily summary' },
+            { key: 'agentErrors', label: 'Agent Error Alerts', description: 'Alert when agent encounters error' },
+            { key: 'campaignMilestones', label: 'Campaign Milestones', description: 'Alert on campaign milestones' }
+          ].map((item) => (
+            <div key={item.key} className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
+              <div>
+                <div className="text-sm font-medium text-zinc-200">{item.label}</div>
+                <div className="text-xs text-zinc-500">{item.description}</div>
+              </div>
+              <button
+                onClick={() => {
+                  setNotifications(prev => ({ ...prev, [item.key]: !prev[item.key] }));
+                  setIsDirty(true);
+                }}
+                className={`w-12 h-6 rounded-full transition-all ${
+                  notifications[item.key] ? 'bg-emerald-500' : 'bg-zinc-600'
+                }`}
+              >
+                <div className={`w-5 h-5 bg-white rounded-full transition-all shadow ${
+                  notifications[item.key] ? 'translate-x-6' : 'translate-x-0.5'
+                }`} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex justify-end">
+        <button
+          onClick={handleSave}
+          className={`font-semibold rounded-lg px-6 py-3 transition-all ${
+            isDirty
+              ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950'
+              : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+          }`}
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  );
+};
