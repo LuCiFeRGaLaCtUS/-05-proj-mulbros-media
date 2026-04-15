@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const SERIES = [
-  { key: 'lastCounty', label: 'Last County', color: '#3b82f6' },
-  { key: 'talise',     label: 'Talise',       color: '#f59e0b' },
-  { key: 'luke',       label: 'Luke',         color: '#10b981' }
+  { key: 'filmFinancing', label: 'Film Financing', color: '#3b82f6' },
+  { key: 'talentOS',      label: 'Talent OS',      color: '#f59e0b' },
+  { key: 'lastCounty',    label: 'Last County',    color: '#10b981' }
 ];
 
 const CustomTooltip = ({ active, payload, label }) => {

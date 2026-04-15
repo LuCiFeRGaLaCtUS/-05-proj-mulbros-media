@@ -1,11 +1,12 @@
 import React from 'react';
-import { Film, Music, Piano, Megaphone, TrendingUp, TrendingDown } from 'lucide-react';
+import { Film, Music, Piano, Megaphone, Clapperboard, TrendingUp, TrendingDown } from 'lucide-react';
 
 const iconMap = {
   Film,
   Music,
   Piano,
-  Megaphone
+  Megaphone,
+  Clapperboard
 };
 
 const colorConfig = {

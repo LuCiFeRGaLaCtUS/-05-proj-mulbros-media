@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Users, Palette, Megaphone, Heart, MessageSquare, BarChart3, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, Palette, Megaphone, Heart, MessageSquare, BarChart3, Settings, GitBranch } from 'lucide-react';
 
 const navItems = [
   { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
@@ -9,6 +9,7 @@ const navItems = [
   { id: 'community', name: 'Community Hub', icon: Heart },
   { id: 'agents', name: 'Agent Chat', icon: MessageSquare },
   { id: 'analytics', name: 'Analytics', icon: BarChart3 },
+  { id: 'roadmap', name: 'Journey Map', icon: GitBranch },
   { id: 'settings', name: 'Settings', icon: Settings }
 ];
 

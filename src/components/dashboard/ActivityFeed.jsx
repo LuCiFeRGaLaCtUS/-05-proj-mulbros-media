@@ -2,14 +2,16 @@ import React from 'react';
 import { Activity } from 'lucide-react';
 
 const verticalColorMap = {
-  film: 'bg-blue-500',
+  financing: 'bg-blue-500',
+  film: 'bg-emerald-500',
   music: 'bg-amber-500',
-  composer: 'bg-emerald-500',
+  composer: 'bg-amber-500',
   community: 'bg-purple-500',
   strategy: 'bg-rose-500'
 };
 
 const verticalLabelMap = {
+  financing: 'Film Financing',
   film: 'Film',
   music: 'Music',
   composer: 'Composer',
@@ -18,9 +20,10 @@ const verticalLabelMap = {
 };
 
 const verticalBadgeMap = {
-  film: 'bg-blue-500/10 text-blue-400',
+  financing: 'bg-blue-500/10 text-blue-400',
+  film: 'bg-emerald-500/10 text-emerald-400',
   music: 'bg-amber-500/10 text-amber-400',
-  composer: 'bg-emerald-500/10 text-emerald-400',
+  composer: 'bg-amber-500/10 text-amber-400',
   community: 'bg-purple-500/10 text-purple-400',
   strategy: 'bg-rose-500/10 text-rose-400'
 };

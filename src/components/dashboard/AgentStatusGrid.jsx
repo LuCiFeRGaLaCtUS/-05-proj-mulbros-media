@@ -3,14 +3,16 @@ import { agents } from '../../config/agents';
 import { Bot, ArrowRight } from 'lucide-react';
 
 const verticalBadgeMap = {
-  film: 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20',
+  financing: 'bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20',
+  film: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20',
   music: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20',
-  composer: 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20',
+  composer: 'bg-amber-500/10 text-amber-400 ring-1 ring-amber-500/20',
   community: 'bg-purple-500/10 text-purple-400 ring-1 ring-purple-500/20',
   strategy: 'bg-rose-500/10 text-rose-400 ring-1 ring-rose-500/20'
 };
 
 const verticalLabelMap = {
+  financing: 'Film Financing',
   film: 'Film',
   music: 'Music',
   composer: 'Composer',

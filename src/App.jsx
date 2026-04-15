@@ -9,6 +9,7 @@ import { AgentChat } from './components/agents/AgentChat';
 import { AnalyticsHub } from './components/analytics/AnalyticsHub';
 import { Settings } from './components/settings/Settings';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
+import { RoadmapView } from './components/roadmap/RoadmapView';
 
 function App() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -56,6 +57,8 @@ function App() {
         return <AnalyticsHub />;
       case 'settings':
         return <Settings />;
+      case 'roadmap':
+        return <RoadmapView />;
       default:
         return <Dashboard onAgentClick={handleAgentClick} />;
     }

@@ -11,21 +11,24 @@ const pageNames = {
   community: 'Community Hub',
   agents: 'Agent Chat',
   analytics: 'Analytics Hub',
-  settings: 'Settings'
+  settings: 'Settings',
+  roadmap: 'Journey Map'
 };
 
 const verticalColorMap = {
-  film: 'bg-blue-500',
+  financing: 'bg-blue-500',
+  film: 'bg-emerald-500',
   music: 'bg-amber-500',
-  composer: 'bg-emerald-500',
+  composer: 'bg-amber-500',
   community: 'bg-purple-500',
   strategy: 'bg-rose-500'
 };
 
 const verticalTextMap = {
-  film: 'text-blue-400',
+  financing: 'text-blue-400',
+  film: 'text-emerald-400',
   music: 'text-amber-400',
-  composer: 'text-emerald-400',
+  composer: 'text-amber-400',
   community: 'text-purple-400',
   strategy: 'text-rose-400'
 };
