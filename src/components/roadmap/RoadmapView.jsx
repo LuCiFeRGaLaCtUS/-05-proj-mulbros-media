@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Users, Globe, Bot, MapPin, BarChart2, FileCheck,
-  Megaphone, MessageSquare, BookOpen, TrendingUp, Handshake, Heart,
+  Megaphone, MessageSquare, BookOpen, TrendingUp, CheckCircle2, Heart,
   ChevronRight, Sparkles, Target, Film, Music
 } from 'lucide-react';
 
@@ -141,7 +141,7 @@ const talentStages = [
     num: 6,
     title: 'Deal Closing',
     desc: 'Rate confirmed, contract issued, booking logged. AI drafts — human approves.',
-    icon: Handshake,
+    icon: CheckCircle2,
     channel: 'CRM Pipeline',
     pillar: 'Sales / Legal',
     ai: true,
