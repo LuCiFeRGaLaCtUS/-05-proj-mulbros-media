@@ -62,7 +62,7 @@ function App() {
   };
 
   return (
-    <Layout activePage={activePage} setActivePage={setActivePage}>
+    <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent}>
       {renderPage()}
       <FloatingChatbot appState={appState} />
     </Layout>
