@@ -6,21 +6,22 @@ import { AgentStatusGrid } from './AgentStatusGrid';
 import { kpiData, generateChartData, activities, campaigns } from '../../config/mockData';
 import { Calendar } from 'lucide-react';
 
-export const Dashboard = ({ onAgentClick }) => {
+export const Dashboard = ({ onAgentClick, setActivePage }) => {
   const chartData = generateChartData();
   const activeCampaignCount = campaigns.filter(c => c.status === 'Active').length;
 
   const allKpis = [
     ...kpiData,
     {
-      id: 'campaigns',
+      id: 'active-campaigns',
       title: 'Active Campaigns',
       value: String(activeCampaignCount),
-      change: '+1 this month',
+      change: '+2 this month',
       changeDirection: 'up',
       subtitle: 'Across all verticals',
       icon: 'Megaphone',
-      color: 'purple'
+      color: 'purple',
+      linkTo: null
     }
   ];
 
@@ -30,7 +31,7 @@ export const Dashboard = ({ onAgentClick }) => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-100">Overview</h1>
-          <p className="text-sm text-zinc-500 mt-0.5">Track performance across all your entertainment assets</p>
+          <p className="text-sm text-zinc-500 mt-0.5">Track performance across all entertainment verticals</p>
         </div>
         <div className="flex items-center gap-2 text-sm text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 px-3 py-1.5 rounded-lg">
           <Calendar size={14} />
@@ -43,7 +44,11 @@ export const Dashboard = ({ onAgentClick }) => {
         <p className="text-xs font-semibold uppercase tracking-widest text-zinc-500 mb-3">Key Metrics</p>
         <div className="grid grid-cols-4 gap-4">
           {allKpis.map((kpi) => (
-            <KPICard key={kpi.id} {...kpi} />
+            <KPICard
+              key={kpi.id}
+              {...kpi}
+              onClick={kpi.linkTo && setActivePage ? () => setActivePage(kpi.linkTo) : undefined}
+            />
           ))}
         </div>
       </div>

@@ -8,13 +8,13 @@ import { getAgentById } from '../../config/agents';
 import { callClaude, getApiKey } from '../../utils/claude';
 
 export const AgentChat = ({ preselectedAgentId, onClose }) => {
-  const [selectedAgent, setSelectedAgent] = useState(preselectedAgentId || 'distribution-marketing');
+  const [selectedAgent, setSelectedAgent] = useState(preselectedAgentId || 'film-financing-discovery');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const agent = getAgentById(selectedAgent);
+  const agent = getAgentById(selectedAgent) || getAgentById('film-financing-discovery');
 
   useEffect(() => {
     if (preselectedAgentId && preselectedAgentId !== selectedAgent) {

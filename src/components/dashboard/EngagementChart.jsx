@@ -3,7 +3,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 
 const SERIES = [
   { key: 'filmFinancing', label: 'Film Financing', color: '#3b82f6' },
-  { key: 'talentOS',      label: 'Talent OS',      color: '#f59e0b' },
+  { key: 'talentOS',      label: 'Music & Comp.',  color: '#f59e0b' },
   { key: 'lastCounty',    label: 'Last County',    color: '#10b981' }
 ];
 

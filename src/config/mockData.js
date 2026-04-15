@@ -11,37 +11,30 @@ export const kpiData = [
     changeDirection: 'up',
     subtitle: 'Film Financing Pipeline',
     icon: 'Clapperboard',
-    color: 'blue'
+    color: 'blue',
+    linkTo: 'financing'
   },
   {
-    id: 'talent-pipeline',
-    title: 'Talent Pipeline Value',
+    id: 'music-pipeline',
+    title: 'Music Pipeline Value',
     value: '$127.5K',
     change: '+$34K this month',
     changeDirection: 'up',
-    subtitle: 'Luke + Talise combined',
+    subtitle: 'Composer + sync deals',
     icon: 'Music',
-    color: 'amber'
+    color: 'amber',
+    linkTo: 'music'
   },
   {
-    id: 'last-county',
+    id: 'productions',
     title: 'Last County Streams',
     value: '142,847',
     change: '+12.4%',
     changeDirection: 'up',
     subtitle: 'Hulu · Prime · YouTube',
     icon: 'Film',
-    color: 'emerald'
-  },
-  {
-    id: 'active-campaigns',
-    title: 'Active Campaigns',
-    value: '6',
-    change: '+2 this month',
-    changeDirection: 'up',
-    subtitle: 'Across all verticals',
-    icon: 'Megaphone',
-    color: 'purple'
+    color: 'emerald',
+    linkTo: 'productions'
   }
 ];
 
@@ -332,8 +325,7 @@ export const tones = ['Professional', 'Casual & Authentic', 'Urgent/Exciting', '
 
 export const settingsTeam = [
   { name: 'Arghya Chowdhury', role: 'Lead Developer / AI Engineer', allocation: 'Full-Time', status: 'Active' },
-  { name: 'Snehaal Dhruv', role: 'Partner / Engagement Lead', allocation: '0.5 FTE', status: 'Active' },
   { name: 'Technical Lead', role: 'Architecture & Shared Layers', allocation: 'Full-Time', status: 'Active' },
   { name: 'AI Engineer A', role: 'Film Financing Vertical', allocation: 'Full-Time', status: 'Active' },
-  { name: 'AI Engineer B', role: 'Talent OS Vertical', allocation: 'Full-Time', status: 'Active' }
+  { name: 'AI Engineer B', role: 'Music & Composition Vertical', allocation: 'Full-Time', status: 'Active' }
 ];

@@ -4,15 +4,12 @@ import { agents } from '../../config/agents';
 import { campaigns, activities } from '../../config/mockData';
 
 const pageNames = {
-  dashboard: 'Dashboard',
-  talent: 'Talent Manager',
-  content: 'Content Studio',
-  campaigns: 'Campaigns',
-  community: 'Community Hub',
-  agents: 'Agent Chat',
-  analytics: 'Analytics Hub',
-  settings: 'Settings',
-  roadmap: 'Journey Map'
+  dashboard:   'Dashboard',
+  financing:   'Film Financing',
+  productions: 'Productions & Distribution',
+  music:       'Music & Composition',
+  agents:      'Agent Chat',
+  settings:    'Settings',
 };
 
 const verticalColorMap = {
@@ -33,7 +30,9 @@ const verticalTextMap = {
   strategy: 'text-rose-400'
 };
 
-const searchablePages = Object.entries(pageNames).map(([id, name]) => ({ id, name, type: 'page' }));
+const searchablePages = Object.entries(pageNames)
+  .filter(([id]) => id !== 'settings')
+  .map(([id, name]) => ({ id, name, type: 'page' }));
 
 const getInitialTheme = () => {
   const stored = localStorage.getItem('mulbros_theme');

@@ -1,56 +1,43 @@
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
+// All AI calls go through /api/ai — proxied by Vite (dev) or Express (production)
+// This avoids CORS issues with direct browser → OpenAI requests.
+const AI_PROXY = '/api/ai';
+const OPENAI_MODEL = 'gpt-4o-mini';
 
-export const callOpenRouter = async (systemPrompt, messages, apiKey) => {
-  if (!apiKey) {
-    throw new Error('No API key configured. Go to Settings > API Keys.');
-  }
-
-  const formattedMessages = [
-    { role: 'system', content: systemPrompt },
-    ...messages
-  ];
-
-  const response = await fetch(OPENROUTER_API_URL, {
+// ── Primary: OpenAI via local proxy ──────────────────────────────────────────
+const callOpenAI = async (systemPrompt, messages) => {
+  const response = await fetch(AI_PROXY, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': window.location.origin || 'http://localhost:5173',
-      'X-Title': 'Mulbros Marketing OS',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: MODEL,
+      model: OPENAI_MODEL,
       max_tokens: 2048,
-      messages: formattedMessages,
+      messages: [{ role: 'system', content: systemPrompt }, ...messages],
     }),
   });
-
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.error?.message || 'OpenRouter API error');
+    const err = await response.json();
+    throw new Error(err.error?.message || `AI proxy error ${response.status}`);
   }
-
   const data = await response.json();
   return data.choices[0].message.content;
 };
 
-export const testOpenRouterKey = async (apiKey) => {
+// ── Main entry point ──────────────────────────────────────────────────────────
+export const callClaude = async (systemPrompt, messages) => {
+  return await callOpenAI(systemPrompt, messages);
+};
+
+export const testClaudeKey = async () => {
   try {
-    const result = await callOpenRouter(
-      'Respond with exactly: OK',
-      [{ role: 'user', content: 'Test' }],
-      apiKey
-    );
-    return { success: true, message: 'Connected' };
+    await callOpenAI('Respond with exactly: OK', [{ role: 'user', content: 'Test' }]);
+    return { success: true, message: 'Connected to OpenAI (gpt-4o-mini)' };
   } catch (error) {
     return { success: false, message: error.message };
   }
 };
 
-export const getApiKey = () => {
-  return localStorage.getItem('mulbros_openrouter_key') || import.meta.env.VITE_OPENROUTER_API_KEY || '';
-};
+export const getApiKey = () => 'proxy'; // key is server-side; not needed client-side
 
-export const callClaude = callOpenRouter;
-export const testClaudeKey = testOpenRouterKey;
+// Legacy aliases kept so existing callers don't break
+export const callOpenRouter = callClaude;
+export const testOpenRouterKey = testClaudeKey;

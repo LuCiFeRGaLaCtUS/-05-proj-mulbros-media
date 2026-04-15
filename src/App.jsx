@@ -1,23 +1,20 @@
 import React, { useState } from 'react';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './components/dashboard/Dashboard';
-import { TalentManager } from './components/talent/TalentManager';
-import { ContentStudio } from './components/content/ContentStudio';
-import { CampaignManager } from './components/campaigns/CampaignManager';
-import { CommunityHub } from './components/community/CommunityHub';
+import { FilmFinancingView } from './components/verticals/FilmFinancingView';
+import { ProductionsView } from './components/verticals/ProductionsView';
+import { MusicView } from './components/verticals/MusicView';
 import { AgentChat } from './components/agents/AgentChat';
-import { AnalyticsHub } from './components/analytics/AnalyticsHub';
 import { Settings } from './components/settings/Settings';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
-import { RoadmapView } from './components/roadmap/RoadmapView';
 
 function App() {
   const [activePage, setActivePage] = useState('dashboard');
   const [preselectedAgent, setPreselectedAgent] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [target, setTarget] = useState('Last County (Film)');
-  const [contentType, setContentType] = useState('TikTok Script');
+  const [target, setTarget] = useState('Film Financing');
+  const [contentType, setContentType] = useState('Filmmaker Outreach DM');
 
   const handleAgentClick = (agentId) => {
     setPreselectedAgent(agentId);
@@ -41,26 +38,13 @@ function App() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'dashboard':
-        return <Dashboard onAgentClick={handleAgentClick} />;
-      case 'talent':
-        return <TalentManager onAgentClick={handleAgentClick} />;
-      case 'content':
-        return <ContentStudio />;
-      case 'campaigns':
-        return <CampaignManager />;
-      case 'community':
-        return <CommunityHub />;
-      case 'agents':
-        return <AgentChat preselectedAgentId={preselectedAgent} onClose={() => setPreselectedAgent(null)} />;
-      case 'analytics':
-        return <AnalyticsHub />;
-      case 'settings':
-        return <Settings />;
-      case 'roadmap':
-        return <RoadmapView />;
-      default:
-        return <Dashboard onAgentClick={handleAgentClick} />;
+      case 'dashboard':   return <Dashboard onAgentClick={handleAgentClick} setActivePage={setActivePage} />;
+      case 'financing':   return <FilmFinancingView />;
+      case 'productions': return <ProductionsView />;
+      case 'music':       return <MusicView onAgentClick={handleAgentClick} />;
+      case 'agents':      return <AgentChat preselectedAgentId={preselectedAgent} onClose={() => setPreselectedAgent(null)} />;
+      case 'settings':    return <Settings />;
+      default:            return <Dashboard onAgentClick={handleAgentClick} />;
     }
   };
 
