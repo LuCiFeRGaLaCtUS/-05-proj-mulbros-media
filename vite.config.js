@@ -7,6 +7,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+
     server: {
       port: 5173,
       host: true,
@@ -28,10 +29,44 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+
     base: './',
+
     build: {
-      outDir: 'dist',
-      sourcemap: false
-    }
+      outDir:               'dist',
+      sourcemap:            false,
+      chunkSizeWarningLimit: 600, // jsPDF is legitimately ~570 kB; suppress the noise
+      // ── Manual chunk splitting — keeps the main bundle lean ────────────────
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            if (!id.includes('node_modules')) return; // app code stays in index chunk
+
+            // Heavy but infrequent: PDF generation (jsPDF + html2canvas + DOMPurify)
+            if (id.includes('/jspdf/') || id.includes('/html2canvas/') || id.includes('/dompurify/')) {
+              return 'vendor-pdf';
+            }
+            // Charting (Recharts + D3 dependencies)
+            if (id.includes('/recharts/') || id.includes('/d3-') || id.includes('/victory-')) {
+              return 'vendor-charts';
+            }
+            // Drag and drop
+            if (id.includes('/@dnd-kit/')) {
+              return 'vendor-dnd';
+            }
+            // Icons
+            if (id.includes('/lucide-react/')) {
+              return 'vendor-icons';
+            }
+            // Date utilities
+            if (id.includes('/date-fns/')) {
+              return 'vendor-dates';
+            }
+            // React ecosystem + everything else → single vendor chunk (avoids circular chunks)
+            return 'vendor';
+          },
+        },
+      },
+    },
   }
 })

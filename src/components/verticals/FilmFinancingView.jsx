@@ -1,10 +1,20 @@
 import React, { useState } from 'react';
+import { jsPDF } from 'jspdf';
+import {
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+} from '@dnd-kit/core';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { filmFinancingPipeline, activities } from '../../config/mockData';
 import { callClaude } from '../../utils/claude';
+import { getJurisdictionPromptContext, getTopJurisdictions } from '../../config/jurisdictions';
 import {
   Clock, Search, Sparkles, CheckCircle2, Plus, Send,
   ChevronDown, ChevronUp, AlertCircle, Users, RefreshCw,
-  Loader2, DollarSign, MapPin, FileText, TrendingUp, ArrowRight
+  Loader2, DollarSign, MapPin, FileText, TrendingUp, ArrowRight, Download, GripVertical
 } from 'lucide-react';
 
 // ── Cinematic background — blue theme ────────────────────────────────────────
@@ -606,14 +616,25 @@ const IncentiveAnalystTab = () => {
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-  const systemPrompt = `You are the Film Financing Incentive Analyst for MulBros Media OS. You are an expert in US state and international film tax incentives, rebates, and production grants. When given project details, produce a structured JSON benchmark with this exact shape (no markdown, raw JSON only):
+  const jurisdictionContext = getJurisdictionPromptContext();
+  const systemPrompt = `You are the Film Financing Incentive Analyst for MulBros Media OS. You are an expert in US state and international film tax incentives, rebates, and production grants.
+
+${jurisdictionContext}
+
+When given project details, produce a structured JSON benchmark with this exact shape (no markdown, raw JSON only):
 {
   "topPick": { "location": string, "credit": string, "savings": string, "reason": string },
   "comparison": [{ "location": string, "flag": string, "credit": string, "savings": string, "minSpend": string, "qualified": string, "refundable": boolean }],
   "budgetTemplate": [{ "category": string, "estimate": string, "qualified": string, "notes": string }],
   "nextStep": string
 }
-Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in $ or local currency. Be specific and data-driven.`;
+Rules:
+- Return 4-5 locations in comparison, chosen from the authoritative data above only.
+- Exclude any jurisdiction whose minSpend exceeds the project budget.
+- Calculate savings as: budget × 0.70 (qualified spend ratio) × credit rate. Show your math in the reason field.
+- Mark refundable accurately per the data above — this is critical for the filmmaker's cash flow planning.
+- Return 7-8 budget line items specific to the project genre and region.
+- All savings in USD equivalent. Be precise and data-driven — this report will be used for real financial decisions.`;
 
   const handleGenerate = async () => {
     if (!form.budget) return;
@@ -621,7 +642,15 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
     setResult(null);
     setParseError(false);
 
-    const userMsg = `Project: "${form.title || 'Untitled'}", Genre: ${form.genre}, Budget: $${form.budget}, Shoot Duration: ${form.duration || '8'} weeks, Preferred Region: ${form.region}, Language: ${form.language}. Generate a tax-incentive benchmark.`;
+    const budgetNum = Number(form.budget) || 0;
+    const topJurisdictions = getTopJurisdictions(budgetNum, 8)
+      .map(j => `${j.flag} ${j.location} (${j.creditRate}, refundable: ${j.refundable})`)
+      .join(', ');
+    const userMsg = `Project: "${form.title || 'Untitled'}", Genre: ${form.genre}, Budget: $${Number(form.budget).toLocaleString()}, Shoot Duration: ${form.duration || '8'} weeks, Preferred Region: ${form.region}, Language: ${form.language}.
+
+Top eligible jurisdictions for this budget: ${topJurisdictions || 'see full list above'}.
+
+Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the eligible list above, prioritising refundable credits and highest savings for this budget size.`;
 
     try {
       const raw = await callClaude(systemPrompt, [{ role: 'user', content: userMsg }]);
@@ -634,6 +663,247 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
     } finally {
       setGenerating(false);
     }
+  };
+
+  const handleExportPDF = () => {
+    if (!result) return;
+    const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+    const W = doc.internal.pageSize.getWidth();
+    const MARGIN = 40;
+    const INNER_W = W - MARGIN * 2;
+    const LINE_H = 14; // base line height for 9pt text
+    let y = 68;
+
+    // Helper: strip emoji / non-latin chars that jsPDF can't render
+    const safe = (s = '') => s.replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[^\x00-\xFF]/g, '').trim();
+    // Helper: show only the credit percentage, not the full type string
+    const creditPct = (s = '') => s.split(' ')[0]; // "25–40% Tax Credit" → "25–40%"
+
+    // ── Header bar ──────────────────────────────────────────────────────
+    doc.setFillColor(30, 64, 175);
+    doc.rect(0, 0, W, 36, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(255, 255, 255);
+    doc.text('MulBros Media OS  —  Film Tax Incentive Benchmark', MARGIN, 23);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(
+      `Generated ${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}`,
+      W - MARGIN, 23, { align: 'right' }
+    );
+
+    // ── Project title + meta ─────────────────────────────────────────────
+    doc.setTextColor(20, 20, 20);
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text(safe(result.project?.title) || 'Your Project', MARGIN, y);
+    y += 18;
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(110, 110, 110);
+    doc.text(
+      `Genre: ${result.project?.genre || '—'}   |   Budget: ${result.project?.budget || '—'}   |   Region: ${result.project?.region || '—'}`,
+      MARGIN, y
+    );
+    y += 22;
+
+    // divider
+    doc.setDrawColor(220, 220, 220);
+    doc.line(MARGIN, y, W - MARGIN, y);
+    y += 16;
+
+    // ── Top Recommendation ──────────────────────────────────────────────
+    // Calculate how many lines the reason needs (left column only, 55% width)
+    const REASON_W = INNER_W * 0.58;
+    const RIGHT_W  = INNER_W * 0.38; // right stats panel
+    doc.setFontSize(9);
+    const reasonLines = doc.splitTextToSize(safe(result.topPick?.reason) || '', REASON_W);
+    const heroInnerH  = 20 + 20 + (reasonLines.length * LINE_H) + 16; // label + location + reason + padding
+    const heroH       = Math.max(heroInnerH, 90);
+
+    doc.setFillColor(235, 245, 255);
+    doc.roundedRect(MARGIN - 8, y, INNER_W + 16, heroH, 6, 6, 'F');
+
+    // Left column
+    const lx = MARGIN;
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(59, 130, 246);
+    doc.text('TOP RECOMMENDATION', lx, y + 14);
+
+    doc.setFontSize(15);
+    doc.setTextColor(15, 15, 15);
+    doc.text(safe(result.topPick?.location) || '—', lx, y + 30);
+
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(80, 80, 80);
+    doc.text(reasonLines, lx, y + 46);
+
+    // Right column — top-aligned, no overlap with reason
+    const rx = W - MARGIN;
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.setTextColor(16, 185, 129);
+    doc.text(safe(result.topPick?.savings) || '', rx, y + 22, { align: 'right' });
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text('Estimated savings', rx, y + 34, { align: 'right' });
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.setTextColor(59, 130, 246);
+    doc.text(creditPct(result.topPick?.credit), rx, y + 52, { align: 'right' });
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120, 120, 120);
+    doc.text('Tax credit', rx, y + 64, { align: 'right' });
+
+    y += heroH + 20;
+
+    // ── Comparison table ─────────────────────────────────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(20, 20, 20);
+    doc.text('Location Comparison', MARGIN, y);
+    y += 12;
+
+    // Columns: Location | Credit % | Est. Savings | Min. Spend | Refundable
+    // (drop Qualified Spend — it's too verbose for narrow columns)
+    const cX = [MARGIN, 220, 300, 390, 470, 530];
+    const cH = ['Location', 'Credit %', 'Est. Savings', 'Min. Spend', 'Qualified', 'Refundable'];
+
+    doc.setFillColor(230, 230, 230);
+    doc.rect(MARGIN - 8, y, INNER_W + 16, 18, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    cH.forEach((h, i) => doc.text(h, cX[i], y + 12));
+    y += 20;
+
+    doc.setFontSize(9);
+    (result.comparison || []).forEach((row, idx) => {
+      const isTop = safe(row.location) === safe(result.topPick?.location);
+      if (isTop) {
+        doc.setFillColor(219, 234, 254); // blue-100
+      } else if (idx % 2 === 0) {
+        doc.setFillColor(248, 248, 248);
+      } else {
+        doc.setFillColor(255, 255, 255);
+      }
+      doc.rect(MARGIN - 8, y, INNER_W + 16, 18, 'F');
+
+      doc.setFont(isTop ? 'helvetica' : 'helvetica', isTop ? 'bold' : 'normal');
+      doc.setTextColor(20, 20, 20);
+      const locLabel = safe(row.location) + (isTop ? '  [Best]' : '');
+      doc.text(locLabel, cX[0], y + 12);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(59, 130, 246);
+      doc.text(creditPct(row.credit) || '', cX[1], y + 12);
+
+      doc.setTextColor(16, 185, 129);
+      doc.text(safe(row.savings) || '', cX[2], y + 12);
+
+      doc.setTextColor(80, 80, 80);
+      doc.text(safe(row.minSpend) || '', cX[3], y + 12);
+
+      // Qualified — first 12 chars max
+      const qual = (safe(row.qualified) || '').slice(0, 12);
+      doc.text(qual, cX[4], y + 12);
+
+      doc.setTextColor(row.refundable ? 16 : 130, row.refundable ? 185 : 130, row.refundable ? 129 : 130);
+      doc.setFont('helvetica', row.refundable ? 'bold' : 'normal');
+      doc.text(row.refundable ? 'Yes' : 'No', cX[5], y + 12);
+
+      y += 20;
+    });
+    y += 16;
+
+    // ── Budget template ──────────────────────────────────────────────────
+    if (y > 580) { doc.addPage(); y = MARGIN; }
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(20, 20, 20);
+    doc.text(`Itemized Budget Template  —  ${safe(result.topPick?.location) || ''}`, MARGIN, y);
+    y += 12;
+
+    // Columns: Category | Estimate | Qualified | Notes
+    const bX = [MARGIN, 200, 295, 360];
+    const bH = ['Category', 'Estimate', 'Qualified', 'Notes'];
+
+    doc.setFillColor(230, 230, 230);
+    doc.rect(MARGIN - 8, y, INNER_W + 16, 18, 'F');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(60, 60, 60);
+    bH.forEach((h, i) => doc.text(h, bX[i], y + 12));
+    y += 20;
+
+    doc.setFontSize(9);
+    (result.budgetTemplate || []).forEach((row, idx) => {
+      // Wrap notes — calculate row height dynamically
+      const noteLines = doc.splitTextToSize(safe(row.notes) || '', INNER_W - (bX[3] - MARGIN) - 8);
+      const rowH = Math.max(18, (noteLines.length * LINE_H) + 8);
+
+      if (idx % 2 === 0) { doc.setFillColor(248, 248, 248); } else { doc.setFillColor(255, 255, 255); }
+      doc.rect(MARGIN - 8, y, INNER_W + 16, rowH, 'F');
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(20, 20, 20);
+      doc.text(safe(row.category) || '', bX[0], y + 12);
+
+      doc.setTextColor(60, 60, 60);
+      doc.text(safe(row.estimate) || '', bX[1], y + 12);
+
+      const isQual = (safe(row.qualified) || '').toLowerCase().startsWith('y');
+      doc.setTextColor(isQual ? 16 : 130, isQual ? 185 : 130, isQual ? 129 : 130);
+      doc.setFont('helvetica', 'bold');
+      doc.text(isQual ? 'Yes' : 'No', bX[2], y + 12);
+
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text(noteLines, bX[3], y + 12);
+
+      y += rowH;
+    });
+    y += 16;
+
+    // ── Next step box ────────────────────────────────────────────────────
+    if (y > 680) { doc.addPage(); y = MARGIN; }
+    doc.setFontSize(9);
+    const nextLines = doc.splitTextToSize(safe(result.nextStep) || '', INNER_W - 24);
+    const nextH = 22 + (nextLines.length * LINE_H) + 12;
+
+    doc.setFillColor(235, 245, 255);
+    doc.roundedRect(MARGIN - 8, y, INNER_W + 16, nextH, 4, 4, 'F');
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.setTextColor(59, 130, 246);
+    doc.text('RECOMMENDED NEXT STEP', MARGIN, y + 14);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(50, 50, 50);
+    doc.text(nextLines, MARGIN, y + 28);
+    y += nextH + 8;
+
+    // ── Footer ───────────────────────────────────────────────────────────
+    const pageH = doc.internal.pageSize.getHeight();
+    doc.setFontSize(7.5);
+    doc.setTextColor(180, 180, 180);
+    doc.text(
+      'MulBros Media OS  —  Confidential. For internal use only. Tax incentive figures based on Q1 2026 data; verify with a qualified accountant before filing.',
+      MARGIN, pageH - 18
+    );
+
+    const slug = (result.project?.title || 'benchmark').toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    doc.save(`mulbros-incentive-benchmark-${slug}.pdf`);
   };
 
   return (
@@ -728,18 +998,39 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
           )}
 
           {/* Top pick hero */}
-          <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5">
-            <div className="text-xs font-semibold uppercase tracking-wider text-blue-400 mb-2">Top Recommendation — {result.project.title}</div>
+          <div className="relative bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 blur-2xl rounded-full pointer-events-none" />
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">Top Recommendation</span>
+              <span className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">★ Best Pick</span>
+              <span className="text-xs text-zinc-600">—</span>
+              <span className="text-xs text-zinc-500 italic">{result.project.title} · {result.project.genre} · {result.project.budget}</span>
+            </div>
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-2xl font-bold text-zinc-100 mb-1">{result.topPick?.location}</div>
                 <p className="text-sm text-zinc-400 leading-relaxed max-w-xl">{result.topPick?.reason}</p>
+                {(() => {
+                  const topRow = (result.comparison || []).find(r => r.location === result.topPick?.location);
+                  return topRow ? (
+                    <div className="flex items-center gap-2 mt-3">
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${topRow.refundable ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
+                        {topRow.refundable ? '✓ Refundable credit' : '○ Non-refundable (transferable)'}
+                      </span>
+                      {topRow.minSpend && (
+                        <span className="text-xs bg-zinc-800 text-zinc-400 border border-zinc-700 px-2.5 py-1 rounded-full">
+                          Min spend: {topRow.minSpend}
+                        </span>
+                      )}
+                    </div>
+                  ) : null;
+                })()}
               </div>
               <div className="text-right flex-shrink-0">
                 <div className="text-3xl font-bold font-mono text-emerald-400">{result.topPick?.savings}</div>
                 <div className="text-xs text-zinc-500 mt-0.5">Estimated savings</div>
-                <div className="text-xl font-bold text-blue-400 mt-1">{result.topPick?.credit}</div>
-                <div className="text-xs text-zinc-500">Tax credit</div>
+                <div className="text-2xl font-bold text-blue-400 mt-2">{result.topPick?.credit}</div>
+                <div className="text-xs text-zinc-500">Tax credit rate</div>
               </div>
             </div>
           </div>
@@ -763,9 +1054,14 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
                   </tr>
                 </thead>
                 <tbody>
-                  {(result.comparison || []).map((row, i) => (
-                    <tr key={i} className="border-b border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
-                      <td className="py-2.5 px-5 text-zinc-200 font-medium">{row.flag} {row.location}</td>
+                  {(result.comparison || []).map((row, i) => {
+                    const isTop = row.location === result.topPick?.location;
+                    return (
+                    <tr key={i} className={`border-b border-zinc-800/40 transition-colors ${isTop ? 'bg-blue-500/5 hover:bg-blue-500/8' : 'hover:bg-zinc-800/20'}`}>
+                      <td className="py-2.5 px-5 font-medium">
+                        <span className={isTop ? 'text-zinc-100' : 'text-zinc-300'}>{row.flag} {row.location}</span>
+                        {isTop && <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-full">★ Top</span>}
+                      </td>
                       <td className="py-2.5 px-4 text-blue-400 font-bold font-mono">{row.credit}</td>
                       <td className="py-2.5 px-4 text-emerald-400 font-semibold font-mono">{row.savings}</td>
                       <td className="py-2.5 px-4 text-zinc-400">{row.minSpend}</td>
@@ -776,7 +1072,8 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
                         </span>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -819,13 +1116,180 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
               <div className="text-sm font-semibold text-zinc-100 mb-1">Ready to move forward?</div>
               <p className="text-xs text-zinc-400 leading-relaxed">{result.nextStep}</p>
             </div>
-            <button className="flex-shrink-0 flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap">
+            <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={handleExportPDF}
+              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap border border-zinc-700/50">
+              <Download size={14} /> Export PDF
+            </button>
+            <button
+              onClick={() => {
+                const subject = encodeURIComponent(`Film Financing Consultation — ${result.project?.title || 'My Project'}`);
+                const body = encodeURIComponent(
+                  `Hi Sean,\n\nI'd like to book a film financing consultation.\n\nProject Details:\n` +
+                  `• Title: ${result.project?.title || 'Untitled'}\n` +
+                  `• Budget: ${result.project?.budget || 'TBD'}\n` +
+                  `• Genre: ${result.project?.genre || 'TBD'}\n` +
+                  `• Top Recommended Location: ${result.topPick?.location || 'TBD'} (${result.topPick?.credit || ''} credit)\n` +
+                  `• Estimated Savings: ${result.topPick?.savings || 'TBD'}\n\n` +
+                  `Please let me know your availability.\n\nThank you`
+                );
+                window.location.href = `mailto:sean@mulbros.com?subject=${subject}&body=${body}`;
+              }}
+              className="flex-shrink-0 flex items-center gap-2 bg-blue-500 hover:bg-blue-400 text-white rounded-xl px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap">
               Book Consultation <ArrowRight size={14} />
             </button>
+            </div>
           </div>
         </div>
       )}
     </div>
+  );
+};
+
+// ─── Pipeline DnD primitives ──────────────────────────────────────────────────
+
+const FFDraggableCard = ({ id, children }) => {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={transform
+        ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`, position: 'relative', zIndex: 999 }
+        : undefined}
+      className={`cursor-grab active:cursor-grabbing transition-opacity ${isDragging ? 'opacity-30' : ''}`}
+    >
+      {children}
+    </div>
+  );
+};
+
+const FFDroppableColumn = ({ id, children, color }) => {
+  const { setNodeRef, isOver } = useDroppable({ id });
+  const hoverRing = color === 'emerald' ? 'ring-emerald-500/30 bg-emerald-500/5'
+    : color === 'amber'   ? 'ring-amber-500/30 bg-amber-500/5'
+    : color === 'purple'  ? 'ring-purple-500/30 bg-purple-500/5'
+    : color === 'blue'    ? 'ring-blue-500/30 bg-blue-500/5'
+    : 'ring-zinc-600/30 bg-zinc-800/20';
+  return (
+    <div
+      ref={setNodeRef}
+      className={`space-y-2 min-h-[72px] rounded-xl p-1 -m-1 transition-all ${isOver ? `ring-1 ${hoverRing}` : ''}`}
+    >
+      {children}
+    </div>
+  );
+};
+
+// ─── Pipeline tab (with DnD) ──────────────────────────────────────────────────
+
+const PipelineTab = () => {
+  const [pipeline, setPipeline] = useState(() =>
+    Object.fromEntries(
+      Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
+    )
+  );
+  const [activeCardId, setActiveCardId] = useState(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+  );
+
+  const handleDragEnd = ({ active, over }) => {
+    setActiveCardId(null);
+    if (!over) return;
+    const [srcStage, idxStr] = active.id.split('::');
+    const destStage = over.id;
+    if (srcStage === destStage) return;
+    setPipeline(prev => {
+      const src  = [...(prev[srcStage]  || [])];
+      const dest = [...(prev[destStage] || [])];
+      const [moved] = src.splice(Number(idxStr), 1);
+      dest.push(moved);
+      return { ...prev, [srcStage]: src, [destStage]: dest };
+    });
+  };
+
+  const getDraggedCard = () => {
+    if (!activeCardId) return null;
+    const [stage, idx] = activeCardId.split('::');
+    return { card: pipeline[stage]?.[Number(idx)] || null, stage };
+  };
+  const { card: draggedCard } = getDraggedCard();
+
+  return (
+    <DndContext
+      sensors={sensors}
+      onDragStart={({ active }) => setActiveCardId(active.id)}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveCardId(null)}
+    >
+      <div className="grid grid-cols-5 gap-4">
+        {STAGES.map(stage => {
+          const leads = pipeline[stage.key] || [];
+          const colors = stageColorMap[stage.color];
+          return (
+            <div key={stage.key} className="space-y-3">
+              <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${colors.header}`}>
+                <span className="text-xs font-semibold uppercase tracking-wider">{stage.label}</span>
+                <span className="text-xs font-mono font-bold">{leads.length}</span>
+              </div>
+              <FFDroppableColumn id={stage.key} color={stage.color}>
+                {leads.map((lead, i) => {
+                  const cardId = `${stage.key}::${i}`;
+                  return (
+                    <FFDraggableCard key={cardId} id={cardId}>
+                      <div className={`rounded-xl border p-3 ${colors.card}`}>
+                        <div className="flex items-start gap-1.5 mb-1">
+                          <GripVertical size={11} className="text-zinc-700 flex-shrink-0 mt-0.5" />
+                          <div className="text-xs font-semibold text-zinc-200 leading-snug">{lead.title}</div>
+                        </div>
+                        {lead.director && <div className="text-xs text-zinc-500 mb-1 pl-4">{lead.director}</div>}
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2 pl-4">
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${colors.badge}`}>{lead.budget}</span>
+                          {lead.country && <span className="text-xs text-zinc-600 truncate">{lead.country}</span>}
+                        </div>
+                        {lead.daysInStage !== undefined && (
+                          <div className="flex items-center gap-1 mt-2 pl-4 text-zinc-600">
+                            <Clock size={10} />
+                            <span className="text-xs">{lead.daysInStage}d</span>
+                          </div>
+                        )}
+                        {lead.incentiveSavings && (
+                          <div className="text-xs text-emerald-400 mt-1 pl-4 font-medium">Saves {lead.incentiveSavings}</div>
+                        )}
+                        {lead.signal && (
+                          <div className="text-xs text-zinc-500 mt-1 pl-4 italic leading-snug">"{lead.signal}"</div>
+                        )}
+                        {lead.status && <div className="text-xs text-zinc-400 mt-1 pl-4">{lead.status}</div>}
+                      </div>
+                    </FFDraggableCard>
+                  );
+                })}
+                {leads.length === 0 && (
+                  <div className="rounded-xl border border-dashed border-zinc-700/40 p-4 text-center text-xs text-zinc-600">
+                    Drop here
+                  </div>
+                )}
+              </FFDroppableColumn>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Ghost card overlay */}
+      <DragOverlay>
+        {draggedCard ? (
+          <div className="rounded-xl border border-blue-500/30 bg-zinc-900 p-3 shadow-2xl shadow-blue-500/10 rotate-1 scale-105 opacity-95">
+            <div className="text-xs font-semibold text-zinc-200 mb-1">{draggedCard.title}</div>
+            {draggedCard.director && <div className="text-xs text-zinc-500">{draggedCard.director}</div>}
+            <div className="text-xs bg-zinc-800 text-zinc-400 inline-block px-1.5 py-0.5 rounded mt-1">{draggedCard.budget}</div>
+          </div>
+        ) : null}
+      </DragOverlay>
+    </DndContext>
   );
 };
 
@@ -902,50 +1366,7 @@ export const FilmFinancingView = () => {
       {activeTab === 'Incentive Analyst' && <IncentiveAnalystTab />}
 
       {/* Pipeline */}
-      {activeTab === 'Pipeline' && (
-        <div className="grid grid-cols-5 gap-4">
-          {STAGES.map(stage => {
-            const leads = filmFinancingPipeline[stage.key] || [];
-            const colors = stageColorMap[stage.color];
-            return (
-              <div key={stage.key} className="space-y-3">
-                <div className={`flex items-center justify-between rounded-lg px-3 py-2 ${colors.header}`}>
-                  <span className="text-xs font-semibold uppercase tracking-wider">{stage.label}</span>
-                  <span className="text-xs font-mono font-bold">{leads.length}</span>
-                </div>
-                <div className="space-y-2">
-                  {leads.map((lead, i) => (
-                    <div key={i} className={`rounded-xl border p-3 ${colors.card}`}>
-                      <div className="text-xs font-semibold text-zinc-200 mb-1 leading-snug">{lead.title}</div>
-                      {lead.director && <div className="text-xs text-zinc-500 mb-1">{lead.director}</div>}
-                      <div className="flex items-center gap-1.5 flex-wrap mt-2">
-                        <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${colors.badge}`}>{lead.budget}</span>
-                        {lead.country && <span className="text-xs text-zinc-600 truncate">{lead.country}</span>}
-                      </div>
-                      {lead.daysInStage !== undefined && (
-                        <div className="flex items-center gap-1 mt-2 text-zinc-600">
-                          <Clock size={10} />
-                          <span className="text-xs">{lead.daysInStage}d</span>
-                        </div>
-                      )}
-                      {lead.incentiveSavings && (
-                        <div className="text-xs text-emerald-400 mt-1 font-medium">Saves {lead.incentiveSavings}</div>
-                      )}
-                      {lead.signal && (
-                        <div className="text-xs text-zinc-500 mt-1 italic leading-snug">"{lead.signal}"</div>
-                      )}
-                      {lead.status && <div className="text-xs text-zinc-400 mt-1">{lead.status}</div>}
-                    </div>
-                  ))}
-                  {leads.length === 0 && (
-                    <div className="rounded-xl border border-zinc-700/30 p-3 text-center text-xs text-zinc-600">Empty</div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {activeTab === 'Pipeline' && <PipelineTab />}
 
       {/* Activity */}
       {activeTab === 'Activity' && (

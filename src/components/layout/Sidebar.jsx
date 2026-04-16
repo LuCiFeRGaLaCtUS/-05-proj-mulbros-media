@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, MessageSquare, Clapperboard, Film, Music, Zap, Settings } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, Clapperboard, Film, Music, Zap, Settings, CalendarDays } from 'lucide-react';
 
 const verticals = [
   { id: 'financing',   name: 'Film Financing',           sub: 'Vertical A', icon: Clapperboard, color: 'blue'    },
@@ -134,6 +134,16 @@ export const Sidebar = ({ activePage, setActivePage }) => {
         <div className="py-3 px-3">
           <div className="h-px bg-gradient-to-r from-transparent via-zinc-800 to-transparent" />
         </div>
+
+        {/* Content Calendar */}
+        <NavButton
+          label="Content Calendar"
+          icon={CalendarDays}
+          isActive={activePage === 'calendar'}
+          onClick={() => setActivePage('calendar')}
+          activeClass="bg-violet-500/10 text-violet-400 border-l-violet-400"
+          hoverClass="hover:text-zinc-100 hover:bg-zinc-800/50"
+        />
 
         {/* Agent Chat */}
         <NavButton

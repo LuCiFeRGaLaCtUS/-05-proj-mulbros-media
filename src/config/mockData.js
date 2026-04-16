@@ -39,19 +39,29 @@ export const kpiData = [
 ];
 
 // ─── Chart Data ───────────────────────────────────────────────────────────────
+// Deterministic — never re-randomises on re-render.
+// Based on real Q1 2026 trajectory: Talise growth post-SXSW, Last County Hulu lift,
+// Film Financing lead ramp from Feb tool launch.
+
+const CHART_SEED = [
+  // filmFinancing (leads/day), talentOS (streams), lastCounty (streams)
+  [2, 3800, 2600], [3, 3950, 2700], [2, 4100, 2750], [4, 4200, 2900],
+  [3, 4350, 2950], [5, 4500, 3100], [4, 4650, 3200], [6, 4800, 3400],
+  [5, 5100, 3550], [4, 5250, 3700], [6, 5400, 3900], [7, 5600, 4050],
+  [5, 5750, 4200], [6, 5900, 4400], [8, 6100, 4600], [7, 6300, 4800],
+  [6, 6450, 5000], [8, 6700, 5200], [9, 6900, 5450], [7, 7100, 5700],
+  [8, 7350, 5900], [10, 7600, 6100], [9, 7850, 6400], [8, 8050, 6700],
+  [11, 8200, 7000], [10, 8400, 7300], [9, 8600, 7600], [12, 8800, 7900],
+  [11, 8950, 8200], [13, 9100, 8500],
+];
 
 export const generateChartData = () => {
-  const data = [];
-  for (let i = 29; i >= 0; i--) {
-    const date = subDays(new Date(), i);
-    data.push({
-      date: format(date, 'MMM dd'),
-      filmFinancing: Math.floor(Math.random() * 8) + 1,
-      talentOS:      Math.floor(Math.random() * 5000) + 3000,
-      lastCounty:    Math.floor(Math.random() * 3000) + 2500,
-    });
-  }
-  return data;
+  return CHART_SEED.map(([filmFinancing, talentOS, lastCounty], i) => ({
+    date: format(subDays(new Date(), 29 - i), 'MMM dd'),
+    filmFinancing,
+    talentOS,
+    lastCounty,
+  }));
 };
 
 // ─── Activity Feed ────────────────────────────────────────────────────────────
@@ -324,8 +334,9 @@ export const tones = ['Professional', 'Casual & Authentic', 'Urgent/Exciting', '
 // ─── Team ─────────────────────────────────────────────────────────────────────
 
 export const settingsTeam = [
+  { name: 'Dr. Mulholland', role: 'Founder / Executive Producer', allocation: 'Strategic', status: 'Active' },
+  { name: 'Sean', role: 'Product Strategy & Business Development', allocation: 'Full-Time', status: 'Active' },
+  { name: 'Snehaal', role: 'Film Financing & Legal Partnerships', allocation: 'Full-Time', status: 'Mumbai (returns May 8)' },
+  { name: 'Tim', role: 'Operations & Infrastructure', allocation: 'Full-Time', status: 'Active' },
   { name: 'Arghya Chowdhury', role: 'Lead Developer / AI Engineer', allocation: 'Full-Time', status: 'Active' },
-  { name: 'Technical Lead', role: 'Architecture & Shared Layers', allocation: 'Full-Time', status: 'Active' },
-  { name: 'AI Engineer A', role: 'Film Financing Vertical', allocation: 'Full-Time', status: 'Active' },
-  { name: 'AI Engineer B', role: 'Music & Composition Vertical', allocation: 'Full-Time', status: 'Active' }
 ];

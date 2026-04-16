@@ -5,6 +5,7 @@ import { Dashboard } from './components/dashboard/Dashboard';
 import { FilmFinancingView } from './components/verticals/FilmFinancingView';
 import { ProductionsView } from './components/verticals/ProductionsView';
 import { MusicView } from './components/verticals/MusicView';
+import { CalendarView } from './components/verticals/CalendarView';
 import { AgentChat } from './components/agents/AgentChat';
 import { Settings } from './components/settings/Settings';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
@@ -62,6 +63,7 @@ function App() {
       case 'financing':   return <FilmFinancingView />;
       case 'productions': return <ProductionsView />;
       case 'music':       return <MusicView onAgentClick={handleAgentClick} />;
+      case 'calendar':    return <CalendarView />;
       case 'agents':      return <AgentChat preselectedAgentId={preselectedAgent} onClose={() => setPreselectedAgent(null)} />;
       case 'settings':    return <Settings />;
       default:            return <Dashboard onAgentClick={handleAgentClick} />;
