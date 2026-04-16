@@ -100,7 +100,7 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
   const handleResultClick = (result) => {
     if (result.type === 'page') setActivePage(result.id);
     else if (result.type === 'agent') { setPreselectedAgent(result.id); setActivePage('agents'); }
-    else if (result.type === 'campaign') setActivePage('campaigns');
+    else if (result.type === 'campaign') setActivePage('financing');
     setSearchQuery('');
     setSearchOpen(false);
   };

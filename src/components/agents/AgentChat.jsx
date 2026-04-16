@@ -7,6 +7,20 @@ import { SuggestedPrompts } from './SuggestedPrompts';
 import { getAgentById } from '../../config/agents';
 import { callClaude, getApiKey } from '../../utils/claude';
 
+const verticalColors = {
+  financing: { bg: 'bg-blue-500/15',    text: 'text-blue-400',    border: 'border-blue-500/20'    },
+  film:      { bg: 'bg-emerald-500/15', text: 'text-emerald-400', border: 'border-emerald-500/20' },
+  music:     { bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
+  composer:  { bg: 'bg-amber-500/15',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
+  community: { bg: 'bg-purple-500/15',  text: 'text-purple-400',  border: 'border-purple-500/20'  },
+  strategy:  { bg: 'bg-rose-500/15',    text: 'text-rose-400',    border: 'border-rose-500/20'    },
+};
+
+const initials = (name) =>
+  name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
 export const AgentChat = ({ preselectedAgentId, onClose }) => {
   const [selectedAgent, setSelectedAgent] = useState(preselectedAgentId || 'film-financing-discovery');
   const [messages, setMessages] = useState([]);
@@ -15,10 +29,12 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
   const messagesEndRef = useRef(null);
 
   const agent = getAgentById(selectedAgent) || getAgentById('film-financing-discovery');
+  const vc = verticalColors[agent?.vertical] || verticalColors.financing;
 
   useEffect(() => {
     if (preselectedAgentId && preselectedAgentId !== selectedAgent) {
       setSelectedAgent(preselectedAgentId);
+      setMessages([]);
     }
   }, [preselectedAgentId]);
 
@@ -29,7 +45,7 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage = { role: 'user', content: input };
+    const userMessage = { role: 'user', content: input, timestamp: now() };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
@@ -38,16 +54,14 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
     try {
       const apiKey = getApiKey();
       if (!apiKey) {
-        throw new Error('No API key configured. Go to Settings > API Keys.');
+        throw new Error('No API key configured. Go to Settings → API Keys and paste your OpenAI key.');
       }
 
-      const response = await callClaude(
-        agent.systemPrompt,
-        newMessages,
-        apiKey
-      );
+      // Strip timestamps before sending to API
+      const apiMessages = newMessages.map(({ role, content }) => ({ role, content }));
+      const response = await callClaude(agent.systemPrompt, apiMessages, apiKey);
 
-      setMessages([...newMessages, { role: 'assistant', content: response }]);
+      setMessages([...newMessages, { role: 'assistant', content: response, timestamp: now() }]);
     } catch (error) {
       toast.error(error.message || 'Failed to get response from agent');
       setMessages(newMessages);
@@ -77,49 +91,53 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
         }}
       />
 
-      <div className="flex-1 flex flex-col bg-zinc-950">
+      <div className="flex-1 flex flex-col bg-zinc-950 min-w-0">
+        {/* Messages area */}
         <div className="flex-1 overflow-y-auto p-6">
           {messages.length === 0 ? (
+            /* ── Empty state ── */
             <div className="h-full flex flex-col justify-center items-center">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-semibold text-zinc-100 mb-2">{agent.name}</h2>
-                <p className="text-zinc-400">{agent.description}</p>
+              <div className={`w-16 h-16 rounded-2xl ${vc.bg} flex items-center justify-center mb-4`}>
+                <span className={`text-2xl font-bold ${vc.text}`}>{initials(agent.name)}</span>
               </div>
-              <SuggestedPrompts
-                agentId={selectedAgent}
-                onSelectPrompt={handlePromptSelect}
-              />
+              <h2 className={`text-xl font-bold mb-1 ${vc.text}`}>{agent.name}</h2>
+              <p className="text-sm text-zinc-500 text-center max-w-sm mb-8 leading-relaxed">
+                {agent.description}
+              </p>
+              <SuggestedPrompts agentId={selectedAgent} onSelectPrompt={handlePromptSelect} />
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-5">
               {messages.map((message, index) => (
                 <ChatMessage
                   key={index}
                   message={message}
                   agentName={agent.name}
+                  vertical={agent.vertical}
                 />
               ))}
-              {isLoading && <TypingIndicator />}
+              {isLoading && <TypingIndicator agentName={agent.name} vertical={agent.vertical} />}
               <div ref={messagesEndRef} />
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-zinc-800">
+        {/* Input bar */}
+        <div className={`p-4 border-t border-zinc-800`}>
           <div className="flex gap-3">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={`Message ${agent.name}...`}
-              className="flex-1 bg-zinc-800 text-zinc-200 rounded-lg px-4 py-3 placeholder:text-zinc-500 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50 resize-none transition-all"
+              placeholder={`Message ${agent.name}…`}
+              className={`flex-1 bg-zinc-800 text-zinc-200 rounded-xl px-4 py-3 placeholder:text-zinc-500 border border-zinc-700/50 focus:outline-none focus:${vc.border} resize-none transition-all`}
               rows={2}
               disabled={isLoading}
             />
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-700 text-zinc-950 disabled:text-zinc-500 rounded-lg px-4 transition-all flex items-center justify-center"
+              className={`${vc.bg} hover:opacity-80 disabled:bg-zinc-700 ${vc.text} disabled:text-zinc-500 rounded-xl px-4 transition-all flex items-center justify-center border ${vc.border}`}
             >
               {isLoading ? (
                 <Loader2 className="animate-spin" size={20} />
@@ -128,7 +146,7 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
               )}
             </button>
           </div>
-          <p className="text-xs text-zinc-500 mt-2">Press Enter to send, Shift+Enter for new line</p>
+          <p className="text-xs text-zinc-600 mt-2">Enter to send · Shift+Enter for new line</p>
         </div>
       </div>
     </div>

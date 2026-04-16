@@ -84,7 +84,7 @@ const filmStages = [
   }
 ];
 
-// ─── Talent OS stages ─────────────────────────────────────────────────────────
+// ─── Music & Composition stages ───────────────────────────────────────────────
 
 const talentStages = [
   {
@@ -326,7 +326,7 @@ export const RoadmapView = () => {
       />
 
       <JourneyLane
-        title="Talent OS — Luke & Talise"
+        title="Music & Composition — Luke & Talise"
         subtitle="Inbound query + proactive outreach → AI response → nurturing → deal closing → ongoing growth"
         icon={Music}
         stages={talentStages}
@@ -338,10 +338,10 @@ export const RoadmapView = () => {
         <div className="text-sm font-semibold text-zinc-300 mb-3">Key Insights — MulBros Media OS</div>
         <ul className="space-y-2 text-xs text-zinc-500">
           <li className="flex gap-2"><span className="text-blue-400 flex-shrink-0">→</span> Film Financing: the free AI tax incentive calculator is the core lead magnet — filmmakers get value, we capture their project data.</li>
-          <li className="flex gap-2"><span className="text-amber-400 flex-shrink-0">→</span> Talent OS: the AI talent manager responds to inbound in &lt;5 min and proactively hunts new work — emulating a top-tier human manager at scale.</li>
+          <li className="flex gap-2"><span className="text-amber-400 flex-shrink-0">→</span> Music & Composition: the AI engine responds to inbound sync enquiries in &lt;5 min and proactively hunts new scoring work for Luke and sync placements for Talise — at scale.</li>
           <li className="flex gap-2"><span className="text-emerald-400 flex-shrink-0">→</span> 34% audience overlap between Last County viewers and Talise fans — cross-promotion between verticals is a compounding growth lever.</li>
           <li className="flex gap-2"><span className="text-purple-400 flex-shrink-0">→</span> Film financing clients (indie filmmakers) are natural leads for Luke's scoring services — two verticals feeding each other.</li>
-          <li className="flex gap-2"><span className="text-rose-400 flex-shrink-0">→</span> The same OS engine (Sales · Marketing · Operations · Customer) deploys across LSSU, BFX Learn, and any future vertical with only a vertical-specific skin on top.</li>
+          <li className="flex gap-2"><span className="text-rose-400 flex-shrink-0">→</span> The same OS engine (Sales · Marketing · Operations · Customer) is designed to scale across future verticals with only a vertical-specific layer on top — the infrastructure compounds.</li>
         </ul>
       </div>
     </div>

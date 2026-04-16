@@ -29,7 +29,7 @@ export const getLukeStats = () => ({
   pipeline: lukePipeline,
   closedDeals: lukePipeline.closed,
   activeLeads: lukePipeline.prospecting.length + lukePipeline.pitched.length + lukePipeline.negotiating.length,
-  totalRevenue: '$42,000',
+  totalRevenue: '$30,000', // confirmed: $18K delivered + $12K in progress; Echo Valley ($35K) still negotiating
   revenueBreakdown: [
     { project: 'Last County', fee: '$18,000', status: 'Delivered' },
     { project: 'Saltwater', fee: '$12,000', status: 'In Progress (May 15)' },
@@ -56,14 +56,14 @@ export const getAnalyticsSummary = () => ({
   impressions: '1.24M',
   engagement: '89.4K',
   subscribers: '847',
-  campaigns: '4',
+  campaigns: String(campaigns.length),
   pipelineValue: '$214K'
 });
 
 export const getQuickStats = () => ({
   lastCounty: { streams: '142,847', change: '+12.4%' },
   talise: { listeners: '85,230', change: '+8.2%' },
-  luke: { leads: '14', revenue: '$42K' },
+  luke: { leads: '14', revenue: '$30K' },
   community: { fans: '2,847', emailSubs: '847' }
 });
 

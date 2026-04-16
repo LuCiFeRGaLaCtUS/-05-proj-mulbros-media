@@ -4,7 +4,6 @@ import {
   lukeBio, lukeMetrics, lukePipeline,
   activities
 } from '../../config/mockData';
-import { LeadPipeline } from '../talent/LeadPipeline';
 import { Bot, Sparkles, Music, Piano, Clock } from 'lucide-react';
 
 const musicActivities = activities.filter(a => ['music', 'composer'].includes(a.vertical));

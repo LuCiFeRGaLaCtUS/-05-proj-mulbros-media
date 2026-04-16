@@ -28,7 +28,7 @@ const verticalBadgeMap = {
   strategy: 'bg-rose-500/10 text-rose-400'
 };
 
-export const ActivityFeed = ({ activities }) => {
+export const ActivityFeed = ({ activities = [] }) => {
   return (
     <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 shadow-xl shadow-black/30 h-full flex flex-col">
       <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-zinc-800/60">

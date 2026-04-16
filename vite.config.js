@@ -16,8 +16,12 @@ export default defineConfig(({ mode }) => {
           changeOrigin: true,
           rewrite: () => '/v1/chat/completions',
           configure: (proxy) => {
-            proxy.on('proxyReq', (proxyReq) => {
-              proxyReq.setHeader('Authorization', `Bearer ${OPENAI_KEY}`);
+            proxy.on('proxyReq', (proxyReq, req) => {
+              // Prefer env key; fall back to key sent by the client (from localStorage via Settings)
+              const authKey = OPENAI_KEY || (req.headers['authorization']?.replace('Bearer ', '') || '');
+              if (authKey) {
+                proxyReq.setHeader('Authorization', `Bearer ${authKey}`);
+              }
               proxyReq.setHeader('Content-Type', 'application/json');
             });
           },

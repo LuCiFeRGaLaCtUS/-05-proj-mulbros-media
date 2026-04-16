@@ -9,7 +9,7 @@ export const SuggestedPrompts = ({ agentId, onSelectPrompt }) => {
     <div className="p-4">
       <h3 className="text-sm font-medium text-zinc-400 mb-3">Suggested prompts</h3>
       <div className="grid grid-cols-2 gap-2">
-        {agent.suggestedPrompts.map((prompt, index) => (
+        {(agent.suggestedPrompts || []).map((prompt, index) => (
           <button
             key={index}
             onClick={() => onSelectPrompt(prompt)}
