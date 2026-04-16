@@ -47,6 +47,8 @@ const applyTheme = (theme) => {
     document.documentElement.classList.remove('light');
   }
   localStorage.setItem('mulbros_theme', theme);
+  // Notify all useTheme() subscribers (Toaster, charts, RoadmapView, etc.)
+  window.dispatchEvent(new CustomEvent('mulbros-theme', { detail: theme }));
 };
 
 export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
@@ -108,12 +110,19 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
   const recentNotifs = activities.slice(0, 6);
 
   return (
-    <div className="fixed top-0 left-64 right-0 h-16 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800 flex items-center justify-between px-6 z-50">
-      <div className="text-lg font-semibold text-zinc-100">
-        {pageNames[activePage] || 'Dashboard'}
+    <div className="fixed top-0 left-64 right-0 h-16 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800/80 flex items-center justify-between px-6 z-50">
+      {/* Cinematic top highlight line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent pointer-events-none" />
+      {/* Subtle left amber glow behind title */}
+      <div className="absolute left-0 top-0 w-48 h-16 bg-amber-500/3 blur-xl pointer-events-none" />
+
+      <div className="relative z-10 flex items-center gap-3">
+        <div className="text-lg font-semibold text-zinc-100">
+          {pageNames[activePage] || 'Dashboard'}
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="relative z-10 flex items-center gap-4">
         {/* Search */}
         <div className="relative" ref={searchRef}>
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 pointer-events-none" />
@@ -134,7 +143,7 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
             </button>
           )}
           {searchOpen && searchQuery && (
-            <div className="absolute top-full mt-2 left-0 w-full bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
+            <div className="absolute top-full mt-2 left-0 w-full bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50">
               {results.length === 0 ? (
                 <div className="px-4 py-3 text-sm text-zinc-500">No results for "{searchQuery}"</div>
               ) : (
@@ -193,8 +202,8 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
             {hasUnread && <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />}
           </button>
           {notifOpen && (
-            <div className="absolute top-full right-0 mt-2 w-96 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">
+            <div className="absolute top-full right-0 mt-2 w-96 bg-zinc-900 border border-zinc-700/80 rounded-xl shadow-2xl shadow-black/60 overflow-hidden z-50">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800 bg-gradient-to-r from-amber-500/5 to-transparent">
                 <span className="text-sm font-semibold text-zinc-100">Notifications</span>
                 {hasUnread && (
                   <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full">{recentNotifs.length} new</span>

@@ -7,6 +7,14 @@ import {
   Loader2, DollarSign, MapPin, FileText, TrendingUp, ArrowRight
 } from 'lucide-react';
 
+// ── Cinematic background — blue theme ────────────────────────────────────────
+const BlueBg = () => (
+  <>
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-950/25 via-zinc-900 to-zinc-950 pointer-events-none" />
+    <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/10 blur-xl rounded-full pointer-events-none" />
+  </>
+);
+
 // ─── Pipeline config ──────────────────────────────────────────────────────────
 
 const STAGES = [
@@ -264,16 +272,17 @@ const LeadGenTab = () => {
   return (
     <div className="space-y-5">
       {/* Config panel */}
-      <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden">
-        <div className="px-5 py-4 border-b border-zinc-800/60 flex items-center gap-2">
+      <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+        <BlueBg />
+        <div className="relative z-10 px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent flex items-center gap-2">
           <Search size={14} className="text-blue-400" />
           <span className="text-sm font-semibold text-zinc-100">Configure Global Lead Scan</span>
-          <span className="ml-auto flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full">
+          <span className="ml-auto flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
             <Sparkles size={9} /> AI-Powered
           </span>
         </div>
 
-        <div className="p-5 grid grid-cols-2 gap-6">
+        <div className="relative z-10 p-5 grid grid-cols-2 gap-6">
           {/* Left: Grouped Sources */}
           <div className="space-y-4 overflow-y-auto max-h-80">
             <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1">Sources</div>
@@ -422,8 +431,9 @@ const LeadGenTab = () => {
 
       {/* Scanning animation */}
       {scanning && (
-        <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-6 flex flex-col items-center gap-3">
-          <div className="flex gap-1.5">
+        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-6 flex flex-col items-center gap-3 overflow-hidden">
+          <BlueBg />
+          <div className="relative z-10 flex gap-1.5">
             {[0, 1, 2, 3, 4].map(i => (
               <div
                 key={i}
@@ -432,10 +442,10 @@ const LeadGenTab = () => {
               />
             ))}
           </div>
-          <div className="text-sm text-zinc-300 font-medium">
+          <div className="relative z-10 text-sm text-zinc-300 font-medium">
             AI scanning {activeSources.join(', ')}…
           </div>
-          <div className="text-xs text-zinc-500">Extracting high-intent signals from posts and profiles</div>
+          <div className="relative z-10 text-xs text-zinc-500">Extracting high-intent signals from posts and profiles</div>
         </div>
       )}
 
@@ -443,7 +453,8 @@ const LeadGenTab = () => {
       {scanned && !scanning && (
         <div className="space-y-4">
           {/* Stats bar */}
-          <div className="flex items-center gap-4 bg-zinc-900 rounded-xl ring-1 ring-zinc-800 px-5 py-3 flex-wrap">
+          <div className="relative flex items-center gap-4 bg-zinc-900 rounded-xl ring-1 ring-blue-900/30 px-5 py-3 flex-wrap overflow-hidden">
+            <BlueBg />
             <div className="flex items-center gap-2 text-sm">
               <Users size={14} className="text-blue-400" />
               <span className="font-bold text-zinc-100">{results.length}</span>
@@ -468,12 +479,13 @@ const LeadGenTab = () => {
               return (
               <div
                 key={lead.id}
-                className={`bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-4 flex flex-col gap-3 ${
+                className={`relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/20 p-4 flex flex-col gap-3 overflow-hidden ${
                   addedIds.includes(lead.id) ? 'opacity-60' : ''
                 }`}
               >
+                <BlueBg />
                 {/* Top row */}
-                <div className="flex items-start justify-between gap-2">
+                <div className="relative z-10 flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColorMap[lead.source] || 'bg-zinc-700 text-zinc-300 border border-zinc-600'}`}>
                       {srcLabel}
@@ -488,13 +500,13 @@ const LeadGenTab = () => {
                 </div>
 
                 {/* Username */}
-                <div className="text-xs font-semibold text-zinc-300">{lead.username}</div>
+                <div className="relative z-10 text-xs font-semibold text-zinc-300">{lead.username}</div>
 
                 {/* Signal snippet */}
-                <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3 italic">{lead.snippet}</p>
+                <p className="relative z-10 text-xs text-zinc-400 leading-relaxed line-clamp-3 italic">{lead.snippet}</p>
 
                 {/* Meta */}
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="relative z-10 flex items-center gap-3 flex-wrap">
                   <span className="text-xs font-semibold text-emerald-400">{lead.budget}</span>
                   <span className="text-xs bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700/40">{lead.country}</span>
                   <span className="text-xs bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700/40">{lead.language}</span>
@@ -502,14 +514,14 @@ const LeadGenTab = () => {
                 </div>
 
                 {/* Tags */}
-                <div className="flex flex-wrap gap-1">
+                <div className="relative z-10 flex flex-wrap gap-1">
                   {lead.tags.map(t => (
                     <span key={t} className="text-xs bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700/40">{t}</span>
                   ))}
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 pt-1">
+                <div className="relative z-10 flex gap-2 pt-1">
                   <button
                     onClick={() => addToPipeline(lead.id)}
                     disabled={addedIds.includes(lead.id)}
@@ -540,12 +552,13 @@ const LeadGenTab = () => {
 
       {/* Empty state before first scan */}
       {!scanning && !scanned && (
-        <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-10 flex flex-col items-center gap-3 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
+          <BlueBg />
+          <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <Search size={22} className="text-blue-400" />
           </div>
-          <div className="text-sm font-semibold text-zinc-300">Configure sources and run a scan</div>
-          <div className="text-xs text-zinc-500 max-w-sm leading-relaxed">
+          <div className="relative z-10 text-sm font-semibold text-zinc-300">Configure sources and run a scan</div>
+          <div className="relative z-10 text-xs text-zinc-500 max-w-sm leading-relaxed">
             The AI agent will scan selected platforms for posts containing high-intent signals — filmmakers discussing tax incentives, gap financing, production budgets, and location decisions.
           </div>
         </div>
@@ -626,13 +639,14 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
   return (
     <div className="space-y-6">
       {/* Input form */}
-      <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-5">
-        <div className="flex items-center gap-2 mb-4">
+      <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
+        <BlueBg />
+        <div className="relative z-10 flex items-center gap-2 mb-4">
           <TrendingUp size={16} className="text-blue-400" />
           <span className="text-sm font-semibold text-zinc-100">Project Details</span>
           <span className="text-xs text-zinc-500 ml-1">— the AI will generate a personalized incentive benchmark</span>
         </div>
-        <div className="grid grid-cols-3 gap-4 mb-4">
+        <div className="relative z-10 grid grid-cols-3 gap-4 mb-4">
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Project Title</label>
             <input value={form.title} onChange={e => set('title', e.target.value)}
@@ -674,7 +688,7 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
           </div>
         </div>
         <button onClick={handleGenerate} disabled={!form.budget || generating}
-          className="flex items-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-xl px-5 py-2.5 text-sm font-semibold transition-all">
+          className="relative z-10 flex items-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-xl px-5 py-2.5 text-sm font-semibold transition-all">
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
           {generating ? 'Generating Benchmark…' : 'Generate AI Benchmark'}
         </button>
@@ -682,12 +696,13 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
 
       {/* Empty state */}
       {!generating && !result && (
-        <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-10 flex flex-col items-center gap-3 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
+          <BlueBg />
+          <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <MapPin size={22} className="text-blue-400" />
           </div>
-          <div className="text-sm font-semibold text-zinc-300">Enter your project details above</div>
-          <div className="text-xs text-zinc-500 max-w-sm leading-relaxed">
+          <div className="relative z-10 text-sm font-semibold text-zinc-300">Enter your project details above</div>
+          <div className="relative z-10 text-xs text-zinc-500 max-w-sm leading-relaxed">
             The AI will rank the top 3–5 states or countries by tax credit %, estimate your savings in dollars, and generate an itemized budget template for your chosen location.
           </div>
         </div>
@@ -695,10 +710,11 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
 
       {/* Generating state */}
       {generating && (
-        <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-10 flex flex-col items-center gap-4">
-          <Loader2 size={28} className="text-blue-400 animate-spin" />
-          <div className="text-sm font-semibold text-zinc-300">Analyzing incentives across 40+ jurisdictions…</div>
-          <div className="text-xs text-zinc-500">Comparing tax credits, rebates, qualified spend rules, and cost benchmarks</div>
+        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-4 overflow-hidden">
+          <BlueBg />
+          <Loader2 size={28} className="relative z-10 text-blue-400 animate-spin" />
+          <div className="relative z-10 text-sm font-semibold text-zinc-300">Analyzing incentives across 40+ jurisdictions…</div>
+          <div className="relative z-10 text-xs text-zinc-500">Comparing tax credits, rebates, qualified spend rules, and cost benchmarks</div>
         </div>
       )}
 
@@ -729,11 +745,12 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
           </div>
 
           {/* Comparison table */}
-          <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden">
-            <div className="px-5 py-3 border-b border-zinc-800/60">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Location Comparison</span>
+          <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+            <BlueBg />
+            <div className="relative z-10 px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Location Comparison</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="relative z-10 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs text-zinc-500">
@@ -766,12 +783,13 @@ Return 3-5 locations in comparison. Return 6-8 budget line items. All savings in
           </div>
 
           {/* Budget template */}
-          <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden">
-            <div className="px-5 py-3 border-b border-zinc-800/60 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Itemized Budget Template — {result.topPick?.location}</span>
+          <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+            <BlueBg />
+            <div className="relative z-10 px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Itemized Budget Template — {result.topPick?.location}</span>
               <span className="text-xs text-zinc-600">Based on {result.project.budget} budget</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="relative z-10 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs text-zinc-500">
@@ -818,27 +836,42 @@ export const FilmFinancingView = () => {
   const tabs = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-100">Film Financing</h1>
-          <p className="text-sm text-zinc-500 mt-1">
-            AI-driven lead discovery → tax incentive modeling → production planning → qualified spend tracking → tax filing
-          </p>
+    <div className="space-y-5">
+      {/* ── Cinematic page header ───────────────────────────────────────── */}
+      <div className="relative overflow-hidden bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5">
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-zinc-950 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-48 h-24 bg-blue-500/5 blur-xl rounded-full pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(59,130,246,0.04),transparent_70%)] pointer-events-none" />
+        {/* Film strip holes across top */}
+        <div className="absolute top-1.5 left-0 right-0 flex gap-1.5 px-4 pointer-events-none opacity-10">
+          {Array.from({ length: 16 }).map((_, i) => <div key={i} className="flex-1 h-1.5 bg-white rounded-[1px]" />)}
         </div>
-        <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg font-medium">
-          Vertical A
-        </span>
+        {/* Ticket perforation rings */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-blue-500/10 pointer-events-none" />
+        <div className="absolute right-12 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-blue-500/15 pointer-events-none" />
+        <div className="relative z-10 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-zinc-100">Film Financing</h1>
+            <p className="text-sm text-zinc-500 mt-1">
+              AI-driven lead discovery → tax incentive modeling → production planning → qualified spend tracking → tax filing
+            </p>
+          </div>
+          <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg font-medium">
+            Vertical A
+          </span>
+        </div>
       </div>
 
-      {/* KPIs */}
+      {/* ── KPIs ────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 p-5">
-            <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
-            <div className="text-sm font-medium text-zinc-300 mb-0.5">{k.label}</div>
-            <div className="text-xs text-zinc-500">{k.sub}</div>
+          <div key={k.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
+            <BlueBg />
+            <div className="relative z-10">
+              <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
+              <div className="text-sm font-medium text-zinc-300 mb-0.5">{k.label}</div>
+              <div className="text-xs text-zinc-500">{k.sub}</div>
+            </div>
           </div>
         ))}
       </div>
@@ -916,11 +949,12 @@ export const FilmFinancingView = () => {
 
       {/* Activity */}
       {activeTab === 'Activity' && (
-        <div className="bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden">
-          <div className="px-5 py-4 border-b border-zinc-800/60">
+        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+          <BlueBg />
+          <div className="relative z-10 px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent">
             <h3 className="text-sm font-semibold text-zinc-100">Recent Agent Activity</h3>
           </div>
-          <div className="divide-y divide-zinc-800/40">
+          <div className="relative z-10 divide-y divide-zinc-800/40">
             {financingActivities.map((a, i) => (
               <div key={i} className="flex gap-3 px-5 py-3 hover:bg-zinc-800/20 transition-colors">
                 <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" />

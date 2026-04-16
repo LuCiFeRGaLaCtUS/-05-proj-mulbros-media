@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users, Globe, Bot, MapPin, BarChart2, FileCheck,
   Megaphone, MessageSquare, BookOpen, TrendingUp, CheckCircle2, Heart,
@@ -163,6 +163,19 @@ const talentStages = [
 
 const StageCard = ({ stage, accentColor, isLast, onSelect, isSelected }) => {
   const Icon = stage.icon;
+  const [isLight, setIsLight] = useState(
+    () => document.documentElement.classList.contains('light')
+  );
+  useEffect(() => {
+    const handler = (e) => setIsLight(e.detail === 'light');
+    window.addEventListener('mulbros-theme', handler);
+    return () => window.removeEventListener('mulbros-theme', handler);
+  }, []);
+
+  const unselectedStyle = isLight
+    ? { borderColor: '#d4d4d8', backgroundColor: '#ffffff' }
+    : { borderColor: '#27272a', backgroundColor: '#18181b' };
+
   return (
     <div className="flex items-start gap-2">
       <div
@@ -170,7 +183,7 @@ const StageCard = ({ stage, accentColor, isLast, onSelect, isSelected }) => {
         className="flex-shrink-0 w-48 rounded-2xl p-4 border cursor-pointer transition-all duration-200"
         style={isSelected
           ? { borderColor: accentColor, backgroundColor: `${accentColor}08`, boxShadow: `0 0 0 2px ${accentColor}` }
-          : { borderColor: '#27272a', backgroundColor: '#18181b' }
+          : unselectedStyle
         }
       >
         <div className="flex items-center justify-between mb-3">

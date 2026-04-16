@@ -82,7 +82,7 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
   };
 
   return (
-    <div className="flex h-[calc(100vh-7rem)]">
+    <div className="flex -mx-6 -mt-6 h-[calc(100vh-4rem)]">
       <AgentSelector
         selectedAgent={selectedAgent}
         onSelectAgent={(id) => {

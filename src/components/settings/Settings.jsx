@@ -17,19 +17,13 @@ export const Settings = () => {
   });
 
   const [notifications, setNotifications] = useState({
-    inApp: true,
-    email: false,
-    slack: false,
-    dailyDigest: true,
-    agentErrors: true,
-    campaignMilestones: true
+    inApp: true, email: false, slack: false,
+    dailyDigest: true, agentErrors: true, campaignMilestones: true
   });
 
   useEffect(() => {
     const stored = localStorage.getItem('mulbros_settings');
-    if (stored) {
-      setSettings(JSON.parse(stored));
-    }
+    if (stored) setSettings(JSON.parse(stored));
   }, []);
 
   const handleSave = () => {
@@ -41,6 +35,7 @@ export const Settings = () => {
 
   return (
     <div className="space-y-6">
+      {/* Tabs */}
       <div className="border-b border-zinc-800">
         <div className="flex gap-4">
           {tabs.map((tab) => (
@@ -49,7 +44,7 @@ export const Settings = () => {
               onClick={() => setActiveTab(tab.toLowerCase().replace(' ', '-'))}
               className={`py-3 px-1 text-sm font-medium transition-all border-b-2 ${
                 activeTab === tab.toLowerCase().replace(' ', '-')
-                  ? 'text-amber-500 border-amber-500'
+                  ? 'text-amber-400 border-amber-400'
                   : 'text-zinc-400 border-transparent hover:text-zinc-100'
               }`}
             >
@@ -59,92 +54,57 @@ export const Settings = () => {
         </div>
       </div>
 
+      {/* General */}
       {activeTab === 'general' && (
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Organization</label>
-            <input
-              type="text"
-              value={settings.organization}
-              onChange={(e) => {
-                setSettings({ ...settings, organization: e.target.value });
-                setIsDirty(true);
-              }}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Engagement Type</label>
-            <input
-              type="text"
-              value={settings.engagementType}
-              onChange={(e) => {
-                setSettings({ ...settings, engagementType: e.target.value });
-                setIsDirty(true);
-              }}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Vendor</label>
-            <input
-              type="text"
-              value={settings.vendor}
-              onChange={(e) => {
-                setSettings({ ...settings, vendor: e.target.value });
-                setIsDirty(true);
-              }}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-zinc-400 mb-2">Methodology</label>
-            <input
-              type="text"
-              value={settings.methodology}
-              onChange={(e) => {
-                setSettings({ ...settings, methodology: e.target.value });
-                setIsDirty(true);
-              }}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50"
-            />
-          </div>
+        <div className="relative bg-zinc-900 rounded-xl p-6 border border-amber-900/20 overflow-hidden space-y-4">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-950/15 via-zinc-900 to-zinc-950 pointer-events-none" />
+          <div className="absolute -top-4 -right-4 w-20 h-20 bg-amber-500/10 blur-xl rounded-full pointer-events-none" />
+          {[
+            { key: 'organization', label: 'Organization' },
+            { key: 'engagementType', label: 'Engagement Type' },
+            { key: 'vendor', label: 'Vendor' },
+            { key: 'methodology', label: 'Methodology' },
+          ].map(({ key, label }) => (
+            <div key={key} className="relative z-10">
+              <label className="block text-sm font-medium text-zinc-400 mb-2">{label}</label>
+              <input
+                type="text"
+                value={settings[key]}
+                onChange={(e) => { setSettings({ ...settings, [key]: e.target.value }); setIsDirty(true); }}
+                className="w-full bg-zinc-800/80 text-zinc-200 rounded-lg px-4 py-2 border border-zinc-700/50 focus:outline-none focus:border-amber-500/50 text-sm"
+              />
+            </div>
+          ))}
         </div>
       )}
 
-      {activeTab === 'api-keys' && <APIKeyManager />}
+      {activeTab === 'api-keys'      && <APIKeyManager />}
+      {activeTab === 'integrations'  && <IntegrationToggles />}
+      {activeTab === 'team'          && <TeamManager />}
 
-      {activeTab === 'integrations' && <IntegrationToggles />}
-
-      {activeTab === 'team' && <TeamManager />}
-
+      {/* Notifications */}
       {activeTab === 'notifications' && (
-        <div className="bg-zinc-900 rounded-xl p-6 border border-zinc-800 space-y-4">
+        <div className="relative bg-zinc-900 rounded-xl p-6 border border-amber-900/20 overflow-hidden space-y-3">
+          <div className="absolute inset-0 bg-gradient-to-br from-amber-950/15 via-zinc-900 to-zinc-950 pointer-events-none" />
+          <div className="absolute -top-4 -right-4 w-20 h-20 bg-amber-500/10 blur-xl rounded-full pointer-events-none" />
           {[
-            { key: 'inApp', label: 'In-App Notifications', description: 'Show notifications within the app' },
-            { key: 'email', label: 'Email Alerts', description: 'Receive alerts via email' },
-            { key: 'slack', label: 'Slack Notifications', description: 'Send alerts to Slack channel' },
-            { key: 'dailyDigest', label: 'Daily Digest', description: 'Receive daily summary' },
-            { key: 'agentErrors', label: 'Agent Error Alerts', description: 'Alert when agent encounters error' },
-            { key: 'campaignMilestones', label: 'Campaign Milestones', description: 'Alert on campaign milestones' }
+            { key: 'inApp',              label: 'In-App Notifications',  description: 'Show notifications within the app'   },
+            { key: 'email',              label: 'Email Alerts',          description: 'Receive alerts via email'             },
+            { key: 'slack',              label: 'Slack Notifications',   description: 'Send alerts to Slack channel'        },
+            { key: 'dailyDigest',        label: 'Daily Digest',          description: 'Receive daily summary'               },
+            { key: 'agentErrors',        label: 'Agent Error Alerts',    description: 'Alert when agent encounters error'   },
+            { key: 'campaignMilestones', label: 'Campaign Milestones',   description: 'Alert on campaign milestones'        }
           ].map((item) => (
-            <div key={item.key} className="flex items-center justify-between p-4 bg-zinc-800/50 rounded-lg">
+            <div key={item.key} className="relative z-10 flex items-center justify-between p-4 bg-zinc-800/50 hover:bg-zinc-800/70 rounded-lg transition-all border border-transparent hover:border-amber-500/10">
               <div>
                 <div className="text-sm font-medium text-zinc-200">{item.label}</div>
                 <div className="text-xs text-zinc-500">{item.description}</div>
               </div>
               <button
-                onClick={() => {
-                  setNotifications(prev => ({ ...prev, [item.key]: !prev[item.key] }));
-                  setIsDirty(true);
-                }}
-                className={`w-12 h-6 rounded-full transition-all ${
-                  notifications[item.key] ? 'bg-emerald-500' : 'bg-zinc-600'
-                }`}
+                onClick={() => { setNotifications(prev => ({ ...prev, [item.key]: !prev[item.key] })); setIsDirty(true); }}
+                className={`w-12 h-6 rounded-full transition-all ${notifications[item.key] ? 'bg-emerald-500' : 'bg-zinc-600'}`}
               >
-                <div className={`w-5 h-5 bg-white rounded-full transition-all shadow ${
-                  notifications[item.key] ? 'translate-x-6' : 'translate-x-0.5'
-                }`} />
+                <div className={`w-5 h-5 bg-white rounded-full transition-all shadow ${notifications[item.key] ? 'translate-x-6' : 'translate-x-0.5'}`} />
               </button>
             </div>
           ))}
@@ -154,10 +114,8 @@ export const Settings = () => {
       <div className="flex justify-end">
         <button
           onClick={handleSave}
-          className={`font-semibold rounded-lg px-6 py-3 transition-all ${
-            isDirty
-              ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950'
-              : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
+          className={`font-semibold rounded-lg px-6 py-3 transition-all text-sm ${
+            isDirty ? 'bg-amber-500 hover:bg-amber-400 text-zinc-950' : 'bg-zinc-700 text-zinc-500 cursor-not-allowed'
           }`}
         >
           Save Changes

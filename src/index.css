@@ -15,77 +15,229 @@ html, body, #root {
   color: #f4f4f5;
 }
 
-/* ── Light mode overrides ─────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — COMPLETE OVERRIDE SYSTEM
+   Mechanism: TopBar adds/removes .light on <html>. Every dark class below
+   is remapped to its light-mode equivalent. Inline-style fixes live in JS.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Root ───────────────────────────────────────────────────────────────────── */
 html.light,
 html.light body,
 html.light #root {
-  background-color: #f8f8fa !important;
+  background-color: #f1f1f4 !important;
   color: #18181b !important;
 }
 
-html.light .bg-zinc-950 { background-color: #f0f0f3 !important; }
-html.light .bg-zinc-900 { background-color: #ffffff !important; }
-html.light .bg-zinc-900\/80 { background-color: rgba(255,255,255,0.85) !important; }
-html.light .bg-zinc-800 { background-color: #e8e8ed !important; }
-html.light .bg-zinc-800\/50 { background-color: rgba(232,232,237,0.6) !important; }
-html.light .bg-zinc-800\/30 { background-color: rgba(232,232,237,0.4) !important; }
-html.light .bg-zinc-800\/20 { background-color: rgba(232,232,237,0.3) !important; }
-html.light .bg-zinc-800\/60 { background-color: rgba(232,232,237,0.7) !important; }
-html.light .bg-zinc-700 { background-color: #d4d4d8 !important; }
+/* ── Solid zinc backgrounds ─────────────────────────────────────────────────── */
+html.light .bg-zinc-950  { background-color: #e8e8ec !important; }
+html.light .bg-zinc-900  { background-color: #ffffff !important; }
+html.light .bg-zinc-800  { background-color: #e4e4e7 !important; }
+html.light .bg-zinc-700  { background-color: #d4d4d8 !important; }
+html.light .bg-zinc-600  { background-color: #a1a1aa !important; }
 
-html.light .border-zinc-800 { border-color: #d4d4d8 !important; }
-html.light .border-zinc-800\/50 { border-color: rgba(212,212,216,0.6) !important; }
-html.light .border-zinc-800\/40 { border-color: rgba(212,212,216,0.5) !important; }
-html.light .border-zinc-800\/60 { border-color: rgba(212,212,216,0.7) !important; }
-html.light .border-zinc-700 { border-color: #d4d4d8 !important; }
-html.light .border-zinc-700\/50 { border-color: rgba(212,212,216,0.6) !important; }
-html.light .border-zinc-700\/40 { border-color: rgba(212,212,216,0.5) !important; }
-html.light .border-zinc-700\/80 { border-color: rgba(212,212,216,0.9) !important; }
+/* ── Zinc backgrounds with opacity ─────────────────────────────────────────── */
+html.light .bg-zinc-950\/95 { background-color: rgba(242,242,245,0.97) !important; }
+html.light .bg-zinc-950\/30 { background-color: rgba(228,228,231,0.30) !important; }
+html.light .bg-zinc-900\/80 { background-color: rgba(255,255,255,0.92) !important; }
+html.light .bg-zinc-900\/50 { background-color: rgba(255,255,255,0.65) !important; }
+html.light .bg-zinc-800\/10 { background-color: rgba(228,228,231,0.18) !important; }
+html.light .bg-zinc-800\/20 { background-color: rgba(228,228,231,0.32) !important; }
+html.light .bg-zinc-800\/30 { background-color: rgba(228,228,231,0.48) !important; }
+html.light .bg-zinc-800\/40 { background-color: rgba(228,228,231,0.58) !important; }
+html.light .bg-zinc-800\/50 { background-color: rgba(228,228,231,0.68) !important; }
+html.light .bg-zinc-800\/60 { background-color: rgba(228,228,231,0.78) !important; }
+html.light .bg-zinc-800\/70 { background-color: rgba(228,228,231,0.84) !important; }
+html.light .bg-zinc-800\/80 { background-color: rgba(228,228,231,0.90) !important; }
+html.light .bg-zinc-800\/95 { background-color: rgba(228,228,231,0.96) !important; }
+html.light .bg-zinc-700\/30 { background-color: rgba(212,212,216,0.42) !important; }
+html.light .bg-zinc-700\/50 { background-color: rgba(212,212,216,0.62) !important; }
+html.light .bg-zinc-700\/80 { background-color: rgba(212,212,216,0.88) !important; }
 
-html.light .ring-zinc-800 { --tw-ring-color: #d4d4d8 !important; }
+/* Sidebar active-icon bg (bg-white/10) → very subtle dark tint */
+html.light .bg-white\/10   { background-color: rgba(0,0,0,0.06) !important; }
 
+/* Modal overlay */
+html.light .bg-black\/50   { background-color: rgba(0,0,0,0.35) !important; }
+
+/* ── Text ───────────────────────────────────────────────────────────────────── */
+/* text-white is used in WelcomeMark h2, DealFlow, AudienceScore, and FloatingChatbot
+   header — all on dark-gradient backgrounds that our CSS overrides to light.
+   Making it dark here is correct: dark text on a now-light background.          */
+html.light .text-white    { color: #18181b !important; }
 html.light .text-zinc-100 { color: #18181b !important; }
 html.light .text-zinc-200 { color: #27272a !important; }
 html.light .text-zinc-300 { color: #3f3f46 !important; }
 html.light .text-zinc-400 { color: #52525b !important; }
 html.light .text-zinc-500 { color: #71717a !important; }
 html.light .text-zinc-600 { color: #a1a1aa !important; }
+html.light .text-zinc-700 { color: #d4d4d8 !important; }
 
-html.light .hover\:bg-zinc-800:hover { background-color: #e4e4e7 !important; }
-html.light .hover\:bg-zinc-800\/30:hover { background-color: rgba(228,228,231,0.5) !important; }
-html.light .hover\:bg-zinc-800\/40:hover { background-color: rgba(228,228,231,0.6) !important; }
-html.light .hover\:bg-zinc-800\/50:hover { background-color: rgba(228,228,231,0.7) !important; }
-html.light .hover\:bg-zinc-700:hover { background-color: #d4d4d8 !important; }
+/* hover text */
+html.light .hover\:text-zinc-100:hover { color: #18181b !important; }
+html.light .hover\:text-zinc-200:hover { color: #27272a !important; }
+html.light .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
 
-html.light .divide-zinc-800\/40 > * + * { border-color: rgba(212,212,216,0.5) !important; }
+/* ── Borders ────────────────────────────────────────────────────────────────── */
+html.light .border-zinc-800     { border-color: #d4d4d8 !important; }
+html.light .border-zinc-800\/20 { border-color: rgba(212,212,216,0.32) !important; }
+html.light .border-zinc-800\/30 { border-color: rgba(212,212,216,0.44) !important; }
+html.light .border-zinc-800\/40 { border-color: rgba(212,212,216,0.56) !important; }
+html.light .border-zinc-800\/50 { border-color: rgba(212,212,216,0.66) !important; }
+html.light .border-zinc-800\/60 { border-color: rgba(212,212,216,0.76) !important; }
+html.light .border-zinc-800\/80 { border-color: rgba(212,212,216,0.90) !important; }
+html.light .border-zinc-700     { border-color: #d4d4d8 !important; }
+html.light .border-zinc-700\/30 { border-color: rgba(212,212,216,0.44) !important; }
+html.light .border-zinc-700\/40 { border-color: rgba(212,212,216,0.56) !important; }
+html.light .border-zinc-700\/50 { border-color: rgba(212,212,216,0.66) !important; }
+html.light .border-zinc-700\/60 { border-color: rgba(212,212,216,0.76) !important; }
+html.light .border-zinc-700\/80 { border-color: rgba(212,212,216,0.90) !important; }
 
-html.light ::-webkit-scrollbar-track { background: #f0f0f3; }
-html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; }
+/* hover borders */
+html.light .hover\:border-zinc-700:hover   { border-color: #c4c4c8 !important; }
+html.light .hover\:border-zinc-600:hover   { border-color: #a1a1aa !important; }
+
+/* ── Ring ───────────────────────────────────────────────────────────────────── */
+html.light .ring-zinc-800 { --tw-ring-color: #d4d4d8 !important; }
+html.light .ring-zinc-700 { --tw-ring-color: #c8c8cc !important; }
+html.light .ring-zinc-600 { --tw-ring-color: #a1a1aa !important; }
+
+/* ── Hover backgrounds ──────────────────────────────────────────────────────── */
+html.light .hover\:bg-zinc-800:hover     { background-color: #e8e8eb !important; }
+html.light .hover\:bg-zinc-800\/20:hover { background-color: rgba(228,228,231,0.38) !important; }
+html.light .hover\:bg-zinc-800\/30:hover { background-color: rgba(228,228,231,0.52) !important; }
+html.light .hover\:bg-zinc-800\/40:hover { background-color: rgba(228,228,231,0.62) !important; }
+html.light .hover\:bg-zinc-800\/50:hover { background-color: rgba(228,228,231,0.72) !important; }
+html.light .hover\:bg-zinc-800\/70:hover { background-color: rgba(228,228,231,0.86) !important; }
+html.light .hover\:bg-zinc-800\/80:hover { background-color: rgba(228,228,231,0.92) !important; }
+html.light .hover\:bg-zinc-700:hover     { background-color: #d4d4d8 !important; }
+html.light .hover\:bg-zinc-700\/80:hover { background-color: rgba(212,212,216,0.88) !important; }
+
+/* ── Divide ─────────────────────────────────────────────────────────────────── */
+html.light .divide-zinc-800\/40 > * + * { border-color: rgba(212,212,216,0.52) !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   CINEMATIC GRADIENT OVERRIDES
+   ─────────────────────────────────────────────────────────────────────────────
+   Problem: every card has an absolute-positioned overlay div with a dark gradient
+   like "from-amber-950/15 via-zinc-900 to-zinc-950". The dark gradient CSS
+   variables (--tw-gradient-from, --tw-gradient-stops, --tw-gradient-to) are
+   completely separate from background-color and are untouched by the solid-bg
+   overrides above. This section neutralises them all.
+
+   We use [class*="from-X-950"] attribute substring selectors so that ALL opacity
+   variants (/15, /20, /25, /30, /35, /40) are caught without enumerating each.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── from-zinc-* (sidebar bg, WelcomeMark, FloatingChatbot header) ── */
+html.light .from-zinc-950 {
+  --tw-gradient-from: #ebebee var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(235,235,238,0)) !important;
+}
+html.light .from-zinc-900 {
+  --tw-gradient-from: #ffffff var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)) !important;
+}
+html.light [class*="from-zinc-800"] {
+  --tw-gradient-from: rgba(228,228,231,0.30) var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(228,228,231,0)) !important;
+}
+
+/* ── from-amber-950 (all /XX variants) → whisper of warm gold ── */
+html.light [class*="from-amber-950"] {
+  --tw-gradient-from: rgba(245,158,11,0.06) var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(245,158,11,0)) !important;
+}
+
+/* ── from-blue-950 → whisper of blue ── */
+html.light [class*="from-blue-950"] {
+  --tw-gradient-from: rgba(59,130,246,0.05) var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59,130,246,0)) !important;
+}
+
+/* ── from-emerald-950 → whisper of green ── */
+html.light [class*="from-emerald-950"] {
+  --tw-gradient-from: rgba(16,185,129,0.05) var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(16,185,129,0)) !important;
+}
+
+/* ── from-purple-950 → whisper of purple ── */
+html.light [class*="from-purple-950"] {
+  --tw-gradient-from: rgba(168,85,247,0.05) var(--tw-gradient-from-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(168,85,247,0)) !important;
+}
+
+/* ── via-zinc-* ── */
+html.light .via-zinc-950 {
+  --tw-gradient-stops:
+    var(--tw-gradient-from),
+    rgba(235,235,238,0.55) var(--tw-gradient-via-position),
+    var(--tw-gradient-to, rgba(235,235,238,0)) !important;
+}
+html.light .via-zinc-900 {
+  --tw-gradient-stops:
+    var(--tw-gradient-from),
+    rgba(255,255,255,0.60) var(--tw-gradient-via-position),
+    var(--tw-gradient-to, rgba(255,255,255,0)) !important;
+}
+
+/* ── via-blue-950 (WelcomeMark, FloatingChatbot header) ── */
+html.light [class*="via-blue-950"] {
+  --tw-gradient-stops:
+    var(--tw-gradient-from),
+    rgba(59,130,246,0.04) var(--tw-gradient-via-position),
+    var(--tw-gradient-to, rgba(59,130,246,0)) !important;
+}
+
+/* ── to-zinc-* ── */
+html.light .to-zinc-950 { --tw-gradient-to: #ebebee var(--tw-gradient-to-position) !important; }
+html.light .to-zinc-900 { --tw-gradient-to: #ffffff var(--tw-gradient-to-position) !important; }
+
+/* ── SVG hardcoded stroke fix (Dashboard AudienceScore/DealFlow track ring) ── */
+html.light [stroke="#1f1f23"] { stroke: #e4e4e7 !important; }
+html.light [stroke="#27272a"] { stroke: #d4d4d8 !important; }
+html.light [stroke="#3f3f46"] { stroke: #e4e4e7 !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   RECHARTS — CSS overrides for SVG axes, grids, and tick labels
+   (Recharts tooltip inline styles are fixed in PerformanceChart.jsx via useTheme)
+   ══════════════════════════════════════════════════════════════════════════════ */
+html.light .recharts-cartesian-axis-line  { stroke: #d4d4d8 !important; }
+html.light .recharts-cartesian-axis-tick-line { stroke: #d4d4d8 !important; }
+html.light .recharts-cartesian-grid-horizontal line,
+html.light .recharts-cartesian-grid-vertical   line { stroke: #e8e8eb !important; }
+html.light .recharts-text tspan { fill: #71717a !important; }
+html.light .recharts-legend-item-text { color: #52525b !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   FORM CONTROLS
+   ══════════════════════════════════════════════════════════════════════════════ */
+html.light input[type="text"],
+html.light input[type="email"],
+html.light input[type="password"],
+html.light input:not([type]),
+html.light textarea,
+html.light select {
+  background-color: rgba(228,228,231,0.55) !important;
+  color: #27272a !important;
+  border-color: #d4d4d8 !important;
+}
+html.light input::placeholder,
+html.light textarea::placeholder { color: #a1a1aa !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SCROLLBARS
+   ══════════════════════════════════════════════════════════════════════════════ */
+html.light ::-webkit-scrollbar-track { background: #ebebee; }
+html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
 html.light ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
-/* ─────────────────────────────────────────────────────────── */
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+/* ── end light theme ─────────────────────────────────────────────────────────── */
 
-::-webkit-scrollbar-track {
-  background: #18181b;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #18181b; }
+::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #52525b; }
 
-::-webkit-scrollbar-thumb {
-  background: #3f3f46;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #52525b;
-}
-
-.font-mono {
-  font-family: 'JetBrains Mono', monospace;
-}
-
-.tabular-nums {
-  font-variant-numeric: tabular-nums;
-}
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.tabular-nums { font-variant-numeric: tabular-nums; }

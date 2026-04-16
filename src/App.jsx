@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Layout } from './components/layout/Layout';
 import { Dashboard } from './components/dashboard/Dashboard';
 import { FilmFinancingView } from './components/verticals/FilmFinancingView';
@@ -7,6 +8,25 @@ import { MusicView } from './components/verticals/MusicView';
 import { AgentChat } from './components/agents/AgentChat';
 import { Settings } from './components/settings/Settings';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
+import { useTheme } from './utils/useTheme';
+
+// Toaster that reacts to theme changes via the mulbros-theme custom event
+const ThemedToaster = () => {
+  const theme = useTheme();
+  const isLight = theme === 'light';
+  return (
+    <Toaster
+      position="bottom-right"
+      toastOptions={{
+        style: isLight
+          ? { background: '#ffffff', color: '#18181b', border: '1px solid #d4d4d8' }
+          : { background: '#27272a', color: '#f4f4f5', border: '1px solid #3f3f46' },
+        success: { iconTheme: { primary: '#10b981', secondary: isLight ? '#ffffff' : '#18181b' } },
+        error:   { iconTheme: { primary: '#ef4444', secondary: isLight ? '#ffffff' : '#18181b' } },
+      }}
+    />
+  );
+};
 
 function App() {
   const [activePage, setActivePage] = useState('dashboard');
@@ -49,10 +69,13 @@ function App() {
   };
 
   return (
-    <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent}>
-      {renderPage()}
-      <FloatingChatbot appState={appState} />
-    </Layout>
+    <>
+      <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent}>
+        {renderPage()}
+        <FloatingChatbot appState={appState} />
+      </Layout>
+      <ThemedToaster />
+    </>
   );
 }
 

@@ -13,13 +13,16 @@ const OPENAI_KEY = process.env.OPENAI_API_KEY || '';
 app.use(express.json());
 
 // AI proxy — avoids CORS when calling OpenAI from the browser
+// Priority: client-sent Authorization header (from localStorage key in Settings)
+// Fallback: OPENAI_API_KEY env var (set on Render for production deploys)
 app.post('/api/ai', async (req, res) => {
   try {
+    const authHeader = req.headers['authorization'] || (OPENAI_KEY ? `Bearer ${OPENAI_KEY}` : '');
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_KEY}`,
+        'Authorization': authHeader,
       },
       body: JSON.stringify(req.body),
     });
