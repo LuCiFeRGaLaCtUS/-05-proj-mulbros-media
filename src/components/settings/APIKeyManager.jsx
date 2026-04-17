@@ -3,7 +3,7 @@ import { Loader2, Check, Zap, Eye, EyeOff } from 'lucide-react';
 import { testAIKey } from '../../utils/ai';
 
 const OTHER_SERVICES = [
-  'OpenRouter', 'Supabase URL', 'Supabase Anon Key',
+  'OpenRouter',
   'Spotify API', 'YouTube API', 'Instagram Graph API', 'Mailchimp API', 'Vercel Token'
 ];
 

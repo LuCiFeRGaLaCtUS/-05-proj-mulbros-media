@@ -4,6 +4,8 @@ import { Layout } from './components/layout/Layout';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './utils/useTheme';
+import { useAuth } from './hooks/useAuth';
+import { LoginPage } from './components/auth/LoginPage';
 
 // M4: Route-level code splitting — each view is a separate chunk loaded on demand
 const Dashboard         = lazy(() => import('./components/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
@@ -39,6 +41,8 @@ const ThemedToaster = () => {
 };
 
 function App() {
+  const { session, user, loading, signOut } = useAuth();
+
   const [activePage, setActivePage]           = useState('dashboard');
   const [preselectedAgent, setPreselectedAgent] = useState(null);
   // M8: removed dead state (campaigns, messages, target, contentType) — never consumed by any routed page
@@ -56,22 +60,32 @@ function App() {
     setPreselectedAgent,
   }), [activePage, setActivePage, preselectedAgent, setPreselectedAgent]);
 
+  // Auth loading spinner
+  if (loading) return (
+    <div className="min-h-screen bg-[#060508] flex items-center justify-center">
+      <div className="w-6 h-6 rounded-full border-2 border-amber-500 border-t-transparent animate-spin" />
+    </div>
+  );
+
+  // Auth gate — show login if no session
+  if (!session) return <LoginPage />;
+
   const renderPage = () => {
     switch (activePage) {
       case 'dashboard':   return <Dashboard onAgentClick={handleAgentClick} setActivePage={setActivePage} />;
-      case 'financing':   return <FilmFinancingView />;
+      case 'financing':   return <FilmFinancingView user={user} />;
       case 'productions': return <ProductionsView />;
-      case 'music':       return <MusicView onAgentClick={handleAgentClick} />;
-      case 'calendar':    return <CalendarView />;
-      case 'agents':      return <AgentChat preselectedAgentId={preselectedAgent} onClose={() => setPreselectedAgent(null)} />;
-      case 'settings':    return <Settings />;
+      case 'music':       return <MusicView onAgentClick={handleAgentClick} user={user} />;
+      case 'calendar':    return <CalendarView user={user} />;
+      case 'agents':      return <AgentChat user={user} preselectedAgentId={preselectedAgent} onClose={() => setPreselectedAgent(null)} />;
+      case 'settings':    return <Settings user={user} />;
       default:            return <Dashboard onAgentClick={handleAgentClick} />;
     }
   };
 
   return (
     <>
-      <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent}>
+      <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent} user={user} signOut={signOut}>
         <ErrorBoundary key={activePage}>
           {/* M4: Suspense boundary wraps lazy-loaded route components */}
           <Suspense fallback={<PageLoader />}>

@@ -63,7 +63,9 @@ const applyTheme = (theme) => {
   window.dispatchEvent(new CustomEvent('mulbros-theme', { detail: theme }));
 };
 
-export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuClick }) => {
+export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuClick, user, signOut }) => {
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+  const initials    = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen]   = useState(false);
   const [notifOpen, setNotifOpen]     = useState(false);
@@ -359,7 +361,7 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
               boxShadow: profileOpen ? '0 0 16px rgba(245,158,11,0.2)' : 'none',
             }}
           >
-            AC
+            {initials}
           </button>
 
           {profileOpen && (
@@ -377,10 +379,10 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
                   style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.12)' }}>
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
                     style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.08))', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.25)' }}>
-                    AC
+                    {initials}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-zinc-100 truncate">Arghya Chowdhury</div>
+                    <div className="text-sm font-bold text-zinc-100 truncate">{displayName}</div>
                     <div className="flex items-center gap-1 mt-0.5">
                       <span className="chip" style={{ background: 'rgba(245,158,11,0.08)', color: 'rgba(245,158,11,0.7)', border: '1px solid rgba(245,158,11,0.15)', fontSize: '8px' }}>ADMIN</span>
                     </div>
@@ -415,7 +417,7 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
 
                 <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm"
                   style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.2)' }}>
-                  AC
+                  {initials}
                 </div>
               </div>
 
@@ -437,11 +439,7 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
                 <div className="h-px my-1" style={{ background: 'rgba(255,255,255,0.05)' }} />
 
                 <button
-                  onClick={() => {
-                    ['mulbros_openai_key', 'mulbros_settings', 'mulbros_notifications',
-                     'mulbros_integration_toggles', 'mulbros_theme'].forEach(k => localStorage.removeItem(k));
-                    window.location.reload();
-                  }}
+                  onClick={signOut}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all text-zinc-400"
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.06)'; e.currentTarget.style.color = '#f87171'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = ''; }}

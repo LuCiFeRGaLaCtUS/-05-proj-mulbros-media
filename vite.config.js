@@ -70,6 +70,10 @@ export default defineConfig(({ mode }) => {
             if (id.includes('/date-fns/')) {
               return 'vendor-dates';
             }
+            // Supabase client
+            if (id.includes('@supabase/')) {
+              return 'vendor-supabase';
+            }
             // React ecosystem + everything else → single vendor chunk (avoids circular chunks)
             return 'vendor';
           },

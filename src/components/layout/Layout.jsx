@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
-export const Layout = ({ children, activePage, setActivePage, setPreselectedAgent }) => {
+export const Layout = ({ children, activePage, setActivePage, setPreselectedAgent, user, signOut }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -58,6 +58,8 @@ export const Layout = ({ children, activePage, setActivePage, setPreselectedAgen
         setActivePage={setActivePage}
         setPreselectedAgent={setPreselectedAgent}
         onMenuClick={() => setSidebarOpen(true)}
+        user={user}
+        signOut={signOut}
       />
 
       <main className="relative lg:ml-64 pt-16 min-h-screen" style={{ zIndex: 1 }}>
