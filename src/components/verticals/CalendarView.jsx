@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { callAIFast } from '../../utils/ai';
+import { useCalendar } from '../../hooks/useCalendar';
 import {
   ChevronLeft, ChevronRight, Plus, Sparkles,
   Clock, CheckCircle2, FileText, Loader2, Trash2,
@@ -13,7 +14,6 @@ import {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY = 'mulbros_calendar_v1';
 
 const PLATFORMS = {
   talise: [
@@ -56,9 +56,6 @@ const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const genId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
-const loadPosts = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } };
-const savePosts = posts => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(posts)); } catch {} };
 
 // ── Violet bg accent ──────────────────────────────────────────────────────────
 const VioletBg = () => (
@@ -136,7 +133,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
 
   const handleAdd = () => {
     if (!content.trim()) return;
-    onAdd({ id: genId(), date: format(date, 'yyyy-MM-dd'), talent, platform, content: content.trim(), scheduledTime: time || null, status: 'draft' });
+    onAdd({ date: format(date, 'yyyy-MM-dd'), talent, platform, content: content.trim(), scheduledTime: time || null, status: 'draft' });
     onClose();
   };
 
@@ -357,20 +354,19 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
 };
 
 // ── Main export ───────────────────────────────────────────────────────────────
-export const CalendarView = () => {
+export const CalendarView = ({ user }) => {
   const [talent,  setTalent]  = useState('talise');
   const [view,    setView]    = useState('week');   // 'week' | 'month'
   const [cursor,  setCursor]  = useState(new Date());
-  const [posts,   setPosts]   = useState(loadPosts);
 
-  // Persist on every change
-  useEffect(() => { savePosts(posts); }, [posts]);
+  const { posts, addPost, deletePost, cycleStatus } = useCalendar(user?.id);
 
-  const addPost    = post => setPosts(prev => [...prev, post]);
-  const deletePost = id   => setPosts(prev => prev.filter(p => p.id !== id));
-  const cycleStatus = id  => setPosts(prev =>
-    prev.map(p => p.id === id ? { ...p, status: STATUS_CFG[p.status]?.next || 'draft' } : p)
-  );
+  const handleCycleStatus = (id) => {
+    const post = posts.find(p => p.id === id);
+    if (!post) return;
+    const nextStatus = STATUS_CFG[post.status]?.next || 'draft';
+    cycleStatus(id, nextStatus);
+  };
 
   const weekStart  = startOfWeek(cursor, { weekStartsOn: 1 });
   const monthStart = startOfMonth(cursor);
@@ -527,7 +523,7 @@ export const CalendarView = () => {
               talent={talent}
               posts={posts}
               onAdd={addPost}
-              onCycle={cycleStatus}
+              onCycle={handleCycleStatus}
               onDelete={deletePost}
             />
           ) : (
@@ -536,7 +532,7 @@ export const CalendarView = () => {
               talent={talent}
               posts={posts}
               onAdd={addPost}
-              onCycle={cycleStatus}
+              onCycle={handleCycleStatus}
               onDelete={deletePost}
             />
           )}

@@ -1,36 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { APIKeyManager } from './APIKeyManager';
 import { IntegrationToggles } from './IntegrationToggles';
 import { TeamManager } from './TeamManager';
+import { useUserSettings } from '../../hooks/useUserSettings';
 
 const tabs = ['General', 'API Keys', 'Integrations', 'Team', 'Notifications'];
 
-export const Settings = () => {
+export const Settings = ({ user }) => {
   const [activeTab, setActiveTab] = useState('general');
   const [isDirty, setIsDirty] = useState(false);
-  const [settings, setSettings] = useState({
-    organization: 'Mulbros Entertainment LLC',
-    engagementType: 'AI-Native Multi-Agent System',
-    vendor: 'FSZT Partners LLC',
-    methodology: '4D Framework (Diagnose, Design, Deploy, Defend)'
-  });
 
-  const [notifications, setNotifications] = useState({
-    inApp: true, email: false, slack: false,
-    dailyDigest: true, agentErrors: true, campaignMilestones: true
-  });
+  const {
+    settings, setSettings,
+    notifications, setNotifications,
+    saveSettings,
+  } = useUserSettings(user?.id);
 
-  useEffect(() => {
-    const stored = localStorage.getItem('mulbros_settings');
-    if (stored) setSettings(JSON.parse(stored));
-  }, []);
-
-  const handleSave = () => {
-    localStorage.setItem('mulbros_settings', JSON.stringify(settings));
-    localStorage.setItem('mulbros_notifications', JSON.stringify(notifications));
-    setIsDirty(false);
-    toast.success('Settings saved successfully');
+  const handleSave = async () => {
+    const { error } = await saveSettings(settings, notifications);
+    if (error) {
+      toast.error('Failed to save settings');
+    } else {
+      setIsDirty(false);
+      toast.success('Settings saved successfully');
+    }
   };
 
   return (

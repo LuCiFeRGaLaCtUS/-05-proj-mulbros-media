@@ -11,9 +11,10 @@ import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import {
   taliseBio, taliseStreamingStats, taliseRelationships,
-  lukeBio, lukeMetrics, lukePipeline,
+  lukeBio, lukeMetrics,
   activities
 } from '../../config/mockData';
+import { useMusicPipeline } from '../../hooks/useMusicPipeline';
 import { Bot, Sparkles, Music, Piano, Clock, Pencil, Check, X, GripVertical } from 'lucide-react';
 
 // ── Cinematic background — amber theme ───────────────────────────────────────
@@ -234,25 +235,9 @@ const LukeCardEdit = ({ draft, onChange, onSave, onCancel }) => (
 );
 
 // ─── Luke overview ────────────────────────────────────────────────────────────
-const LUKE_PIPELINE_KEY = 'mulbros_luke_pipeline';
-const loadLukePipeline = () => {
-  try {
-    const stored = localStorage.getItem(LUKE_PIPELINE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return Object.fromEntries(
-    Object.entries(lukePipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
-  );
-};
-
-const LukeOverview = ({ onAgentClick }) => {
-  // M17: persist Luke pipeline across navigation — loads from localStorage on mount
-  const [pipeline, setPipeline] = useState(loadLukePipeline);
-
-  // Persist whenever pipeline changes
-  useEffect(() => {
-    try { localStorage.setItem(LUKE_PIPELINE_KEY, JSON.stringify(pipeline)); } catch {}
-  }, [pipeline]);
+const LukeOverview = ({ onAgentClick, userId }) => {
+  // Persist Luke pipeline to Supabase
+  const { pipeline, setPipeline } = useMusicPipeline(userId);
   const [editing, setEditing] = useState(null);   // { stage, index }
   const [editDraft, setEditDraft] = useState({});
   const [activeCardId, setActiveCardId] = useState(null);
@@ -426,7 +411,7 @@ const LukeOverview = ({ onAgentClick }) => {
 };
 
 // ─── Main view ────────────────────────────────────────────────────────────────
-export const MusicView = ({ onAgentClick }) => {
+export const MusicView = ({ onAgentClick, user }) => {
   const [talent, setTalent] = useState('talise');
   const [activeTab, setActiveTab] = useState('Overview');
   const tabs = ['Overview', 'Activity'];
@@ -542,7 +527,7 @@ export const MusicView = ({ onAgentClick }) => {
       {activeTab === 'Overview' && (
         talent === 'talise'
           ? <TaliseOverview />
-          : <LukeOverview onAgentClick={onAgentClick} />
+          : <LukeOverview onAgentClick={onAgentClick} userId={user?.id} />
       )}
 
       {activeTab === 'Activity' && (

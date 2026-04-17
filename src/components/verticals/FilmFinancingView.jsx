@@ -10,7 +10,8 @@ import {
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { filmFinancingPipeline, activities } from '../../config/mockData';
+import { activities } from '../../config/mockData';
+import { useFilmPipeline } from '../../hooks/useFilmPipeline';
 import { callAI } from '../../utils/ai';
 import { getJurisdictionPromptContext, getTopJurisdictions } from '../../config/jurisdictions';
 import {
@@ -1306,28 +1307,12 @@ const PipelineTab = ({ pipeline, setPipeline }) => {
 
 // ─── Main view ────────────────────────────────────────────────────────────────
 
-const FILM_PIPELINE_KEY = 'mulbros_film_pipeline';
-const loadFilmPipeline = () => {
-  try {
-    const stored = localStorage.getItem(FILM_PIPELINE_KEY);
-    if (stored) return JSON.parse(stored);
-  } catch {}
-  return Object.fromEntries(
-    Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
-  );
-};
-
-export const FilmFinancingView = () => {
+export const FilmFinancingView = ({ user }) => {
   const [activeTab, setActiveTab] = useState('Lead Gen');
   const tabs = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
-  // ── Shared pipeline state — persisted to localStorage (M17) ──────────────
-  const [pipeline, setPipeline] = useState(loadFilmPipeline);
-
-  // Save to localStorage whenever pipeline changes
-  useEffect(() => {
-    try { localStorage.setItem(FILM_PIPELINE_KEY, JSON.stringify(pipeline)); } catch {}
-  }, [pipeline]);
+  // ── Shared pipeline state — persisted to Supabase ────────────────────────
+  const { pipeline, setPipeline } = useFilmPipeline(user?.id);
 
   // Called by LeadGenTab when user clicks "Add to Pipeline"
   const handleAddToPipeline = (lead) => {

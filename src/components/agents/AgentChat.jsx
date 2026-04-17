@@ -7,24 +7,13 @@ import { SuggestedPrompts } from './SuggestedPrompts';
 import { getAgentById } from '../../config/agents';
 import { callAI, getApiKey } from '../../utils/ai';
 import { verticalColors } from '../../config/verticalColors';
+import { useAgentChats } from '../../hooks/useAgentChats';
 
 const initials = (name) =>
   name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
-const now = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-// M19: persist chat history per agent in sessionStorage (cleared when tab closes)
-const HISTORY_KEY = (id) => `mulbros_chat_${id}`;
-const loadHistory = (id) => {
-  try { return JSON.parse(sessionStorage.getItem(HISTORY_KEY(id)) || '[]'); } catch { return []; }
-};
-const saveHistory = (id, msgs) => {
-  try { sessionStorage.setItem(HISTORY_KEY(id), JSON.stringify(msgs)); } catch {}
-};
-
-export const AgentChat = ({ preselectedAgentId, onClose }) => {
+export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
   const [selectedAgent, setSelectedAgent] = useState(preselectedAgentId || 'film-financing-discovery');
-  const [messages, setMessages]           = useState(() => loadHistory(preselectedAgentId || 'film-financing-discovery'));
   const [input, setInput]                 = useState('');
   const [isLoading, setIsLoading]         = useState(false);
   const messagesEndRef = useRef(null);
@@ -32,15 +21,11 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
   const agent = getAgentById(selectedAgent) || getAgentById('film-financing-discovery');
   const vc    = verticalColors[agent?.vertical] || verticalColors.financing;
 
-  // Persist history whenever messages change
-  useEffect(() => {
-    saveHistory(selectedAgent, messages);
-  }, [selectedAgent, messages]);
+  const { messages, addMessage, clearHistory } = useAgentChats(user?.id, selectedAgent);
 
   useEffect(() => {
     if (preselectedAgentId && preselectedAgentId !== selectedAgent) {
       setSelectedAgent(preselectedAgentId);
-      setMessages(loadHistory(preselectedAgentId));
     }
   }, [preselectedAgentId]);
 
@@ -50,34 +35,30 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
 
   const switchAgent = useCallback((id) => {
     setSelectedAgent(id);
-    setMessages(loadHistory(id));
   }, []);
-
-  const clearHistory = () => {
-    setMessages([]);
-    saveHistory(selectedAgent, []);
-  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
 
-    const userMessage = { role: 'user', content: input, timestamp: now() };
-    const newMessages = [...messages, userMessage];
-    setMessages(newMessages);
+    const userContent = input;
     setInput('');
     setIsLoading(true);
+
+    // Optimistic user message (hook handles the DB insert)
+    await addMessage('user', userContent);
 
     try {
       const apiKey = getApiKey();
       if (!apiKey) {
         throw new Error('No API key configured. Go to Settings → API Keys and paste your OpenAI key.');
       }
-      const apiMessages = newMessages.map(({ role, content }) => ({ role, content }));
-      const response    = await callAI(agent.systemPrompt, apiMessages, apiKey, agent.model);
-      setMessages([...newMessages, { role: 'assistant', content: response, timestamp: now() }]);
+      // Build message history for the API call
+      const apiMessages = [...messages, { role: 'user', content: userContent }]
+        .map(({ role, content }) => ({ role, content }));
+      const response = await callAI(agent.systemPrompt, apiMessages, apiKey, agent.model);
+      await addMessage('assistant', response);
     } catch (error) {
       toast.error(error.message || 'Failed to get response from agent');
-      setMessages(newMessages);
     } finally {
       setIsLoading(false);
     }
