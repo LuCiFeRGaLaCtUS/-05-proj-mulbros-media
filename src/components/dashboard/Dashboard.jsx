@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell
@@ -7,8 +7,9 @@ import {
   DollarSign, Users, Music, Film, Clapperboard,
   TrendingUp, TrendingDown, ArrowRight, Star,
   Award, Radio, Mic, Play, Zap, Clock, CheckCircle2,
-  ExternalLink
+  ExternalLink, Search, Sparkles, Target, Brain, BarChart2
 } from 'lucide-react';
+import { AgentStatusGrid } from './AgentStatusGrid';
 
 const C = {
   gold:    '#f59e0b',
@@ -35,21 +36,130 @@ const PLATFORM_DATA = [
 ];
 const PLATFORM_COLORS = [C.gold, C.purple, C.rose, C.blue];
 
+// ── Count-up animation hook ────────────────────────────────────────────────────
+const useCountUp = (target, duration = 1400, delay = 0) => {
+  const [count, setCount] = useState(0);
+  const rafRef = useRef(null);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const start = performance.now();
+      const step = (now) => {
+        const t = Math.min((now - start) / duration, 1);
+        const eased = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+        setCount(Math.floor(eased * target));
+        if (t < 1) rafRef.current = requestAnimationFrame(step);
+        else setCount(target);
+      };
+      rafRef.current = requestAnimationFrame(step);
+    }, delay);
+    return () => {
+      clearTimeout(timer);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [target, duration, delay]);
+  return count;
+};
+
+// ── Section Label ─────────────────────────────────────────────────────────────
+const SectionLabel = ({ label, sub }) => (
+  <div className="flex items-center gap-3 pt-1">
+    <span className="text-[10px] font-black tracking-[0.28em] text-zinc-600 uppercase flex-shrink-0"
+      style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      {label}
+    </span>
+    {sub && <span className="text-[10px] text-zinc-700 flex-shrink-0">· {sub}</span>}
+    <div className="flex-1 h-px bg-zinc-800/80" />
+  </div>
+);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// QUICK ACTIONS BAR — agent launcher shortcuts
+// ══════════════════════════════════════════════════════════════════════════════
+const QUICK_ACTIONS = [
+  {
+    id: 'film-financing-discovery',
+    label: 'Lead Discovery',
+    sub: 'Find filmmakers on Reddit & Stage32',
+    Icon: Search,
+    color: C.blue,
+    colorCls: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', hover: 'hover:border-blue-500/40 hover:bg-blue-500/15', icon: 'text-blue-400', text: 'text-blue-400', dot: 'bg-blue-400' },
+  },
+  {
+    id: 'film-financing-analyst',
+    label: 'Incentive Analyst',
+    sub: 'Generate tax-credit benchmarks',
+    Icon: BarChart2,
+    color: C.blue,
+    colorCls: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', hover: 'hover:border-blue-500/40 hover:bg-blue-500/15', icon: 'text-blue-400', text: 'text-blue-400', dot: 'bg-blue-400' },
+  },
+  {
+    id: 'talise-marketing',
+    label: 'Talise Marketing',
+    sub: 'TikTok plans & playlist pitches',
+    Icon: Music,
+    color: C.gold,
+    colorCls: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', hover: 'hover:border-amber-500/40 hover:bg-amber-500/15', icon: 'text-amber-400', text: 'text-amber-400', dot: 'bg-amber-400' },
+  },
+  {
+    id: 'luke-sales',
+    label: 'Luke Outreach',
+    sub: 'Score new composer deals',
+    Icon: Target,
+    color: C.emerald,
+    colorCls: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', hover: 'hover:border-emerald-500/40 hover:bg-emerald-500/15', icon: 'text-emerald-400', text: 'text-emerald-400', dot: 'bg-emerald-400' },
+  },
+  {
+    id: 'mulbros-intelligence',
+    label: 'MulBros Intel',
+    sub: 'Cross-vertical strategy',
+    Icon: Brain,
+    color: C.purple,
+    colorCls: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', hover: 'hover:border-purple-500/40 hover:bg-purple-500/15', icon: 'text-purple-400', text: 'text-purple-400', dot: 'bg-purple-500' },
+  },
+];
+
+const QuickActionsBar = ({ onAgentClick }) => (
+  <div className="grid grid-cols-5 gap-3">
+    {QUICK_ACTIONS.map(({ id, label, sub, Icon, colorCls }) => (
+      <button
+        key={id}
+        onClick={() => onAgentClick(id)}
+        className={`
+          group relative flex items-center gap-3 rounded-xl p-3.5
+          border ${colorCls.border} ${colorCls.bg} ${colorCls.hover}
+          transition-all duration-200 cursor-pointer text-left
+          active:scale-[0.97] hover:shadow-lg hover:shadow-black/20
+        `}
+      >
+        <div className={`w-8 h-8 rounded-lg ${colorCls.bg} flex items-center justify-center flex-shrink-0 border ${colorCls.border} group-hover:scale-110 transition-transform duration-200`}>
+          <Icon size={15} className={colorCls.icon} />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors leading-tight truncate"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>
+            {label}
+          </p>
+          <p className="text-[10px] text-zinc-600 group-hover:text-zinc-500 transition-colors mt-0.5 leading-tight truncate">
+            {sub}
+          </p>
+        </div>
+        <ArrowRight size={11} className={`${colorCls.text} opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex-shrink-0`} />
+      </button>
+    ))}
+  </div>
+);
+
 // ══════════════════════════════════════════════════════════════════════════════
 // THEMATIC BACKGROUNDS  — all opacity values use valid Tailwind modifiers only
-// (/10 /15 /20 /25 /30 etc.) — NO /12 /08 or non-standard values
 // ══════════════════════════════════════════════════════════════════════════════
 
 const BgRevenue = () => (
   <>
     <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-zinc-950 pointer-events-none" />
-    {/* glow — use opacity-10 (valid) and blur-xl (not blur-2xl) to avoid white-circle artefact */}
     <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-blue-500/10 blur-xl pointer-events-none" />
-    {/* reel rings — all use /10 or /15 (valid) */}
     <div className="absolute right-8 top-1/2 -translate-y-1/2 w-28 h-28 rounded-full border border-blue-500/10 pointer-events-none" />
     <div className="absolute right-12 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-blue-500/15 pointer-events-none" />
     <div className="absolute right-16 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-blue-500/20 pointer-events-none" />
-    {/* ticket perforations bottom */}
     <div className="absolute bottom-2 left-4 right-4 flex justify-around pointer-events-none">
       {Array.from({ length: 12 }).map((_, i) => <div key={i} className="w-1 h-1 rounded-full bg-blue-400/10" />)}
     </div>
@@ -61,13 +171,11 @@ const BgStreams = () => (
   <>
     <div className="absolute inset-0 bg-gradient-to-br from-amber-950/30 via-zinc-900 to-zinc-950 pointer-events-none" />
     <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-amber-500/10 blur-xl pointer-events-none" />
-    {/* equalizer bars */}
     <div className="absolute right-4 bottom-4 flex items-end gap-[3px] pointer-events-none opacity-10">
       {[14, 22, 10, 26, 18, 30, 16, 24, 12, 20].map((h, i) => (
         <div key={i} className="w-1.5 rounded-t-sm bg-amber-400" style={{ height: h }} />
       ))}
     </div>
-    {/* sound-wave arcs — /10 and /15 only */}
     <div className="absolute right-14 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-amber-500/10 pointer-events-none" />
     <div className="absolute right-10 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-amber-500/15 pointer-events-none" />
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(245,158,11,0.07),transparent_60%)] pointer-events-none" />
@@ -78,7 +186,6 @@ const BgDeals = () => (
   <>
     <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/30 via-zinc-900 to-zinc-950 pointer-events-none" />
     <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-emerald-500/10 blur-xl pointer-events-none" />
-    {/* clapperboard stripes */}
     <div className="absolute top-0 right-0 w-20 h-8 overflow-hidden rounded-bl-lg pointer-events-none opacity-10">
       {[0,1,2,3,4].map(i => (
         <div key={i} className="absolute h-16 w-3 bg-emerald-400"
@@ -250,41 +357,47 @@ const BgTimeline = () => (
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ROW 1 — Interactive Stat Cards
+// ROW 1 — Interactive Stat Cards with count-up animation
 // ══════════════════════════════════════════════════════════════════════════════
-const StatCard = ({ title, value, change, changeUp, sub, Icon, iconBg, iconColor, accentColor, Bg, onClick, linkLabel }) => (
-  <button
-    onClick={onClick}
-    className="relative w-full text-left bg-zinc-900 rounded-2xl p-5 ring-1 ring-zinc-800 hover:ring-zinc-600 transition-all overflow-hidden shadow-xl shadow-black/30 group cursor-pointer active:scale-[0.98]"
-    style={{ '--accent': accentColor }}
-  >
-    <Bg />
-    <div className="relative z-10 flex items-center justify-between">
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-2">{title}</p>
-        <p className="text-[1.65rem] font-black text-zinc-100 leading-none mb-2">{value}</p>
-        <div className="flex items-center gap-1.5">
-          {changeUp
-            ? <TrendingUp size={10} className="text-emerald-400 flex-shrink-0" />
-            : <TrendingDown size={10} className="text-red-400 flex-shrink-0" />}
-          <span className={`text-xs font-bold ${changeUp ? 'text-emerald-400' : 'text-red-400'}`}>{change}</span>
-          {sub && <span className="text-xs text-zinc-600 ml-0.5">{sub}</span>}
+const StatCardAnimated = ({ title, value, numericValue, formatter, change, changeUp, sub, Icon, iconBg, iconColor, accentColor, Bg, onClick, linkLabel, delay = 0 }) => {
+  const counted = useCountUp(numericValue, 1400, delay);
+  const display = formatter ? formatter(counted) : counted.toLocaleString();
+
+  return (
+    <button
+      onClick={onClick}
+      className="relative w-full text-left bg-zinc-900 rounded-2xl p-5 ring-1 ring-zinc-800 hover:ring-zinc-600 transition-all overflow-hidden shadow-xl shadow-black/30 group cursor-pointer active:scale-[0.98]"
+      style={{ '--accent': accentColor }}
+    >
+      <Bg />
+      <div className="relative z-10 flex items-center justify-between">
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-2"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>{title}</p>
+          <p className="text-[1.65rem] font-black text-zinc-100 leading-none mb-2 tabular-nums"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>{display}</p>
+          <div className="flex items-center gap-1.5">
+            {changeUp
+              ? <TrendingUp size={10} className="text-emerald-400 flex-shrink-0" />
+              : <TrendingDown size={10} className="text-red-400 flex-shrink-0" />}
+            <span className={`text-xs font-bold ${changeUp ? 'text-emerald-400' : 'text-red-400'}`}>{change}</span>
+            {sub && <span className="text-xs text-zinc-600 ml-0.5">{sub}</span>}
+          </div>
+        </div>
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ml-4 ${iconBg} group-hover:scale-110 transition-transform duration-300`}>
+          <Icon size={22} className={iconColor} />
         </div>
       </div>
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ml-4 ${iconBg} group-hover:scale-110 transition-transform duration-300`}>
-        <Icon size={22} className={iconColor} />
+      <div className="relative z-10 flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <ExternalLink size={10} className="text-zinc-500" />
+        <span className="text-[10px] text-zinc-500">{linkLabel}</span>
       </div>
-    </div>
-    {/* hover reveal link hint */}
-    <div className="relative z-10 flex items-center gap-1 mt-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-      <ExternalLink size={10} className="text-zinc-500" />
-      <span className="text-[10px] text-zinc-500">{linkLabel}</span>
-    </div>
-  </button>
-);
+    </button>
+  );
+};
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ROW 2 — Welcome Banner
+// ROW 2 — Welcome Banner (enhanced with gradient headline)
 // ══════════════════════════════════════════════════════════════════════════════
 const WelcomeMark = ({ onGoToAgents }) => (
   <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden shadow-2xl shadow-black/50 h-full" style={{ minHeight: 290 }}>
@@ -300,23 +413,48 @@ const WelcomeMark = ({ onGoToAgents }) => (
     </div>
     <div className="absolute right-20 top-1/2 -translate-y-1/2 w-64 h-64 rounded-full border border-white/[0.04] pointer-events-none" />
     <div className="absolute right-8 top-1/2 -translate-y-1/2 w-48 h-48 rounded-full border border-amber-500/10 pointer-events-none" />
+
     <div className="relative z-10 px-10 py-8 h-full flex flex-col justify-between">
       <div>
         <div className="flex items-center gap-2 mb-5">
           <Film size={13} className="text-amber-400" />
-          <span className="text-[10px] font-black text-amber-400 uppercase tracking-[0.22em]">Studio Command Center</span>
+          <span className="text-[10px] font-black text-amber-400 uppercase tracking-[0.22em]"
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>Studio Command Center</span>
         </div>
         <p className="text-zinc-400 text-sm mb-1 font-medium">Welcome back,</p>
-        <h2 className="text-4xl font-black text-white mb-3 tracking-tight leading-none">MulBros Media</h2>
+        <h2 className="text-4xl font-black leading-none mb-3 tracking-tight"
+          style={{
+            fontFamily: "'DM Sans', sans-serif",
+            background: 'linear-gradient(135deg, #ffffff 0%, #f59e0b 50%, #3b82f6 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
+          MulBros Media
+        </h2>
         <p className="text-zinc-400 text-sm leading-relaxed max-w-xs">
           Your AI-powered Hollywood OS is live.<br />
-          <span className="text-amber-400 font-semibold">4 agents</span> active ·{' '}
+          <span className="text-amber-400 font-semibold">9 agents</span> active ·{' '}
           <span className="text-blue-400 font-semibold">$214K</span> pipeline ·{' '}
           <span className="text-emerald-400 font-semibold">3 verticals</span>
         </p>
       </div>
+
+      {/* Vertical pills */}
+      <div className="flex gap-2 mt-4">
+        {[
+          { label: 'Film Financing', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+          { label: 'Productions', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+          { label: 'Music & Comp.', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+        ].map(({ label, color }) => (
+          <span key={label} className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${color}`}
+            style={{ fontFamily: "'DM Sans', sans-serif" }}>{label}</span>
+        ))}
+      </div>
+
       <button onClick={onGoToAgents}
-        className="self-start inline-flex items-center gap-2 mt-6 text-sm font-bold text-white bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 hover:border-amber-500/50 rounded-xl px-5 py-2.5 transition-all group/btn active:scale-95">
+        className="self-start inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 hover:border-amber-500/50 rounded-xl px-5 py-2.5 transition-all group/btn active:scale-95"
+        style={{ fontFamily: "'DM Sans', sans-serif" }}>
         <Play size={13} className="text-amber-400 group-hover/btn:scale-110 transition-transform" />
         Open Agent Hub
         <ArrowRight size={13} className="text-amber-400 group-hover/btn:translate-x-0.5 transition-transform" />
@@ -336,7 +474,7 @@ const AudienceScore = ({ onClick }) => {
       <BgAudienceScore />
       <div className="relative z-10 mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-bold text-zinc-100">Audience Score</h3>
+          <h3 className="text-sm font-bold text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>Audience Score</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Across all releases</p>
         </div>
         <ExternalLink size={12} className="text-zinc-600 group-hover:text-amber-400 transition-colors mt-0.5" />
@@ -356,7 +494,7 @@ const AudienceScore = ({ onClick }) => {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
             <Star size={15} className="text-amber-400" fill="#f59e0b" />
-            <span className="text-2xl font-black text-white leading-none">95%</span>
+            <span className="text-2xl font-black text-white leading-none" style={{ fontFamily: "'DM Sans', sans-serif" }}>95%</span>
             <span className="text-[10px] text-zinc-500">rating</span>
           </div>
         </div>
@@ -381,7 +519,7 @@ const DealFlow = ({ onClick }) => {
       <BgDealFlow />
       <div className="relative z-10 mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-bold text-zinc-100">Deal Flow</h3>
+          <h3 className="text-sm font-bold text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>Deal Flow</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Luke composer pipeline</p>
         </div>
         <ExternalLink size={12} className="text-zinc-600 group-hover:text-emerald-400 transition-colors mt-0.5" />
@@ -390,7 +528,7 @@ const DealFlow = ({ onClick }) => {
         {[{ label: 'Active Leads', value: '14' }, { label: 'Confirmed $', value: '$30K' }].map(({ label, value }) => (
           <div key={label} className="bg-zinc-800/60 rounded-xl p-3 border border-zinc-700/30 hover:border-emerald-500/20 transition-colors">
             <p className="text-[10px] text-zinc-500 mb-1">{label}</p>
-            <p className="text-lg font-black text-zinc-100">{value}</p>
+            <p className="text-lg font-black text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>{value}</p>
           </div>
         ))}
       </div>
@@ -402,7 +540,7 @@ const DealFlow = ({ onClick }) => {
               strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-black text-white leading-none">9.3</span>
+            <span className="text-lg font-black text-white leading-none" style={{ fontFamily: "'DM Sans', sans-serif" }}>9.3</span>
             <span className="text-[9px] text-zinc-500 mt-0.5">score</span>
           </div>
         </div>
@@ -438,7 +576,7 @@ const RevenueChart = ({ onClick }) => {
       <BgRevenueChart />
       <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800/60">
         <div>
-          <h3 className="text-sm font-bold text-zinc-100">Revenue Pipeline</h3>
+          <h3 className="text-sm font-bold text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>Revenue Pipeline</h3>
           <p className="text-xs text-zinc-500 mt-0.5">6-month forecast · click legend to toggle</p>
         </div>
         <div className="flex items-center gap-4">
@@ -517,7 +655,7 @@ const PlatformChart = ({ onClick }) => {
       <BgPlatformChart />
       <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800/60">
         <div>
-          <h3 className="text-sm font-bold text-zinc-100">Talise — Platform Reach</h3>
+          <h3 className="text-sm font-bold text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>Talise — Platform Reach</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Monthly audience by platform</p>
         </div>
         <ExternalLink size={12} className="text-zinc-600 group-hover:text-amber-400 transition-colors" />
@@ -560,7 +698,8 @@ const ProgressCard = ({ Icon, iconBg, iconColor, title, value, pct, color, sub, 
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[11px] text-zinc-500 uppercase tracking-wider">{title}</p>
-        <p className="text-lg font-black text-zinc-100 leading-tight">{value}</p>
+        <p className="text-lg font-black text-zinc-100 leading-tight"
+          style={{ fontFamily: "'DM Sans', sans-serif" }}>{value}</p>
       </div>
       <ExternalLink size={11} className="text-zinc-700 group-hover:text-zinc-400 transition-colors flex-shrink-0" />
     </div>
@@ -598,7 +737,7 @@ const ProjectsTable = ({ onRowClick }) => {
       <BgProjectsTable />
       <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800/60">
         <div>
-          <h3 className="text-sm font-bold text-zinc-100">Active Projects</h3>
+          <h3 className="text-sm font-bold text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>Active Projects</h3>
           <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
             <CheckCircle2 size={11} className="text-emerald-400" />
             3 projects delivered this quarter
@@ -658,7 +797,7 @@ const ActivityTimeline = ({ onItemClick }) => {
       <BgTimeline />
       <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800/60">
         <div>
-          <h3 className="text-sm font-bold text-zinc-100">Studio Activity</h3>
+          <h3 className="text-sm font-bold text-zinc-100" style={{ fontFamily: "'DM Sans', sans-serif" }}>Studio Activity</h3>
           <p className="text-xs mt-0.5 flex items-center gap-1.5">
             <TrendingUp size={11} className="text-emerald-400" />
             <span className="text-emerald-400 font-bold">+28%</span>
@@ -701,30 +840,40 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
   return (
     <div className="space-y-5">
 
+      {/* Quick Actions */}
+      <SectionLabel label="Quick Launch" sub="AI agents ready" />
+      <QuickActionsBar onAgentClick={onAgentClick} />
+
       {/* Row 1 — 4 interactive themed stat cards */}
+      <SectionLabel label="Metrics" sub="live indicators" />
       <div className="grid grid-cols-4 gap-4">
-        <StatCard title="Box Office Revenue" value="$30,000" change="+12.4%" changeUp   sub="confirmed"
-          Icon={DollarSign}  iconBg="bg-blue-500/20"    iconColor="text-blue-400"
+        <StatCardAnimated title="Box Office Revenue" numericValue={30000} formatter={v => `$${v.toLocaleString()}`}
+          change="+12.4%" changeUp sub="confirmed"
+          Icon={DollarSign} iconBg="bg-blue-500/20" iconColor="text-blue-400"
           accentColor={C.blue} Bg={BgRevenue}
-          onClick={() => nav('financing')} linkLabel="View Film Financing →" />
+          onClick={() => nav('financing')} linkLabel="View Film Financing →" delay={0} />
 
-        <StatCard title="Monthly Streams"    value="85,230"  change="+8.2%"  changeUp   sub="Talise"
-          Icon={Music}        iconBg="bg-amber-500/20"   iconColor="text-amber-400"
+        <StatCardAnimated title="Monthly Streams" numericValue={85230} formatter={v => v.toLocaleString()}
+          change="+8.2%" changeUp sub="Talise"
+          Icon={Music} iconBg="bg-amber-500/20" iconColor="text-amber-400"
           accentColor={C.gold} Bg={BgStreams}
-          onClick={() => nav('music')} linkLabel="View Music & Composition →" />
+          onClick={() => nav('music')} linkLabel="View Music & Composition →" delay={80} />
 
-        <StatCard title="Active Deals"       value="14"      change="+3"     changeUp   sub="pipeline"
+        <StatCardAnimated title="Active Deals" numericValue={14} formatter={v => String(v)}
+          change="+3" changeUp sub="pipeline"
           Icon={Clapperboard} iconBg="bg-emerald-500/20" iconColor="text-emerald-400"
           accentColor={C.emerald} Bg={BgDeals}
-          onClick={() => nav('financing')} linkLabel="View Deal Pipeline →" />
+          onClick={() => nav('financing')} linkLabel="View Deal Pipeline →" delay={160} />
 
-        <StatCard title="Fan Community"      value="2,847"   change="-2.1%"  changeUp={false} sub="members"
-          Icon={Users}        iconBg="bg-purple-500/20"  iconColor="text-purple-400"
+        <StatCardAnimated title="Fan Community" numericValue={2847} formatter={v => v.toLocaleString()}
+          change="-2.1%" changeUp={false} sub="members"
+          Icon={Users} iconBg="bg-purple-500/20" iconColor="text-purple-400"
           accentColor={C.purple} Bg={BgCommunity}
-          onClick={() => nav('music')} linkLabel="View Community →" />
+          onClick={() => nav('music')} linkLabel="View Community →" delay={240} />
       </div>
 
       {/* Row 2 — WelcomeMark (6) + AudienceScore (3) + DealFlow (3) */}
+      <SectionLabel label="Overview" sub="studio command" />
       <div className="grid grid-cols-12 gap-4" style={{ minHeight: 290 }}>
         <div className="col-span-6"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
         <div className="col-span-3"><AudienceScore onClick={() => nav('music')} /></div>
@@ -732,12 +881,14 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
       </div>
 
       {/* Row 3 — Revenue AreaChart (7) + Platform BarChart (5) */}
+      <SectionLabel label="Analytics" sub="6-month forecast · platform reach" />
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-7"><RevenueChart onClick={() => nav('financing')} /></div>
         <div className="col-span-5"><PlatformChart onClick={() => nav('music')} /></div>
       </div>
 
       {/* Row 4 — 4 progress metric cards */}
+      <SectionLabel label="Targets" sub="progress to goal" />
       <div className="grid grid-cols-4 gap-4">
         <ProgressCard Icon={Film}       iconBg="bg-emerald-500/20" iconColor="text-emerald-400"
           title="Last County Streams" value="142,847" pct={71} color={C.emerald} sub="Target: 200K"
@@ -757,10 +908,15 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
       </div>
 
       {/* Row 5 — Projects table (7) + Activity timeline (5) */}
+      <SectionLabel label="Operations" sub="projects · studio activity" />
       <div className="grid grid-cols-12 gap-4">
         <div className="col-span-7"><ProjectsTable onRowClick={(page) => nav(page)} /></div>
         <div className="col-span-5"><ActivityTimeline onItemClick={(page) => nav(page)} /></div>
       </div>
+
+      {/* Row 6 — Agent Fleet */}
+      <SectionLabel label="Agent Fleet" sub="9 agents online" />
+      <AgentStatusGrid onAgentClick={onAgentClick} />
 
     </div>
   );
