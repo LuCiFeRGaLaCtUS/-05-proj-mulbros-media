@@ -7,7 +7,7 @@ import {
   DollarSign, Users, Music, Film, Clapperboard,
   TrendingUp, TrendingDown, ArrowRight, Star,
   Award, Radio, Mic, Play, Zap, Clock, CheckCircle2,
-  ExternalLink, Search, Sparkles, Target, Brain, BarChart2,
+  ExternalLink, Sparkles,
   Wind, Droplets, Eye, Thermometer, MapPin, RefreshCw, Sunrise, Sunset,
 } from 'lucide-react';
 import { AgentStatusGrid } from './AgentStatusGrid';
@@ -20,6 +20,9 @@ const C = {
   red:     '#ef4444',
   rose:    '#f43f5e',
 };
+
+// Logged-in user — consistent with TopBar.jsx; wire to auth/settings when ready
+const USER_NAME = 'Arghya Chowdhury';
 
 const REVENUE_DATA = [
   { month: 'Oct', financing: 12000, music: 4500,  productions: 8000  },
@@ -74,80 +77,139 @@ const SectionLabel = ({ label, sub }) => (
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
-// QUICK ACTIONS BAR — agent launcher shortcuts
+// WELCOME HERO — replaces Quick Launch; shows greeting + live clock + weather
 // ══════════════════════════════════════════════════════════════════════════════
-const QUICK_ACTIONS = [
-  {
-    id: 'film-financing-discovery',
-    label: 'Lead Discovery',
-    sub: 'Find filmmakers on Reddit & Stage32',
-    Icon: Search,
-    color: C.blue,
-    colorCls: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', hover: 'hover:border-blue-500/40 hover:bg-blue-500/15', icon: 'text-blue-400', text: 'text-blue-400', dot: 'bg-blue-400' },
-  },
-  {
-    id: 'film-financing-analyst',
-    label: 'Incentive Analyst',
-    sub: 'Generate tax-credit benchmarks',
-    Icon: BarChart2,
-    color: C.blue,
-    colorCls: { bg: 'bg-blue-500/10', border: 'border-blue-500/20', hover: 'hover:border-blue-500/40 hover:bg-blue-500/15', icon: 'text-blue-400', text: 'text-blue-400', dot: 'bg-blue-400' },
-  },
-  {
-    id: 'talise-marketing',
-    label: 'Talise Marketing',
-    sub: 'TikTok plans & playlist pitches',
-    Icon: Music,
-    color: C.gold,
-    colorCls: { bg: 'bg-amber-500/10', border: 'border-amber-500/20', hover: 'hover:border-amber-500/40 hover:bg-amber-500/15', icon: 'text-amber-400', text: 'text-amber-400', dot: 'bg-amber-400' },
-  },
-  {
-    id: 'luke-sales',
-    label: 'Luke Outreach',
-    sub: 'Score new composer deals',
-    Icon: Target,
-    color: C.emerald,
-    colorCls: { bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', hover: 'hover:border-emerald-500/40 hover:bg-emerald-500/15', icon: 'text-emerald-400', text: 'text-emerald-400', dot: 'bg-emerald-400' },
-  },
-  {
-    id: 'mulbros-intelligence',
-    label: 'MulBros Intel',
-    sub: 'Cross-vertical strategy',
-    Icon: Brain,
-    color: C.purple,
-    colorCls: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', hover: 'hover:border-purple-500/40 hover:bg-purple-500/15', icon: 'text-purple-400', text: 'text-purple-400', dot: 'bg-purple-500' },
-  },
-];
+const WelcomeHero = () => {
+  const [liveNow, setLiveNow] = useState(new Date());
 
-const QuickActionsBar = ({ onAgentClick }) => (
-  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-    {QUICK_ACTIONS.map(({ id, label, sub, Icon, colorCls }) => (
-      <button
-        key={id}
-        onClick={() => onAgentClick(id)}
-        className={`
-          tile-pop group relative flex items-center gap-3 rounded-xl p-3.5
-          border ${colorCls.border} ${colorCls.bg} ${colorCls.hover}
-          cursor-pointer text-left
-        `}
-      >
-        <div className={`w-8 h-8 rounded-lg ${colorCls.bg} flex items-center justify-center flex-shrink-0 border ${colorCls.border} group-hover:scale-110 transition-transform duration-200`}>
-          <Icon size={15} className={colorCls.icon} />
+  useEffect(() => {
+    const id = setInterval(() => setLiveNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const greeting = () => {
+    const h = liveNow.getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  const dateStr = liveNow.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  });
+  const timeStr = liveNow.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+  const [firstName] = USER_NAME.split(' ');
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+
+      {/* ── Left: welcome panel ─────────────────────────────────────────────── */}
+      <div className="lg:col-span-9 relative rounded-2xl overflow-hidden tile-pop"
+        style={{
+          background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1c 60%, #08080f 100%)',
+          border: '1px solid rgba(245,158,11,0.12)',
+          boxShadow: '0 0 40px rgba(245,158,11,0.04)',
+          minHeight: 180,
+        }}>
+
+        {/* Ambient glows */}
+        <div className="absolute -top-16 -left-16 w-72 h-72 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.07) 0%, transparent 70%)' }} />
+        <div className="absolute -bottom-10 right-20 w-56 h-56 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%)' }} />
+        <div className="absolute top-1/2 right-0 w-40 h-40 rounded-full pointer-events-none"
+          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.03) 0%, transparent 70%)' }} />
+
+        {/* Top accent line */}
+        <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: 'linear-gradient(to right, transparent, rgba(245,158,11,0.45) 35%, rgba(34,211,238,0.2) 65%, transparent)' }} />
+
+        {/* Dot grid overlay */}
+        <div className="absolute inset-0 bg-dot-grid opacity-35 pointer-events-none" />
+
+        {/* Scanline overlay */}
+        <div className="absolute inset-0 scanlines opacity-30 pointer-events-none" />
+
+        <div className="relative z-10 p-7 flex flex-col justify-between h-full" style={{ minHeight: 180 }}>
+
+          {/* Top row: greeting text + live clock */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              {/* Status tag */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="w-1.5 h-1.5 rounded-full online-dot"
+                  style={{ color: '#22d3ee', background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)' }} />
+                <span className="text-[10px] font-black uppercase tracking-[0.32em]"
+                  style={{ color: 'rgba(34,211,238,0.6)' }}>
+                  {greeting()} · Studio Active
+                </span>
+              </div>
+
+              {/* Main headline */}
+              <h1 className="text-[2.6rem] font-black leading-[1.1] mb-0.5"
+                style={{ color: '#f0f0f2', textShadow: '0 0 40px rgba(245,158,11,0.12)' }}>
+                Welcome back,
+              </h1>
+              <h1 className="text-[2.6rem] font-black leading-[1.1]"
+                style={{
+                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 45%, #22d3ee 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}>
+                {firstName}.
+              </h1>
+            </div>
+
+            {/* Live clock + date */}
+            <div className="flex-shrink-0 flex flex-col items-end gap-2">
+              <div className="px-4 py-2.5 rounded-xl flex items-center gap-2"
+                style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.12)' }}>
+                <div className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: '#22d3ee', boxShadow: '0 0 5px rgba(34,211,238,0.9)' }} />
+                <span className="font-mono text-2xl font-black tabular-nums"
+                  style={{ color: 'rgba(34,211,238,0.9)', letterSpacing: '-0.02em' }}>
+                  {timeStr}
+                </span>
+              </div>
+              <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                {dateStr}
+              </span>
+            </div>
+          </div>
+
+          {/* Bottom: status pills */}
+          <div className="flex items-center gap-2 mt-6 flex-wrap">
+            {[
+              { label: 'Studio Online',    color: '#22d3ee' },
+              { label: '9 Agents Active',  color: '#34d399' },
+              { label: '$214K Pipeline',   color: '#f59e0b' },
+              { label: '3 Verticals Live', color: '#a78bfa' },
+            ].map(({ label, color }) => (
+              <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
+                style={{
+                  background: `${color}0d`,
+                  border: `1px solid ${color}22`,
+                }}>
+                <div className="w-1 h-1 rounded-full flex-shrink-0"
+                  style={{ background: color, boxShadow: `0 0 4px ${color}` }} />
+                <span className="text-[11px] font-semibold tracking-wide"
+                  style={{ color: `${color}cc` }}>
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs font-bold text-zinc-200 group-hover:text-white transition-colors leading-tight truncate"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}>
-            {label}
-          </p>
-          <p className="text-[10px] text-zinc-600 group-hover:text-zinc-500 transition-colors mt-0.5 leading-tight truncate">
-            {sub}
-          </p>
-        </div>
-        <ArrowRight size={11} className={`${colorCls.text} opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all flex-shrink-0`} />
-      </button>
-    ))}
-  </div>
-);
+      </div>
+
+      {/* ── Right: weather tile (vertical) ─────────────────────────────────── */}
+      <div className="lg:col-span-3">
+        <WeatherTile />
+      </div>
+    </div>
+  );
+};
 
 // ══════════════════════════════════════════════════════════════════════════════
 // THEMATIC BACKGROUNDS  — all opacity values use valid Tailwind modifiers only
@@ -1042,9 +1104,8 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
   return (
     <div className="space-y-5">
 
-      {/* Quick Actions */}
-      <SectionLabel label="Quick Launch" sub="AI agents ready" />
-      <QuickActionsBar onAgentClick={onAgentClick} />
+      {/* Hero — Welcome greeting + live weather */}
+      <WelcomeHero />
 
       {/* Row 1 — 4 interactive themed stat cards */}
       <SectionLabel label="Metrics" sub="live indicators" />
@@ -1074,13 +1135,12 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
           onClick={() => nav('music')} linkLabel="View Community →" delay={240} />
       </div>
 
-      {/* Row 2 — WelcomeMark + AudienceScore + DealFlow + WeatherTile */}
-      <SectionLabel label="Overview" sub="studio command · live weather" />
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4" style={{ minHeight: 290 }}>
-        <div className="sm:col-span-2 lg:col-span-5"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
+      {/* Row 2 — WelcomeMark + AudienceScore + DealFlow */}
+      <SectionLabel label="Overview" sub="studio command" />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: 290 }}>
+        <div className="lg:col-span-6"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
         <div className="lg:col-span-3"><AudienceScore onClick={() => nav('music')} /></div>
-        <div className="lg:col-span-2"><DealFlow onClick={() => nav('financing')} /></div>
-        <div className="lg:col-span-2"><WeatherTile /></div>
+        <div className="lg:col-span-3"><DealFlow onClick={() => nav('financing')} /></div>
       </div>
 
       {/* Row 3 — Revenue AreaChart + Platform BarChart */}
