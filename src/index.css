@@ -2,31 +2,294 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   MULBROS MEDIA OS — DESIGN SYSTEM
+   Hollywood × Cyberpunk 2077 × Agentic Intelligence
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ── CSS Custom Properties ─────────────────────────────────────────────────── */
+:root {
+  --brand:          #f59e0b;
+  --brand-dim:      rgba(245,158,11,0.15);
+  --brand-glow:     rgba(245,158,11,0.35);
+  --cyan:           #22d3ee;
+  --cyan-dim:       rgba(34,211,238,0.12);
+  --cyan-glow:      rgba(34,211,238,0.30);
+  --magenta:        #e879f9;
+  --magenta-dim:    rgba(232,121,249,0.10);
+  --neon-green:     #4ade80;
+  --surface-0:      #050507;
+  --surface-1:      #08080d;
+  --surface-2:      #0d0d14;
+  --surface-3:      #12121a;
+  --surface-card:   #0f0f17;
+  --border-dim:     rgba(255,255,255,0.05);
+  --border-mid:     rgba(255,255,255,0.09);
+  --border-bright:  rgba(255,255,255,0.15);
+  --grid-color:     rgba(255,255,255,0.025);
+}
+
 html, body, #root {
   height: 100%;
   font-family: 'Inter', system-ui, sans-serif;
-  background-color: #09090b;
-  color: #f4f4f5;
+  background-color: var(--surface-0);
+  color: #e4e4e7;
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   LIGHT THEME — COMPLETE OVERRIDE SYSTEM
-   Mechanism: TopBar adds/removes .light on <html>. Every dark class below
-   is remapped to its light-mode equivalent. Inline-style fixes live in JS.
+   KEYFRAME ANIMATIONS
    ══════════════════════════════════════════════════════════════════════════════ */
 
-/* ── Root ───────────────────────────────────────────────────────────────────── */
+@keyframes neon-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--brand-glow), 0 0 16px var(--brand-dim); }
+  50%       { opacity: 0.7; box-shadow: 0 0 10px var(--brand-glow), 0 0 28px var(--brand-dim); }
+}
+
+@keyframes cyan-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--cyan-glow), 0 0 14px var(--cyan-dim); }
+  50%       { opacity: 0.65; box-shadow: 0 0 12px var(--cyan-glow), 0 0 30px var(--cyan-dim); }
+}
+
+@keyframes online-ping {
+  0%   { transform: scale(1);   opacity: 0.7; }
+  70%  { transform: scale(2.2); opacity: 0;   }
+  100% { transform: scale(2.2); opacity: 0;   }
+}
+
+@keyframes scan-line {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  10%  { opacity: 0.6; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+@keyframes flicker {
+  0%, 95%, 100% { opacity: 1; }
+  96%            { opacity: 0.85; }
+  97%            { opacity: 1; }
+  98%            { opacity: 0.9; }
+}
+
+@keyframes data-stream {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 0% 100%; }
+}
+
+@keyframes hud-in {
+  from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes type-cursor {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+@keyframes glow-border {
+  0%, 100% { border-color: rgba(245,158,11,0.25); }
+  50%       { border-color: rgba(245,158,11,0.55); }
+}
+
+@keyframes noise {
+  0%   { transform: translate(0,0); }
+  10%  { transform: translate(-2%,-3%); }
+  20%  { transform: translate(3%,2%); }
+  30%  { transform: translate(-1%,4%); }
+  40%  { transform: translate(4%,-1%); }
+  50%  { transform: translate(-3%,3%); }
+  60%  { transform: translate(2%,-4%); }
+  70%  { transform: translate(-4%,1%); }
+  80%  { transform: translate(1%,-2%); }
+  90%  { transform: translate(-2%,4%); }
+  100% { transform: translate(0,0); }
+}
+
+@keyframes neural-dots {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
+  40%            { transform: scale(1.1); opacity: 1;   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   UTILITY CLASSES — CYBERPUNK DESIGN SYSTEM
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Glow text ── */
+.text-glow-brand  { text-shadow: 0 0 10px var(--brand-glow), 0 0 24px var(--brand-dim); }
+.text-glow-cyan   { text-shadow: 0 0 10px var(--cyan-glow),  0 0 24px var(--cyan-dim);  }
+
+/* ── Neon glow boxes ── */
+.glow-brand  { box-shadow: 0 0 0 1px var(--brand-dim), 0 0 20px var(--brand-dim), inset 0 0 20px var(--brand-dim); }
+.glow-cyan   { box-shadow: 0 0 0 1px var(--cyan-dim),  0 0 20px var(--cyan-dim),  inset 0 0 14px var(--cyan-dim);  }
+.glow-card   { box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 0 1px var(--border-dim); }
+
+/* ── Animated neon elements ── */
+.animate-neon-pulse  { animation: neon-pulse  2.4s ease-in-out infinite; }
+.animate-cyan-pulse  { animation: cyan-pulse  2.8s ease-in-out infinite; }
+.animate-flicker     { animation: flicker     6s   linear      infinite; }
+.animate-hud-in      { animation: hud-in      0.18s ease-out   both;     }
+.animate-slide-left  { animation: slide-in-left 0.22s ease-out both;     }
+
+/* ── Grid background ── */
+.bg-grid {
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ── Dot grid background ── */
+.bg-dot-grid {
+  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* ── Scanline overlay ── */
+.scanlines::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.08) 2px,
+    rgba(0,0,0,0.08) 4px
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ── HUD corner accents ── */
+.hud-corners {
+  position: relative;
+}
+.hud-corners::before,
+.hud-corners::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: var(--brand);
+  border-style: solid;
+  opacity: 0.5;
+}
+.hud-corners::before {
+  top: 0; left: 0;
+  border-width: 1px 0 0 1px;
+}
+.hud-corners::after {
+  bottom: 0; right: 0;
+  border-width: 0 1px 1px 0;
+}
+
+/* ── Glass panel ── */
+.glass {
+  background: rgba(13,13,20,0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.glass-light {
+  background: rgba(18,18,26,0.70);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* ── Neural typing indicator ── */
+.neural-dot {
+  animation: neural-dots 1.4s ease-in-out infinite both;
+}
+.neural-dot:nth-child(1) { animation-delay: 0s;    }
+.neural-dot:nth-child(2) { animation-delay: 0.16s; }
+.neural-dot:nth-child(3) { animation-delay: 0.32s; }
+
+/* ── Neon border gradient ── */
+.border-neon-brand {
+  border: 1px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+.border-neon-brand::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--brand-dim), transparent 60%, var(--cyan-dim));
+  z-index: -1;
+}
+
+/* ── Chip label ── */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Online badge ── */
+.online-dot {
+  position: relative;
+  display: inline-block;
+}
+.online-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: online-ping 1.6s ease-out infinite;
+  background: currentColor;
+}
+
+/* ── Mono data font ── */
+.font-mono { font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   SCROLLBARS — Cyberpunk
+   ══════════════════════════════════════════════════════════════════════════════ */
+::-webkit-scrollbar              { width: 4px; height: 4px; }
+::-webkit-scrollbar-track        { background: var(--surface-1); }
+::-webkit-scrollbar-thumb        { background: rgba(245,158,11,0.25); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover  { background: rgba(245,158,11,0.50); }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   RECHARTS — SVG axes, grids, tick labels
+   ══════════════════════════════════════════════════════════════════════════════ */
+.recharts-cartesian-axis-line         { stroke: rgba(255,255,255,0.06) !important; }
+.recharts-cartesian-axis-tick-line    { stroke: rgba(255,255,255,0.06) !important; }
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical   line { stroke: rgba(255,255,255,0.04) !important; }
+.recharts-text tspan  { fill: #52525b !important; font-size: 11px !important; }
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   LIGHT THEME — complete override system
+   Mechanism: TopBar adds/removes .light on <html>.
+   ══════════════════════════════════════════════════════════════════════════════ */
+
 html.light,
 html.light body,
 html.light #root {
   background-color: #f1f1f4 !important;
   color: #18181b !important;
+  --surface-0: #f1f1f4;
+  --surface-1: #ffffff;
+  --surface-2: #e8e8ec;
+  --grid-color: rgba(0,0,0,0.03);
 }
 
 /* ── Solid zinc backgrounds ─────────────────────────────────────────────────── */
@@ -36,7 +299,7 @@ html.light .bg-zinc-800  { background-color: #e4e4e7 !important; }
 html.light .bg-zinc-700  { background-color: #d4d4d8 !important; }
 html.light .bg-zinc-600  { background-color: #a1a1aa !important; }
 
-/* ── Zinc backgrounds with opacity ─────────────────────────────────────────── */
+/* ── Zinc with opacity ─────────────────────────────────────────────────────── */
 html.light .bg-zinc-950\/95 { background-color: rgba(242,242,245,0.97) !important; }
 html.light .bg-zinc-950\/30 { background-color: rgba(228,228,231,0.30) !important; }
 html.light .bg-zinc-900\/80 { background-color: rgba(255,255,255,0.92) !important; }
@@ -53,17 +316,10 @@ html.light .bg-zinc-800\/95 { background-color: rgba(228,228,231,0.96) !importan
 html.light .bg-zinc-700\/30 { background-color: rgba(212,212,216,0.42) !important; }
 html.light .bg-zinc-700\/50 { background-color: rgba(212,212,216,0.62) !important; }
 html.light .bg-zinc-700\/80 { background-color: rgba(212,212,216,0.88) !important; }
+html.light .bg-white\/10    { background-color: rgba(0,0,0,0.06) !important; }
+html.light .bg-black\/50    { background-color: rgba(0,0,0,0.35) !important; }
 
-/* Sidebar active-icon bg (bg-white/10) → very subtle dark tint */
-html.light .bg-white\/10   { background-color: rgba(0,0,0,0.06) !important; }
-
-/* Modal overlay */
-html.light .bg-black\/50   { background-color: rgba(0,0,0,0.35) !important; }
-
-/* ── Text ───────────────────────────────────────────────────────────────────── */
-/* text-white is used in WelcomeMark h2, DealFlow, AudienceScore, and FloatingChatbot
-   header — all on dark-gradient backgrounds that our CSS overrides to light.
-   Making it dark here is correct: dark text on a now-light background.          */
+/* ── Text ─────────────────────────────────────────────────────────────────── */
 html.light .text-white    { color: #18181b !important; }
 html.light .text-zinc-100 { color: #18181b !important; }
 html.light .text-zinc-200 { color: #27272a !important; }
@@ -72,13 +328,11 @@ html.light .text-zinc-400 { color: #52525b !important; }
 html.light .text-zinc-500 { color: #71717a !important; }
 html.light .text-zinc-600 { color: #a1a1aa !important; }
 html.light .text-zinc-700 { color: #d4d4d8 !important; }
-
-/* hover text */
 html.light .hover\:text-zinc-100:hover { color: #18181b !important; }
 html.light .hover\:text-zinc-200:hover { color: #27272a !important; }
 html.light .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
 
-/* ── Borders ────────────────────────────────────────────────────────────────── */
+/* ── Borders ─────────────────────────────────────────────────────────────── */
 html.light .border-zinc-800     { border-color: #d4d4d8 !important; }
 html.light .border-zinc-800\/20 { border-color: rgba(212,212,216,0.32) !important; }
 html.light .border-zinc-800\/30 { border-color: rgba(212,212,216,0.44) !important; }
@@ -92,17 +346,15 @@ html.light .border-zinc-700\/40 { border-color: rgba(212,212,216,0.56) !importan
 html.light .border-zinc-700\/50 { border-color: rgba(212,212,216,0.66) !important; }
 html.light .border-zinc-700\/60 { border-color: rgba(212,212,216,0.76) !important; }
 html.light .border-zinc-700\/80 { border-color: rgba(212,212,216,0.90) !important; }
+html.light .hover\:border-zinc-700:hover { border-color: #c4c4c8 !important; }
+html.light .hover\:border-zinc-600:hover { border-color: #a1a1aa !important; }
 
-/* hover borders */
-html.light .hover\:border-zinc-700:hover   { border-color: #c4c4c8 !important; }
-html.light .hover\:border-zinc-600:hover   { border-color: #a1a1aa !important; }
-
-/* ── Ring ───────────────────────────────────────────────────────────────────── */
+/* ── Ring ────────────────────────────────────────────────────────────────── */
 html.light .ring-zinc-800 { --tw-ring-color: #d4d4d8 !important; }
 html.light .ring-zinc-700 { --tw-ring-color: #c8c8cc !important; }
 html.light .ring-zinc-600 { --tw-ring-color: #a1a1aa !important; }
 
-/* ── Hover backgrounds ──────────────────────────────────────────────────────── */
+/* ── Hover backgrounds ─────────────────────────────────────────────────────── */
 html.light .hover\:bg-zinc-800:hover     { background-color: #e8e8eb !important; }
 html.light .hover\:bg-zinc-800\/20:hover { background-color: rgba(228,228,231,0.38) !important; }
 html.light .hover\:bg-zinc-800\/30:hover { background-color: rgba(228,228,231,0.52) !important; }
@@ -113,23 +365,10 @@ html.light .hover\:bg-zinc-800\/80:hover { background-color: rgba(228,228,231,0.
 html.light .hover\:bg-zinc-700:hover     { background-color: #d4d4d8 !important; }
 html.light .hover\:bg-zinc-700\/80:hover { background-color: rgba(212,212,216,0.88) !important; }
 
-/* ── Divide ─────────────────────────────────────────────────────────────────── */
+/* ── Divide ─────────────────────────────────────────────────────────────── */
 html.light .divide-zinc-800\/40 > * + * { border-color: rgba(212,212,216,0.52) !important; }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   CINEMATIC GRADIENT OVERRIDES
-   ─────────────────────────────────────────────────────────────────────────────
-   Problem: every card has an absolute-positioned overlay div with a dark gradient
-   like "from-amber-950/15 via-zinc-900 to-zinc-950". The dark gradient CSS
-   variables (--tw-gradient-from, --tw-gradient-stops, --tw-gradient-to) are
-   completely separate from background-color and are untouched by the solid-bg
-   overrides above. This section neutralises them all.
-
-   We use [class*="from-X-950"] attribute substring selectors so that ALL opacity
-   variants (/15, /20, /25, /30, /35, /40) are caught without enumerating each.
-   ══════════════════════════════════════════════════════════════════════════════ */
-
-/* ── from-zinc-* (sidebar bg, WelcomeMark, FloatingChatbot header) ── */
+/* ── Gradient overrides ─────────────────────────────────────────────────── */
 html.light .from-zinc-950 {
   --tw-gradient-from: #ebebee var(--tw-gradient-from-position) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(235,235,238,0)) !important;
@@ -142,76 +381,48 @@ html.light [class*="from-zinc-800"] {
   --tw-gradient-from: rgba(228,228,231,0.30) var(--tw-gradient-from-position) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(228,228,231,0)) !important;
 }
-
-/* ── from-amber-950 (all /XX variants) → whisper of warm gold ── */
 html.light [class*="from-amber-950"] {
   --tw-gradient-from: rgba(245,158,11,0.06) var(--tw-gradient-from-position) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(245,158,11,0)) !important;
 }
-
-/* ── from-blue-950 → whisper of blue ── */
 html.light [class*="from-blue-950"] {
   --tw-gradient-from: rgba(59,130,246,0.05) var(--tw-gradient-from-position) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59,130,246,0)) !important;
 }
-
-/* ── from-emerald-950 → whisper of green ── */
 html.light [class*="from-emerald-950"] {
   --tw-gradient-from: rgba(16,185,129,0.05) var(--tw-gradient-from-position) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(16,185,129,0)) !important;
 }
-
-/* ── from-purple-950 → whisper of purple ── */
 html.light [class*="from-purple-950"] {
   --tw-gradient-from: rgba(168,85,247,0.05) var(--tw-gradient-from-position) !important;
   --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(168,85,247,0)) !important;
 }
-
-/* ── via-zinc-* ── */
 html.light .via-zinc-950 {
-  --tw-gradient-stops:
-    var(--tw-gradient-from),
-    rgba(235,235,238,0.55) var(--tw-gradient-via-position),
-    var(--tw-gradient-to, rgba(235,235,238,0)) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(235,235,238,0.55) var(--tw-gradient-via-position), var(--tw-gradient-to, rgba(235,235,238,0)) !important;
 }
 html.light .via-zinc-900 {
-  --tw-gradient-stops:
-    var(--tw-gradient-from),
-    rgba(255,255,255,0.60) var(--tw-gradient-via-position),
-    var(--tw-gradient-to, rgba(255,255,255,0)) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(255,255,255,0.60) var(--tw-gradient-via-position), var(--tw-gradient-to, rgba(255,255,255,0)) !important;
 }
-
-/* ── via-blue-950 (WelcomeMark, FloatingChatbot header) ── */
 html.light [class*="via-blue-950"] {
-  --tw-gradient-stops:
-    var(--tw-gradient-from),
-    rgba(59,130,246,0.04) var(--tw-gradient-via-position),
-    var(--tw-gradient-to, rgba(59,130,246,0)) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), rgba(59,130,246,0.04) var(--tw-gradient-via-position), var(--tw-gradient-to, rgba(59,130,246,0)) !important;
 }
-
-/* ── to-zinc-* ── */
 html.light .to-zinc-950 { --tw-gradient-to: #ebebee var(--tw-gradient-to-position) !important; }
 html.light .to-zinc-900 { --tw-gradient-to: #ffffff var(--tw-gradient-to-position) !important; }
 
-/* ── SVG hardcoded stroke fix (Dashboard AudienceScore/DealFlow track ring) ── */
+/* ── SVG fixes ───────────────────────────────────────────────────────────── */
 html.light [stroke="#1f1f23"] { stroke: #e4e4e7 !important; }
 html.light [stroke="#27272a"] { stroke: #d4d4d8 !important; }
 html.light [stroke="#3f3f46"] { stroke: #e4e4e7 !important; }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   RECHARTS — CSS overrides for SVG axes, grids, and tick labels
-   (Recharts tooltip inline styles are fixed in PerformanceChart.jsx via useTheme)
-   ══════════════════════════════════════════════════════════════════════════════ */
-html.light .recharts-cartesian-axis-line  { stroke: #d4d4d8 !important; }
+/* ── Recharts light ──────────────────────────────────────────────────────── */
+html.light .recharts-cartesian-axis-line     { stroke: #d4d4d8 !important; }
 html.light .recharts-cartesian-axis-tick-line { stroke: #d4d4d8 !important; }
 html.light .recharts-cartesian-grid-horizontal line,
 html.light .recharts-cartesian-grid-vertical   line { stroke: #e8e8eb !important; }
 html.light .recharts-text tspan { fill: #71717a !important; }
 html.light .recharts-legend-item-text { color: #52525b !important; }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   FORM CONTROLS
-   ══════════════════════════════════════════════════════════════════════════════ */
+/* ── Form controls light ─────────────────────────────────────────────────── */
 html.light input[type="text"],
 html.light input[type="email"],
 html.light input[type="password"],
@@ -225,19 +436,7 @@ html.light select {
 html.light input::placeholder,
 html.light textarea::placeholder { color: #a1a1aa !important; }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   SCROLLBARS
-   ══════════════════════════════════════════════════════════════════════════════ */
+/* ── Scrollbars light ────────────────────────────────────────────────────── */
 html.light ::-webkit-scrollbar-track { background: #ebebee; }
 html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
 html.light ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
-
-/* ── end light theme ─────────────────────────────────────────────────────────── */
-
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: #18181b; }
-::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #52525b; }
-
-.font-mono { font-family: 'JetBrains Mono', monospace; }
-.tabular-nums { font-variant-numeric: tabular-nums; }

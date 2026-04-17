@@ -1,31 +1,57 @@
 import React from 'react';
+import { Cpu, ChevronRight } from 'lucide-react';
 import { agentGroups } from '../../config/agents';
-
-const verticalColors = {
-  financing: { bg: 'bg-blue-500/15',    text: 'text-blue-400',    ring: 'border-blue-500/50',    dot: 'bg-blue-400'    },
-  film:      { bg: 'bg-emerald-500/15', text: 'text-emerald-400', ring: 'border-emerald-500/50', dot: 'bg-emerald-400' },
-  music:     { bg: 'bg-amber-500/15',   text: 'text-amber-400',   ring: 'border-amber-500/50',   dot: 'bg-amber-400'   },
-  composer:  { bg: 'bg-amber-500/15',   text: 'text-amber-400',   ring: 'border-amber-500/50',   dot: 'bg-amber-400'   },
-  community: { bg: 'bg-purple-500/15',  text: 'text-purple-400',  ring: 'border-purple-500/50',  dot: 'bg-purple-400'  },
-  strategy:  { bg: 'bg-rose-500/15',    text: 'text-rose-400',    ring: 'border-rose-500/50',    dot: 'bg-rose-400'    },
-};
+import { verticalColors } from '../../config/verticalColors';
 
 const initials = (name) =>
   name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
+const GroupLabel = ({ name }) => (
+  <div className="flex items-center gap-2 px-1 mb-2">
+    <div className="w-1 h-2.5 rounded-sm" style={{ background: 'rgba(34,211,238,0.5)' }} />
+    <span className="text-[9px] font-black uppercase tracking-[0.28em]"
+      style={{ color: 'rgba(34,211,238,0.45)' }}>
+      {name}
+    </span>
+    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(34,211,238,0.15), transparent)' }} />
+  </div>
+);
+
 export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
   return (
-    <div className="w-72 bg-zinc-900 border-r border-zinc-800 flex-shrink-0 flex flex-col">
-      <div className="px-4 py-4 border-b border-zinc-800/60 flex-shrink-0">
-        <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider">Agents</h3>
+    <div className="w-72 flex-shrink-0 flex flex-col"
+      style={{
+        background: '#07070e',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
+      }}>
+
+      {/* Header */}
+      <div className="px-4 py-4 flex-shrink-0 relative"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div className="absolute bottom-0 left-0 right-0 h-px"
+          style={{ background: 'linear-gradient(to right, transparent, rgba(34,211,238,0.2), transparent)' }} />
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+            style={{ background: 'rgba(34,211,238,0.08)', border: '1px solid rgba(34,211,238,0.15)' }}>
+            <Cpu size={14} style={{ color: '#22d3ee' }} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold" style={{ color: 'rgba(34,211,238,0.9)' }}>
+              Neural Agents
+            </h3>
+            <p className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              SELECT AGENT
+            </p>
+          </div>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4">
+
+      {/* Agent list */}
+      <div className="flex-1 overflow-y-auto p-3">
         <div className="space-y-5">
           {agentGroups.map((group) => (
             <div key={group.name}>
-              <h4 className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2 px-1">
-                {group.name}
-              </h4>
+              <GroupLabel name={group.name} />
               <div className="space-y-1">
                 {group.agents.map((agent) => {
                   const vc = verticalColors[agent.vertical] || verticalColors.financing;
@@ -34,28 +60,63 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
                     <button
                       key={agent.id}
                       onClick={() => onSelectAgent(agent.id)}
-                      className={`w-full rounded-xl p-3 cursor-pointer transition-all text-left border ${
-                        isSelected
-                          ? `${vc.bg} ${vc.ring}`
-                          : 'bg-zinc-800/40 hover:bg-zinc-800 border-zinc-700/40'
-                      }`}
+                      className="w-full rounded-xl p-3 cursor-pointer transition-all text-left group relative overflow-hidden"
+                      style={isSelected ? {
+                        background: `linear-gradient(135deg, ${vc.dim} 0%, rgba(255,255,255,0.02) 100%)`,
+                        border: `1px solid ${vc.neon}30`,
+                        boxShadow: vc.glow,
+                      } : {
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                      }}
                     >
+                      {/* Hover shimmer */}
+                      {!isSelected && (
+                        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+                          style={{ background: 'rgba(255,255,255,0.02)' }} />
+                      )}
+
+                      {/* Selected left bar */}
+                      {isSelected && (
+                        <div className="absolute left-0 top-2 bottom-2 w-0.5 rounded-full"
+                          style={{ background: vc.neon, boxShadow: `0 0 6px ${vc.neon}` }} />
+                      )}
+
                       <div className="flex items-center gap-2.5">
-                        <div className={`w-7 h-7 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold ${
-                          isSelected ? `${vc.bg} ${vc.text}` : 'bg-zinc-700 text-zinc-400'
-                        }`}>
+                        {/* Avatar */}
+                        <div className="relative w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold transition-all"
+                          style={isSelected ? {
+                            background: vc.dim,
+                            border: `1px solid ${vc.neon}40`,
+                            color: vc.neon,
+                            boxShadow: `0 0 10px ${vc.neon}20`,
+                          } : {
+                            background: 'rgba(255,255,255,0.05)',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            color: 'rgba(255,255,255,0.35)',
+                          }}>
                           {initials(agent.name)}
+                          {/* Online dot overlay */}
+                          {agent.status === 'active' && (
+                            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
+                              style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)', border: '1.5px solid #07070e' }} />
+                          )}
                         </div>
+
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
-                            <span className={`text-sm font-medium truncate ${isSelected ? 'text-zinc-100' : 'text-zinc-300'}`}>
+                            <span className="text-sm font-semibold truncate"
+                              style={{ color: isSelected ? '#e4e4e7' : 'rgba(255,255,255,0.5)' }}>
                               {agent.name}
                             </span>
-                            <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-                              agent.status === 'active' ? `${vc.dot} animate-pulse` : 'bg-zinc-600'
-                            }`} />
+                            {isSelected && (
+                              <ChevronRight size={12} style={{ color: vc.neon, flexShrink: 0 }} />
+                            )}
                           </div>
-                          <p className="text-xs text-zinc-500 mt-0.5 leading-snug line-clamp-1">{agent.description}</p>
+                          <p className="text-xs mt-0.5 leading-snug line-clamp-1"
+                            style={{ color: 'rgba(255,255,255,0.25)' }}>
+                            {agent.description}
+                          </p>
                         </div>
                       </div>
                     </button>
