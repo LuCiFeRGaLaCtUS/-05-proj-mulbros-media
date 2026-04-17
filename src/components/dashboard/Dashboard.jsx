@@ -633,22 +633,23 @@ const RevenueChart = ({ onClick }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 // ROW 3 — Platform Bar Chart
 // ══════════════════════════════════════════════════════════════════════════════
+const CustomBar = ({ x, y, width, height, index }) => {
+  const color = PLATFORM_COLORS[index % PLATFORM_COLORS.length];
+  const id = `pb-${index}`;
+  return (
+    <g>
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity={0.9} />
+          <stop offset="100%" stopColor={color} stopOpacity={0.3} />
+        </linearGradient>
+      </defs>
+      <rect x={x} y={y} width={width} height={height} rx={5} fill={`url(#${id})`} />
+    </g>
+  );
+};
+
 const PlatformChart = ({ onClick }) => {
-  const CustomBar = ({ x, y, width, height, index }) => {
-    const color = PLATFORM_COLORS[index % PLATFORM_COLORS.length];
-    const id = `pb-${index}`;
-    return (
-      <g>
-        <defs>
-          <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={color} stopOpacity={0.9} />
-            <stop offset="100%" stopColor={color} stopOpacity={0.3} />
-          </linearGradient>
-        </defs>
-        <rect x={x} y={y} width={width} height={height} rx={5} fill={`url(#${id})`} />
-      </g>
-    );
-  };
   return (
     <button onClick={onClick}
       className="relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-amber-500/30 shadow-xl shadow-black/30 overflow-hidden cursor-pointer transition-all group active:scale-[0.99]">
