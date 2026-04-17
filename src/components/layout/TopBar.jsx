@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
   Bell, Search, X, Settings, Sun, Moon, CircleUserRound,
-  LogOut, BadgeCheck, Menu, Cpu, Zap, Radio,
+  LogOut, BadgeCheck, Menu, Cpu, Zap,
 } from 'lucide-react';
 import { agents } from '../../config/agents';
 import { campaigns, activities } from '../../config/mockData';
@@ -70,7 +70,6 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
   const [profileOpen, setProfileOpen] = useState(false);
   const [hasUnread, setHasUnread]     = useState(true);
   const [theme, setTheme]             = useState(getInitialTheme);
-  const [time, setTime]               = useState(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
 
   const searchRef  = useRef(null);
   const notifRef   = useRef(null);
@@ -78,13 +77,6 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
 
   useEffect(() => { applyTheme(theme); }, []);
 
-  // Live clock
-  useEffect(() => {
-    const id = setInterval(() => {
-      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    }, 10000);
-    return () => clearInterval(id);
-  }, []);
 
   const toggleTheme = () => {
     const next = theme === 'dark' ? 'light' : 'dark';
@@ -181,13 +173,6 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
 
       {/* ── RIGHT: controls ── */}
       <div className="relative z-10 flex items-center gap-3">
-
-        {/* Live clock */}
-        <div className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
-          style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}>
-          <Radio size={10} style={{ color: 'rgba(52,211,153,0.7)' }} />
-          <span className="font-mono text-xs" style={{ color: 'rgba(52,211,153,0.8)' }}>{time}</span>
-        </div>
 
         {/* Search */}
         <div className="relative" ref={searchRef}>

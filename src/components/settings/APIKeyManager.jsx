@@ -21,17 +21,20 @@ export const APIKeyManager = () => {
   const [otherKeys, setOtherKeys] = useState(loadOtherKeys);
   const [showOtherKeys, setShowOtherKeys] = useState({});
 
-  const handleSaveOpenAI = (val) => {
-    setOpenaiKey(val);
-    if (val.trim()) {
-      localStorage.setItem('mulbros_openai_key', val.trim());
+  // M16: update display state on every keystroke; persist to localStorage only on blur
+  //      (avoids storing half-pasted partial keys)
+  const handleOpenAIChange = (val) => setOpenaiKey(val);
+  const handleOpenAIBlur  = () => {
+    if (openaiKey.trim()) {
+      localStorage.setItem('mulbros_openai_key', openaiKey.trim());
     } else {
       localStorage.removeItem('mulbros_openai_key');
     }
   };
 
-  const handleSaveOther = (name, val) => {
-    setOtherKeys(prev => ({ ...prev, [name]: val }));
+  const handleOtherChange = (name, val) => setOtherKeys(prev => ({ ...prev, [name]: val }));
+  const handleOtherBlur   = (name) => {
+    const val = otherKeys[name] || '';
     if (val.trim()) {
       localStorage.setItem(storageKey(name), val.trim());
     } else {
@@ -80,7 +83,8 @@ export const APIKeyManager = () => {
                 <input
                   type={showKey ? 'text' : 'password'}
                   value={openaiKey}
-                  onChange={(e) => handleSaveOpenAI(e.target.value)}
+                  onChange={(e) => handleOpenAIChange(e.target.value)}
+                  onBlur={handleOpenAIBlur}
                   placeholder="sk-proj-… (leave blank to use .env key)"
                   className="flex-1 bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm"
                 />
@@ -122,7 +126,8 @@ export const APIKeyManager = () => {
                     <input
                       type={isVisible ? 'text' : 'password'}
                       value={val}
-                      onChange={(e) => handleSaveOther(name, e.target.value)}
+                      onChange={(e) => handleOtherChange(name, e.target.value)}
+                      onBlur={() => handleOtherBlur(name)}
                       placeholder={`Enter ${name} key`}
                       className="flex-1 bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm"
                     />

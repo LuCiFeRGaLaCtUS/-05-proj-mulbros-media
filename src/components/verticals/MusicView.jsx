@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -77,7 +77,7 @@ const DroppableColumn = ({ id, children }) => {
 const TaliseOverview = () => (
   <div className="space-y-5">
     {/* Bio */}
-    <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-5 overflow-hidden">
+    <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-5 overflow-hidden">
       <AmberBg />
       <div className="relative z-10">
         <div className="text-xs font-semibold uppercase tracking-wider text-amber-400/70 mb-2">Bio</div>
@@ -88,7 +88,7 @@ const TaliseOverview = () => (
     {/* Streaming stats */}
     <div className="grid grid-cols-4 gap-4">
       {taliseStreamingStats.map(s => (
-        <div key={s.platform} className="relative bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-4 overflow-hidden">
+        <div key={s.platform} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-4 overflow-hidden">
           <AmberBg />
           <div className="relative z-10">
             <div className="text-xs text-zinc-500 mb-1.5 leading-snug">{s.platform}</div>
@@ -100,7 +100,7 @@ const TaliseOverview = () => (
     </div>
 
     {/* Relationships table */}
-    <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 overflow-hidden">
+    <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 overflow-hidden">
       <AmberBg />
       <div className="relative z-10">
         <div className="px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-amber-500/5 to-transparent">
@@ -234,13 +234,25 @@ const LukeCardEdit = ({ draft, onChange, onSave, onCancel }) => (
 );
 
 // ─── Luke overview ────────────────────────────────────────────────────────────
-const LukeOverview = ({ onAgentClick }) => {
-  // Deep-clone mock data into local state so we can mutate it
-  const [pipeline, setPipeline] = useState(() =>
-    Object.fromEntries(
-      Object.entries(lukePipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
-    )
+const LUKE_PIPELINE_KEY = 'mulbros_luke_pipeline';
+const loadLukePipeline = () => {
+  try {
+    const stored = localStorage.getItem(LUKE_PIPELINE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return Object.fromEntries(
+    Object.entries(lukePipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
   );
+};
+
+const LukeOverview = ({ onAgentClick }) => {
+  // M17: persist Luke pipeline across navigation — loads from localStorage on mount
+  const [pipeline, setPipeline] = useState(loadLukePipeline);
+
+  // Persist whenever pipeline changes
+  useEffect(() => {
+    try { localStorage.setItem(LUKE_PIPELINE_KEY, JSON.stringify(pipeline)); } catch {}
+  }, [pipeline]);
   const [editing, setEditing] = useState(null);   // { stage, index }
   const [editDraft, setEditDraft] = useState({});
   const [activeCardId, setActiveCardId] = useState(null);
@@ -315,7 +327,7 @@ const LukeOverview = ({ onAgentClick }) => {
   return (
     <div className="space-y-5">
       {/* Bio */}
-      <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-5 overflow-hidden">
+      <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-5 overflow-hidden">
         <AmberBg />
         <div className="relative z-10">
           <div className="text-xs font-semibold uppercase tracking-wider text-amber-400/70 mb-2">Bio</div>
@@ -326,7 +338,7 @@ const LukeOverview = ({ onAgentClick }) => {
       {/* Metrics */}
       <div className="grid grid-cols-4 gap-4">
         {lukeMetrics.map(m => (
-          <div key={m.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-4 overflow-hidden">
+          <div key={m.label} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-4 overflow-hidden">
             <AmberBg />
             <div className="relative z-10">
               <div className="text-xs text-zinc-500 mb-1.5">{m.label}</div>
@@ -423,7 +435,7 @@ export const MusicView = ({ onAgentClick }) => {
     <div className="space-y-5">
 
       {/* ── Cinematic page header ─────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-5">
+      <div className="relative overflow-hidden tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 p-5">
         <div className="absolute inset-0 bg-gradient-to-br from-amber-950/35 via-zinc-900 to-zinc-950 pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-24 bg-amber-500/5 blur-xl rounded-full pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(245,158,11,0.04),transparent_70%)] pointer-events-none" />
@@ -450,7 +462,7 @@ export const MusicView = ({ onAgentClick }) => {
       </div>
 
       {/* ── AI Engine banner ──────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-amber-950/40 via-zinc-900 to-zinc-950 border border-amber-500/25 rounded-2xl p-4 flex items-center gap-4">
+      <div className="tile-pop relative overflow-hidden bg-gradient-to-br from-amber-950/40 via-zinc-900 to-zinc-950 border border-amber-500/25 rounded-2xl p-4 flex items-center gap-4">
         <div className="absolute -top-4 right-8 w-24 h-24 bg-amber-500/10 blur-xl rounded-full pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(245,158,11,0.05),transparent_70%)] pointer-events-none" />
         {/* Staff lines */}
@@ -534,7 +546,7 @@ export const MusicView = ({ onAgentClick }) => {
       )}
 
       {activeTab === 'Activity' && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-amber-900/30 overflow-hidden">
           <AmberBg />
           <div className="relative z-10">
             <div className="px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-amber-500/5 to-transparent">

@@ -84,7 +84,7 @@ export const ProductionsView = () => {
     <div className="space-y-5">
 
       {/* ── Cinematic page header ─────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5">
+      <div className="relative overflow-hidden tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5">
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/40 via-zinc-900 to-zinc-950 pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-24 bg-emerald-500/5 blur-xl rounded-full pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(16,185,129,0.04),transparent_70%)] pointer-events-none" />
@@ -114,7 +114,7 @@ export const ProductionsView = () => {
       {/* ── KPIs ──────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5 overflow-hidden">
+          <div key={k.label} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5 overflow-hidden">
             <EmeraldBg />
             <div className="relative z-10">
               <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
@@ -150,7 +150,7 @@ export const ProductionsView = () => {
           {activeProductions.map(p => {
             const colors = phaseColorMap[p.phaseColor];
             return (
-              <div key={p.title} className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-6 overflow-hidden">
+              <div key={p.title} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-6 overflow-hidden">
                 <EmeraldBg />
                 <div className="relative z-10">
                   <div className="flex items-start justify-between mb-5">
@@ -210,7 +210,7 @@ export const ProductionsView = () => {
           })}
 
           {activeProductions.length === 0 && (
-            <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-8 text-center overflow-hidden">
+            <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-8 text-center overflow-hidden">
               <EmeraldBg />
               <span className="relative z-10 text-sm text-zinc-500">No active productions.</span>
             </div>
@@ -222,7 +222,7 @@ export const ProductionsView = () => {
       {activeTab === 'Distribution' && (
         <div className="space-y-4">
           {distributed.map(f => (
-            <div key={f.title} className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-6 overflow-hidden">
+            <div key={f.title} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-6 overflow-hidden">
               <EmeraldBg />
               <div className="relative z-10">
                 <div className="flex items-start gap-4 mb-5">
@@ -264,7 +264,7 @@ export const ProductionsView = () => {
           ))}
 
           {/* Distribution playbook */}
-          <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5 overflow-hidden">
+          <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5 overflow-hidden">
             <EmeraldBg />
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-3">
@@ -284,7 +284,7 @@ export const ProductionsView = () => {
 
       {/* ── Activity ──────────────────────────────────────────────────────── */}
       {activeTab === 'Activity' && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 overflow-hidden">
           <EmeraldBg />
           <div className="relative z-10">
             <div className="px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-emerald-500/5 to-transparent">

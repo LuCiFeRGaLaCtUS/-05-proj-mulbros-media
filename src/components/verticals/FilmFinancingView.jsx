@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { jsPDF } from 'jspdf';
+import React, { useState, useRef, useEffect } from 'react';
+// M3: jsPDF loaded on demand — keeps the 568KB vendor-pdf chunk out of the initial bundle
 import {
   DndContext,
   PointerSensor,
@@ -238,6 +238,9 @@ const financingActivities = activities.filter(a => a.vertical === 'financing');
 const LeadGenTab = ({ onAddToPipeline }) => {
   const defaultSources = ['reddit', 'kickstarter', 'indiegogo', 'stage32', 'slated', 'linkedin'];
   const [activeSources, setActiveSources] = useState(defaultSources);
+  // M5: track timeout so it can be cancelled if component unmounts mid-scan
+  const scanTimerRef = useRef(null);
+  useEffect(() => () => { if (scanTimerRef.current) clearTimeout(scanTimerRef.current); }, []);
   const [activeSubreddits, setActiveSubreddits] = useState(['r/indiefilm', 'r/filmmakers', 'r/lowbudgetfilmmaking']);
   const [keywords, setKeywords] = useState(SIGNAL_KEYWORDS.slice(0, 6).join(', '));
   const [budgetMin, setBudgetMin] = useState('50000');
@@ -267,7 +270,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
     setScanning(true);
     setResults([]);
     setScanned(false);
-    setTimeout(() => {
+    scanTimerRef.current = setTimeout(() => {
       const filtered = MOCK_RESULTS.filter(r => activeSources.includes(r.source));
       setResults(filtered);
       setScanning(false);
@@ -291,7 +294,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
   return (
     <div className="space-y-5">
       {/* Config panel */}
-      <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+      <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
         <BlueBg />
         <div className="relative z-10 px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent flex items-center gap-2">
           <Search size={14} className="text-blue-400" />
@@ -450,7 +453,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
 
       {/* Scanning animation */}
       {scanning && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-6 flex flex-col items-center gap-3 overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-6 flex flex-col items-center gap-3 overflow-hidden">
           <BlueBg />
           <div className="relative z-10 flex gap-1.5">
             {[0, 1, 2, 3, 4].map(i => (
@@ -498,7 +501,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
               return (
               <div
                 key={lead.id}
-                className={`relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/20 p-4 flex flex-col gap-3 overflow-hidden ${
+                className={`relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/20 p-4 flex flex-col gap-3 overflow-hidden ${
                   addedIds.includes(lead.id) ? 'opacity-60' : ''
                 }`}
               >
@@ -571,7 +574,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
 
       {/* Empty state before first scan */}
       {!scanning && !scanned && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
           <BlueBg />
           <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <Search size={22} className="text-blue-400" />
@@ -674,8 +677,10 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!result) return;
+    // M3: dynamically import jsPDF — 568KB chunk only downloaded when the user actually clicks Export
+    const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ unit: 'pt', format: 'letter' });
     const W = doc.internal.pageSize.getWidth();
     const MARGIN = 40;
@@ -918,7 +923,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
   return (
     <div className="space-y-6">
       {/* Input form */}
-      <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
+      <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
         <BlueBg />
         <div className="relative z-10 flex items-center gap-2 mb-4">
           <TrendingUp size={16} className="text-blue-400" />
@@ -975,7 +980,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
       {/* Empty state */}
       {!generating && !result && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
           <BlueBg />
           <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
             <MapPin size={22} className="text-blue-400" />
@@ -989,7 +994,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
       {/* Generating state */}
       {generating && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-4 overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-4 overflow-hidden">
           <BlueBg />
           <Loader2 size={28} className="relative z-10 text-blue-400 animate-spin" />
           <div className="relative z-10 text-sm font-semibold text-zinc-300">Analyzing incentives across 40+ jurisdictions…</div>
@@ -1007,7 +1012,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
           )}
 
           {/* Top pick hero */}
-          <div className="relative bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 overflow-hidden">
+          <div className="relative tile-pop bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 overflow-hidden">
             <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 blur-2xl rounded-full pointer-events-none" />
             <div className="flex items-center gap-2 mb-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">Top Recommendation</span>
@@ -1045,7 +1050,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
           </div>
 
           {/* Comparison table */}
-          <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+          <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
             <BlueBg />
             <div className="relative z-10 px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent">
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Location Comparison</span>
@@ -1089,7 +1094,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
           </div>
 
           {/* Budget template */}
-          <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+          <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
             <BlueBg />
             <div className="relative z-10 px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Itemized Budget Template — {result.topPick?.location}</span>
@@ -1120,7 +1125,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
           </div>
 
           {/* CTA */}
-          <div className="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 flex items-center justify-between gap-4">
+          <div className="tile-pop bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 flex items-center justify-between gap-4">
             <div>
               <div className="text-sm font-semibold text-zinc-100 mb-1">Ready to move forward?</div>
               <p className="text-xs text-zinc-400 leading-relaxed">{result.nextStep}</p>
@@ -1301,16 +1306,28 @@ const PipelineTab = ({ pipeline, setPipeline }) => {
 
 // ─── Main view ────────────────────────────────────────────────────────────────
 
+const FILM_PIPELINE_KEY = 'mulbros_film_pipeline';
+const loadFilmPipeline = () => {
+  try {
+    const stored = localStorage.getItem(FILM_PIPELINE_KEY);
+    if (stored) return JSON.parse(stored);
+  } catch {}
+  return Object.fromEntries(
+    Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
+  );
+};
+
 export const FilmFinancingView = () => {
   const [activeTab, setActiveTab] = useState('Lead Gen');
   const tabs = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
-  // ── Shared pipeline state — lifted so LeadGen and Pipeline tabs stay in sync ──
-  const [pipeline, setPipeline] = useState(() =>
-    Object.fromEntries(
-      Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
-    )
-  );
+  // ── Shared pipeline state — persisted to localStorage (M17) ──────────────
+  const [pipeline, setPipeline] = useState(loadFilmPipeline);
+
+  // Save to localStorage whenever pipeline changes
+  useEffect(() => {
+    try { localStorage.setItem(FILM_PIPELINE_KEY, JSON.stringify(pipeline)); } catch {}
+  }, [pipeline]);
 
   // Called by LeadGenTab when user clicks "Add to Pipeline"
   const handleAddToPipeline = (lead) => {
@@ -1332,7 +1349,7 @@ export const FilmFinancingView = () => {
   return (
     <div className="space-y-5">
       {/* ── Cinematic page header ───────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5">
+      <div className="relative overflow-hidden tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-zinc-950 pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-24 bg-blue-500/5 blur-xl rounded-full pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(59,130,246,0.04),transparent_70%)] pointer-events-none" />
@@ -1359,7 +1376,7 @@ export const FilmFinancingView = () => {
       {/* ── KPIs ────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
+          <div key={k.label} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
             <BlueBg />
             <div className="relative z-10">
               <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
@@ -1400,7 +1417,7 @@ export const FilmFinancingView = () => {
 
       {/* Activity */}
       {activeTab === 'Activity' && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
           <BlueBg />
           <div className="relative z-10 px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent">
             <h3 className="text-sm font-semibold text-zinc-100">Recent Agent Activity</h3>

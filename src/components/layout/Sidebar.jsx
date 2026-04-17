@@ -182,7 +182,7 @@ export const Sidebar = ({ activePage, setActivePage }) => {
             </div>
             <div className="flex items-center gap-1.5 mt-1">
               <div className="w-1 h-1 rounded-full bg-cyan-400 online-dot" style={{ color: '#22d3ee' }} />
-              <span className="text-[9px] font-bold tracking-[0.3em] uppercase"
+              <span className="text-[9px] font-bold tracking-[0.3em] uppercase font-mono"
                 style={{ color: 'rgba(34,211,238,0.6)' }}>
                 MEDIA OS
               </span>
@@ -255,7 +255,7 @@ export const Sidebar = ({ activePage, setActivePage }) => {
 
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold leading-snug truncate">{v.name}</div>
-                <div className="text-[10px] mt-0.5 font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>{v.sub}</div>
+                <div className="text-[10px] mt-0.5 font-mono tracking-[0.12em]" style={{ color: 'rgba(255,255,255,0.18)', fontFamily: 'var(--font-mono)' }}>{v.sub}</div>
               </div>
 
               {isActive && (

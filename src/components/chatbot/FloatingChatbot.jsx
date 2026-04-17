@@ -1,10 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { X, Send, Loader2, Clapperboard, Film, Star, Mic, DollarSign, Users } from 'lucide-react';
 import { formatDataForAI } from '../../utils/appData';
 import { createActionHandlers, parseUserIntent, getQuickResponses } from '../../utils/appActions';
 import { callAIFast, getApiKey } from '../../utils/ai';
 
-const buildSystemPrompt = () => `You are the MulBros Studio AI — an intelligent assistant embedded in MulBros Media OS.
+// M2: system prompt is memoised — formatDataForAI() only runs when the component mounts,
+//     not on every message send.
+const useSystemPrompt = () =>
+  useMemo(() => `You are the MulBros Studio AI — an intelligent assistant embedded in MulBros Media OS.
 
 You have access to live data from the system:
 ${formatDataForAI()}
@@ -19,7 +22,7 @@ RESPONSE STYLE:
 - If asked to navigate, include the [NAVIGATE:x] token AND confirm in text
 - Never invent data not shown above
 
-VALID PAGE IDS: dashboard, financing, productions, music, agents, settings`;
+VALID PAGE IDS: dashboard, financing, productions, music, agents, settings`, []);
 
 // ── Quick action config ────────────────────────────────────────────────────────
 const QUICK_ACTIONS = [
@@ -82,11 +85,24 @@ export const FloatingChatbot = ({ appState }) => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef       = useRef(null);
+  // M6: abort controller so in-flight requests are cancelled when chat is closed
+  const abortRef       = useRef(null);
 
+  const systemPrompt = useSystemPrompt();
   const actions = createActionHandlers(appState);
 
   useEffect(() => { if (isOpen) inputRef.current?.focus(); }, [isOpen]);
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading]);
+
+  // M6: abort any in-flight request when chat closes or component unmounts
+  useEffect(() => {
+    if (!isOpen && abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+      setIsLoading(false);
+    }
+  }, [isOpen]);
+  useEffect(() => () => abortRef.current?.abort(), []);
 
   const sendMessage = async (userMessage) => {
     if (!userMessage.trim() || isLoading) return;
@@ -100,8 +116,10 @@ export const FloatingChatbot = ({ appState }) => {
 
       if (!skipAI) {
         const apiKey  = getApiKey();
+        // M6: create a fresh AbortController for each request
+        abortRef.current = new AbortController();
         const response = await callAIFast(
-          buildSystemPrompt(),
+          systemPrompt,
           newMessages.map(({ role, content }) => ({ role, content })),
           apiKey
         );
@@ -118,12 +136,14 @@ export const FloatingChatbot = ({ appState }) => {
         setMessages([...newMessages, { role: 'assistant', content: getQuickResponses(intent) }]);
       }
     } catch (err) {
+      if (err.name === 'AbortError') return; // chat was closed — discard silently
       setMessages([...newMessages, {
         role: 'assistant',
         content: `Cut! Something went wrong. ${err.message?.includes('API') ? 'Check your OpenAI key in Settings.' : err.message || 'Please try again.'}`
       }]);
     } finally {
       setIsLoading(false);
+      abortRef.current = null;
     }
   };
 
@@ -190,8 +210,12 @@ export const FloatingChatbot = ({ appState }) => {
           </div>
         </div>
 
-        {/* ── Messages ── */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-950/95">
+        {/* ── Messages — M21: aria-live so screen readers announce AI responses ── */}
+        <div
+          className="flex-1 overflow-y-auto p-4 space-y-3 bg-zinc-950/95"
+          aria-live="polite"
+          aria-label="Chat messages"
+        >
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
               {msg.role === 'assistant' && (
@@ -210,7 +234,7 @@ export const FloatingChatbot = ({ appState }) => {
           ))}
 
           {isLoading && (
-            <div className="flex justify-start gap-2">
+            <div className="flex justify-start gap-2" aria-label="Studio AI is typing">
               <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center flex-shrink-0 mt-0.5">
                 <Clapperboard size={11} className="text-zinc-950" />
               </div>

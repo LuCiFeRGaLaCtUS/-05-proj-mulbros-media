@@ -1,16 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Layout } from './components/layout/Layout';
-import { Dashboard } from './components/dashboard/Dashboard';
-import { FilmFinancingView } from './components/verticals/FilmFinancingView';
-import { ProductionsView } from './components/verticals/ProductionsView';
-import { MusicView } from './components/verticals/MusicView';
-import { CalendarView } from './components/verticals/CalendarView';
-import { AgentChat } from './components/agents/AgentChat';
-import { Settings } from './components/settings/Settings';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './utils/useTheme';
+
+// M4: Route-level code splitting — each view is a separate chunk loaded on demand
+const Dashboard         = lazy(() => import('./components/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
+const FilmFinancingView = lazy(() => import('./components/verticals/FilmFinancingView').then(m => ({ default: m.FilmFinancingView })));
+const ProductionsView   = lazy(() => import('./components/verticals/ProductionsView').then(m => ({ default: m.ProductionsView })));
+const MusicView         = lazy(() => import('./components/verticals/MusicView').then(m => ({ default: m.MusicView })));
+const CalendarView      = lazy(() => import('./components/verticals/CalendarView').then(m => ({ default: m.CalendarView })));
+const AgentChat         = lazy(() => import('./components/agents/AgentChat').then(m => ({ default: m.AgentChat })));
+const Settings          = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
+
+const PageLoader = () => (
+  <div className="flex items-center justify-center h-[60vh]">
+    <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+  </div>
+);
 
 // Toaster that reacts to theme changes via the mulbros-theme custom event
 const ThemedToaster = () => {
@@ -31,32 +39,22 @@ const ThemedToaster = () => {
 };
 
 function App() {
-  const [activePage, setActivePage] = useState('dashboard');
+  const [activePage, setActivePage]           = useState('dashboard');
   const [preselectedAgent, setPreselectedAgent] = useState(null);
-  const [campaigns, setCampaigns] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [target, setTarget] = useState('Film Financing');
-  const [contentType, setContentType] = useState('Filmmaker Outreach DM');
+  // M8: removed dead state (campaigns, messages, target, contentType) — never consumed by any routed page
 
   const handleAgentClick = (agentId) => {
     setPreselectedAgent(agentId);
     setActivePage('agents');
   };
 
-  const appState = {
+  // M1: stable object reference — only recreated when navigation state actually changes
+  const appState = useMemo(() => ({
     activePage,
     setActivePage,
     preselectedAgent,
     setPreselectedAgent,
-    campaigns,
-    setCampaigns,
-    messages,
-    setMessages,
-    target,
-    setTarget,
-    contentType,
-    setContentType
-  };
+  }), [activePage, setActivePage, preselectedAgent, setPreselectedAgent]);
 
   const renderPage = () => {
     switch (activePage) {
@@ -75,7 +73,10 @@ function App() {
     <>
       <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent}>
         <ErrorBoundary key={activePage}>
-          {renderPage()}
+          {/* M4: Suspense boundary wraps lazy-loaded route components */}
+          <Suspense fallback={<PageLoader />}>
+            {renderPage()}
+          </Suspense>
         </ErrorBoundary>
         <FloatingChatbot appState={appState} />
       </Layout>

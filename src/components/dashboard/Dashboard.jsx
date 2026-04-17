@@ -104,12 +104,12 @@ const WelcomeHero = () => {
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
 
       {/* ── Left: welcome panel ─────────────────────────────────────────────── */}
-      <div className="lg:col-span-9 relative rounded-2xl overflow-hidden tile-pop"
+      <div className="lg:col-span-7 relative rounded-2xl overflow-hidden tile-pop"
         style={{
           background: 'linear-gradient(135deg, #0a0a14 0%, #0d0d1c 60%, #08080f 100%)',
           border: '1px solid rgba(245,158,11,0.12)',
           boxShadow: '0 0 40px rgba(245,158,11,0.04)',
-          minHeight: 180,
+          minHeight: 140,
         }}>
 
         {/* Ambient glows */}
@@ -130,13 +130,13 @@ const WelcomeHero = () => {
         {/* Scanline overlay */}
         <div className="absolute inset-0 scanlines opacity-30 pointer-events-none" />
 
-        <div className="relative z-10 p-7 flex flex-col justify-between h-full" style={{ minHeight: 180 }}>
+        <div className="relative z-10 p-5 flex flex-col justify-between h-full" style={{ minHeight: 140 }}>
 
           {/* Top row: greeting text + live clock */}
           <div className="flex items-start justify-between gap-4">
             <div>
               {/* Status tag */}
-              <div className="flex items-center gap-2 mb-4">
+              <div className="flex items-center gap-2 mb-2">
                 <span className="w-1.5 h-1.5 rounded-full online-dot"
                   style={{ color: '#22d3ee', background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)' }} />
                 <span className="text-[10px] font-black uppercase tracking-[0.32em]"
@@ -146,40 +146,47 @@ const WelcomeHero = () => {
               </div>
 
               {/* Main headline */}
-              <h1 className="text-[2.6rem] font-black leading-[1.1] mb-0.5"
-                style={{ color: '#f0f0f2', textShadow: '0 0 40px rgba(245,158,11,0.12)' }}>
+              <h1 className="font-display font-light italic leading-[1.1] mb-0.5"
+                style={{
+                  color: 'rgba(240,240,242,0.72)',
+                  textShadow: '0 0 40px rgba(245,158,11,0.10)',
+                  fontSize: '1.85rem',
+                  letterSpacing: '0.015em',
+                }}>
                 Welcome back,
               </h1>
-              <h1 className="text-[2.6rem] font-black leading-[1.1]"
+              <h1 className="font-display font-semibold leading-[1.05]"
                 style={{
-                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 45%, #22d3ee 100%)',
+                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 40%, #22d3ee 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
+                  fontSize: '2.6rem',
+                  letterSpacing: '0.02em',
                 }}>
                 {firstName}.
               </h1>
             </div>
 
             {/* Live clock + date */}
-            <div className="flex-shrink-0 flex flex-col items-end gap-2">
-              <div className="px-4 py-2.5 rounded-xl flex items-center gap-2"
+            <div className="flex-shrink-0 flex flex-col items-end gap-1.5">
+              <div className="px-3 py-2 rounded-xl flex items-center gap-2"
                 style={{ background: 'rgba(34,211,238,0.06)', border: '1px solid rgba(34,211,238,0.12)' }}>
                 <div className="w-1.5 h-1.5 rounded-full"
                   style={{ background: '#22d3ee', boxShadow: '0 0 5px rgba(34,211,238,0.9)' }} />
-                <span className="font-mono text-2xl font-black tabular-nums"
+                <span className="font-mono text-xl font-black tabular-nums"
                   style={{ color: 'rgba(34,211,238,0.9)', letterSpacing: '-0.02em' }}>
                   {timeStr}
                 </span>
               </div>
-              <span className="text-[11px] font-medium" style={{ color: 'rgba(255,255,255,0.2)' }}>
+              <span className="font-mono text-xl font-black tabular-nums" style={{ color: 'rgba(255,255,255,0.25)', letterSpacing: '-0.02em' }}>
                 {dateStr}
               </span>
             </div>
           </div>
 
           {/* Bottom: status pills */}
-          <div className="flex items-center gap-2 mt-6 flex-wrap">
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
             {[
               { label: 'Studio Online',    color: '#22d3ee' },
               { label: '9 Agents Active',  color: '#34d399' },
@@ -204,7 +211,7 @@ const WelcomeHero = () => {
       </div>
 
       {/* ── Right: weather tile (vertical) ─────────────────────────────────── */}
-      <div className="lg:col-span-3">
+      <div className="lg:col-span-5">
         <WeatherTile />
       </div>
     </div>
@@ -428,16 +435,17 @@ const StatCardAnimated = ({ title, value, numericValue, formatter, change, chang
   return (
     <button
       onClick={onClick}
-      className="tile-pop relative w-full text-left bg-zinc-900 rounded-2xl p-5 ring-1 ring-zinc-800 hover:ring-zinc-600 overflow-hidden shadow-xl shadow-black/30 group cursor-pointer"
+      className="tile-pop relative w-full text-left rounded-2xl p-5 ring-1 ring-zinc-800/60 overflow-hidden shadow-xl shadow-black/40 group cursor-pointer"
+      style={{ background: 'linear-gradient(145deg, #100e15 0%, #0c0a10 60%, #0e0c13 100%)' }}
       style={{ '--accent': accentColor }}
     >
       <Bg />
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium text-zinc-500 uppercase tracking-widest mb-2"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}>{title}</p>
-          <p className="text-[1.65rem] font-black text-zinc-100 leading-none mb-2 tabular-nums"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}>{display}</p>
+          <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2"
+            style={{ fontFamily: 'var(--font-mono)' }}>{title}</p>
+          <p className="text-[1.65rem] font-bold text-zinc-100 leading-none mb-2 tabular-nums"
+            style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.03em' }}>{display}</p>
           <div className="flex items-center gap-1.5">
             {changeUp
               ? <TrendingUp size={10} className="text-emerald-400 flex-shrink-0" />
@@ -484,9 +492,10 @@ const WelcomeMark = ({ onGoToAgents }) => (
             style={{ fontFamily: "'DM Sans', sans-serif" }}>Studio Command Center</span>
         </div>
         <p className="text-zinc-400 text-sm mb-1 font-medium">Welcome back,</p>
-        <h2 className="text-4xl font-black leading-none mb-3 tracking-tight"
+        <h2 className="font-display font-semibold leading-[0.95] mb-3"
           style={{
-            fontFamily: "'DM Sans', sans-serif",
+            fontSize: '3rem',
+            letterSpacing: '0.01em',
             background: 'linear-gradient(135deg, #ffffff 0%, #f59e0b 50%, #3b82f6 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',

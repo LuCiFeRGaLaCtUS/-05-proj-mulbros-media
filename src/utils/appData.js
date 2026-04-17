@@ -67,6 +67,20 @@ export const getQuickStats = () => ({
   community: { fans: '2,847', emailSubs: '847' }
 });
 
+// M15: read calendar posts saved by CalendarView so chatbot knows scheduled content
+const getCalendarSummary = () => {
+  try {
+    const posts = JSON.parse(localStorage.getItem('mulbros_calendar_v1') || '[]');
+    if (!posts.length) return 'No posts scheduled yet.';
+    const byStatus = posts.reduce((acc, p) => {
+      acc[p.status] = (acc[p.status] || 0) + 1;
+      return acc;
+    }, {});
+    const lines = Object.entries(byStatus).map(([s, n]) => `  ${n} ${s}`).join('\n');
+    return `${posts.length} total posts:\n${lines}`;
+  } catch { return 'Unavailable.'; }
+};
+
 export const formatDataForAI = () => {
   const lukeStats = getLukeStats();
   const taliseStats = getTaliseStats();
@@ -74,7 +88,7 @@ export const formatDataForAI = () => {
   const quickStats = getQuickStats();
   const allCampaigns = getCampaigns();
   const segments = getFanSegments();
-  
+
   return `
 === MULBROS MARKETING OS DATA ===
 
@@ -111,5 +125,8 @@ ANALYTICS:
 - Total Impressions: ${analytics.impressions}
 - Total Engagement: ${analytics.engagement}
 - Pipeline Value: ${analytics.pipelineValue}
+
+CONTENT CALENDAR:
+${getCalendarSummary()}
 `;
 };
