@@ -5,7 +5,7 @@ import { AgentSelector } from './AgentSelector';
 import { ChatMessage, TypingIndicator } from './ChatMessage';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { getAgentById } from '../../config/agents';
-import { callClaude, getApiKey } from '../../utils/claude';
+import { callAI, getApiKey } from '../../utils/ai';
 
 const verticalColors = {
   financing: { bg: 'bg-blue-500/15',    text: 'text-blue-400',    border: 'border-blue-500/20'    },
@@ -59,7 +59,8 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
 
       // Strip timestamps before sending to API
       const apiMessages = newMessages.map(({ role, content }) => ({ role, content }));
-      const response = await callClaude(agent.systemPrompt, apiMessages, apiKey);
+      // Use the per-agent model from agents.js (e.g. claude-sonnet-4-20250514)
+      const response = await callAI(agent.systemPrompt, apiMessages, apiKey, agent.model);
 
       setMessages([...newMessages, { role: 'assistant', content: response, timestamp: now() }]);
     } catch (error) {
@@ -137,6 +138,7 @@ export const AgentChat = ({ preselectedAgentId, onClose }) => {
             <button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
+              aria-label="Send message"
               className={`${vc.bg} hover:opacity-80 disabled:bg-zinc-700 ${vc.text} disabled:text-zinc-500 rounded-xl px-4 transition-all flex items-center justify-center border ${vc.border}`}
             >
               {isLoading ? (

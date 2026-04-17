@@ -1,13 +1,31 @@
 import React from 'react';
 
-export const IntegrationToggles = () => {
-  const [integrations, setIntegrations] = React.useState({
-    Spotify: false, YouTube: false, Instagram: false, TikTok: false,
-    Hulu: false, Mailchimp: false, 'IMDb Pro': false, Slack: false,
-    'Google Analytics': false, 'Movie Magic Budgeting': false
-  });
+const STORAGE_KEY = 'mulbros_integration_toggles';
 
-  const toggle = (name) => setIntegrations(prev => ({ ...prev, [name]: !prev[name] }));
+const defaultIntegrations = {
+  Spotify: false, YouTube: false, Instagram: false, TikTok: false,
+  Hulu: false, Mailchimp: false, 'IMDb Pro': false, Slack: false,
+  'Google Analytics': false, 'Movie Magic Budgeting': false
+};
+
+const loadIntegrations = () => {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) return { ...defaultIntegrations, ...JSON.parse(stored) };
+  } catch (_) { /* ignore */ }
+  return defaultIntegrations;
+};
+
+export const IntegrationToggles = () => {
+  const [integrations, setIntegrations] = React.useState(loadIntegrations);
+
+  const toggle = (name) => {
+    setIntegrations(prev => {
+      const next = { ...prev, [name]: !prev[name] };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch (_) { /* ignore */ }
+      return next;
+    });
+  };
 
   const descriptions = {
     Spotify: 'Track streaming metrics',
@@ -35,6 +53,8 @@ export const IntegrationToggles = () => {
             </div>
             <button
               onClick={() => toggle(name)}
+              aria-label={`${connected ? 'Disconnect' : 'Connect'} ${name}`}
+              aria-pressed={connected}
               className={`w-12 h-6 rounded-full transition-all ${connected ? 'bg-emerald-500' : 'bg-zinc-600'}`}
             >
               <div className={`w-5 h-5 bg-white rounded-full transition-all shadow ${connected ? 'translate-x-6' : 'translate-x-0.5'}`} />

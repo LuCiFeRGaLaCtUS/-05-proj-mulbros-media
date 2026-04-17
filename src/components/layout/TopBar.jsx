@@ -204,6 +204,9 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
+            aria-label="Notifications"
+            aria-expanded={notifOpen}
+            aria-haspopup="true"
             className="relative p-2 text-zinc-400 hover:text-zinc-100 transition-all"
           >
             <Bell size={20} />
@@ -250,6 +253,9 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuC
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setProfileOpen(o => !o); setNotifOpen(false); }}
+            aria-label="Open profile menu"
+            aria-expanded={profileOpen}
+            aria-haspopup="true"
             className="w-9 h-9 bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 rounded-full flex items-center justify-center font-medium text-sm transition-all ring-2 ring-transparent hover:ring-amber-500/40"
           >
             AC

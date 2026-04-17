@@ -3,13 +3,15 @@ import { jsPDF } from 'jspdf';
 import {
   DndContext,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   DragOverlay,
 } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { filmFinancingPipeline, activities } from '../../config/mockData';
-import { callClaude } from '../../utils/claude';
+import { callAI } from '../../utils/ai';
 import { getJurisdictionPromptContext, getTopJurisdictions } from '../../config/jurisdictions';
 import {
   Clock, Search, Sparkles, CheckCircle2, Plus, Send,
@@ -660,7 +662,7 @@ Top eligible jurisdictions for this budget: ${topJurisdictions || 'see full list
 Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the eligible list above, prioritising refundable credits and highest savings for this budget size.`;
 
     try {
-      const raw = await callClaude(systemPrompt, [{ role: 'user', content: userMsg }]);
+      const raw = await callAI(systemPrompt, [{ role: 'user', content: userMsg }]);
       const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const parsed = JSON.parse(cleaned);
       setResult({ ...parsed, project: { title: form.title || 'Your Project', genre: form.genre, budget: `$${Number(form.budget).toLocaleString()}`, region: form.region } });
@@ -1196,7 +1198,8 @@ const PipelineTab = ({ pipeline, setPipeline }) => {
   const [activeCardId, setActiveCardId] = useState(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = ({ active, over }) => {
@@ -1219,7 +1222,8 @@ const PipelineTab = ({ pipeline, setPipeline }) => {
     const [stage, idx] = activeCardId.split('::');
     return { card: pipeline[stage]?.[Number(idx)] || null, stage };
   };
-  const { card: draggedCard } = getDraggedCard();
+  const _dragResult = getDraggedCard();
+  const draggedCard = _dragResult ? _dragResult.card : null;
 
   return (
     <DndContext
@@ -1310,13 +1314,14 @@ export const FilmFinancingView = () => {
 
   // Called by LeadGenTab when user clicks "Add to Pipeline"
   const handleAddToPipeline = (lead) => {
+    // Map LeadGen result fields → pipeline card fields (matches mockData schema)
     const card = {
-      id:       lead.id,
-      name:     lead.username,
-      project:  lead.snippet?.substring(0, 60) + '…',
-      budget:   lead.budget,
-      country:  lead.country,
-      tags:     lead.tags || [],
+      title:       lead.username,                                         // card header
+      budget:      lead.budget,
+      country:     lead.country || 'Unknown',
+      source:      lead.source,
+      signal:      lead.snippet ? lead.snippet.substring(0, 80) + '…' : '', // italic context row
+      daysInStage: 0,
     };
     setPipeline(prev => ({
       ...prev,

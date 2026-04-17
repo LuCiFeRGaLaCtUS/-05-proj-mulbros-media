@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { X, Send, Loader2, Clapperboard, Film, Star, Mic, DollarSign, Users } from 'lucide-react';
 import { formatDataForAI } from '../../utils/appData';
 import { createActionHandlers, parseUserIntent, getQuickResponses } from '../../utils/appActions';
-import { callClaudeFast, getApiKey } from '../../utils/claude';
+import { callAIFast, getApiKey } from '../../utils/ai';
 
 const buildSystemPrompt = () => `You are the MulBros Studio AI — an intelligent assistant embedded in MulBros Media OS.
 
@@ -100,7 +100,7 @@ export const FloatingChatbot = ({ appState }) => {
 
       if (!skipAI) {
         const apiKey  = getApiKey();
-        const response = await callClaudeFast(
+        const response = await callAIFast(
           buildSystemPrompt(),
           newMessages.map(({ role, content }) => ({ role, content })),
           apiKey
@@ -183,6 +183,7 @@ export const FloatingChatbot = ({ appState }) => {
               </div>
             </div>
             <button onClick={() => setIsOpen(false)}
+              aria-label="Close chatbot"
               className="w-8 h-8 rounded-lg bg-zinc-800/60 hover:bg-zinc-700/60 border border-zinc-700/50 flex items-center justify-center text-zinc-400 hover:text-zinc-100 transition-all">
               <X size={15} />
             </button>
@@ -261,6 +262,7 @@ export const FloatingChatbot = ({ appState }) => {
               />
             </div>
             <button onClick={handleSend} disabled={!input.trim() || isLoading}
+              aria-label="Send message"
               className="w-10 h-10 flex-shrink-0 rounded-xl flex items-center justify-center transition-all
                 bg-gradient-to-br from-amber-500 to-yellow-400
                 hover:from-amber-400 hover:to-yellow-300

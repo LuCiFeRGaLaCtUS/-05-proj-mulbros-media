@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { callClaudeFast } from '../../utils/claude';
+import { callAIFast } from '../../utils/ai';
 import {
   ChevronLeft, ChevronRight, Plus, Sparkles,
   Clock, CheckCircle2, FileText, Loader2, Trash2,
@@ -125,7 +125,7 @@ Platform: ${plLabel}
 Post date: ${format(date, 'EEEE, MMMM d yyyy')}
 
 Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold title + one sentence hook. Keep the total response under 130 words. No preamble.`;
-      const result = await callClaudeFast(sys, [{ role: 'user', content: 'Generate 3 ideas.' }]);
+      const result = await callAIFast(sys, [{ role: 'user', content: 'Generate 3 ideas.' }]);
       setContent(result.trim());
     } catch {
       setContent('Could not generate — add your OpenAI key in Settings to enable AI suggestions.');

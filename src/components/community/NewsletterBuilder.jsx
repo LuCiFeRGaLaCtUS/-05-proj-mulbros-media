@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { Loader2, Sparkles } from 'lucide-react';
-import { callClaude, getApiKey } from '../../utils/claude';
+import { callAI, getApiKey } from '../../utils/ai';
 
 const communitySystemPrompt = `You are the Community Manager Agent for Mulbros Entertainment. You manage the fan community across all three assets: Last County (film), Talise (indie artist), and Luke Mulholland (composer). Your job is to write newsletters, engagement emails, and community content that keeps fans connected to the Mulbros ecosystem. Write warm, inclusive, insider-feeling content that makes fans feel like they're part of something special.`;
 
@@ -14,7 +14,7 @@ export const NewsletterBuilder = () => {
     try {
       const apiKey = getApiKey();
       if (!apiKey) throw new Error('No API key configured. Go to Settings > API Keys.');
-      const result = await callClaude(
+      const result = await callAI(
         communitySystemPrompt,
         [{ role: 'user', content: "Draft this month's Mulbros ecosystem newsletter" }],
         apiKey

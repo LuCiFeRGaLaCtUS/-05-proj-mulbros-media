@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import {
   DndContext,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   DragOverlay,
 } from '@dnd-kit/core';
+import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import {
   taliseBio, taliseStreamingStats, taliseRelationships,
@@ -244,7 +246,8 @@ const LukeOverview = ({ onAgentClick }) => {
   const [activeCardId, setActiveCardId] = useState(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   // ── inline edit helpers ──────────────────────────────────────────────

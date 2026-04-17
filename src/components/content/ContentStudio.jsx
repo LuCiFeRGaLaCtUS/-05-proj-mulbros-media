@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { BriefPanel } from './BriefPanel';
 import { OutputPanel } from './OutputPanel';
 import { getAgentById } from '../../config/agents';
-import { callClaude, getApiKey } from '../../utils/claude';
+import { callAI, getApiKey } from '../../utils/ai';
 
 const agentMap = {
   'Last County (Film)': 'last-county-distribution',  // fix: was 'distribution-marketing' (non-existent)
@@ -48,7 +48,7 @@ export const ContentStudio = () => {
 
       const userMessage = `Create a ${contentType} for ${target}. Tone: ${tone}. ${additionalContext || ''}`;
 
-      const response = await callClaude(
+      const response = await callAI(
         agent.systemPrompt,
         [{ role: 'user', content: userMessage }],
         apiKey
