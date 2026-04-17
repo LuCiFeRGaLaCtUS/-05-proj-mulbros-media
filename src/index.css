@@ -260,6 +260,46 @@ html, body, #root {
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
 /* ══════════════════════════════════════════════════════════════════════════════
+   TILE POP-OUT HOVER — spring cubic-bezier bounce on hover, slam-back on click
+   Apply .tile-pop to any card/tile you want to animate.
+   ══════════════════════════════════════════════════════════════════════════════ */
+.tile-pop {
+  transition:
+    transform  0.28s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
+  transform-origin: center bottom;
+}
+.tile-pop:hover {
+  transform: translateY(-6px) scale(1.018);
+  box-shadow:
+    0 24px 56px rgba(0,0,0,0.60),
+    0 8px  20px rgba(0,0,0,0.40),
+    0 0   0 1px rgba(255,255,255,0.07) !important;
+}
+.tile-pop:active {
+  transform: translateY(-1px) scale(0.985) !important;
+  transition-duration: 0.08s !important;
+}
+
+/* ── Weather shimmer loading skeleton ── */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.weather-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.10) 40%,
+    rgba(255,255,255,0.04) 80%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════
    SCROLLBARS — Cyberpunk
    ══════════════════════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar              { width: 4px; height: 4px; }

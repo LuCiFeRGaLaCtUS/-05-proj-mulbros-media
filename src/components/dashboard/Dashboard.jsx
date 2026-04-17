@@ -7,7 +7,8 @@ import {
   DollarSign, Users, Music, Film, Clapperboard,
   TrendingUp, TrendingDown, ArrowRight, Star,
   Award, Radio, Mic, Play, Zap, Clock, CheckCircle2,
-  ExternalLink, Search, Sparkles, Target, Brain, BarChart2
+  ExternalLink, Search, Sparkles, Target, Brain, BarChart2,
+  Wind, Droplets, Eye, Thermometer, MapPin, RefreshCw, Sunrise, Sunset,
 } from 'lucide-react';
 import { AgentStatusGrid } from './AgentStatusGrid';
 
@@ -125,10 +126,9 @@ const QuickActionsBar = ({ onAgentClick }) => (
         key={id}
         onClick={() => onAgentClick(id)}
         className={`
-          group relative flex items-center gap-3 rounded-xl p-3.5
+          tile-pop group relative flex items-center gap-3 rounded-xl p-3.5
           border ${colorCls.border} ${colorCls.bg} ${colorCls.hover}
-          transition-all duration-200 cursor-pointer text-left
-          active:scale-[0.97] hover:shadow-lg hover:shadow-black/20
+          cursor-pointer text-left
         `}
       >
         <div className={`w-8 h-8 rounded-lg ${colorCls.bg} flex items-center justify-center flex-shrink-0 border ${colorCls.border} group-hover:scale-110 transition-transform duration-200`}>
@@ -366,7 +366,7 @@ const StatCardAnimated = ({ title, value, numericValue, formatter, change, chang
   return (
     <button
       onClick={onClick}
-      className="relative w-full text-left bg-zinc-900 rounded-2xl p-5 ring-1 ring-zinc-800 hover:ring-zinc-600 transition-all overflow-hidden shadow-xl shadow-black/30 group cursor-pointer active:scale-[0.98]"
+      className="tile-pop relative w-full text-left bg-zinc-900 rounded-2xl p-5 ring-1 ring-zinc-800 hover:ring-zinc-600 overflow-hidden shadow-xl shadow-black/30 group cursor-pointer"
       style={{ '--accent': accentColor }}
     >
       <Bg />
@@ -400,7 +400,7 @@ const StatCardAnimated = ({ title, value, numericValue, formatter, change, chang
 // ROW 2 — Welcome Banner (enhanced with gradient headline)
 // ══════════════════════════════════════════════════════════════════════════════
 const WelcomeMark = ({ onGoToAgents }) => (
-  <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden shadow-2xl shadow-black/50 h-full" style={{ minHeight: 290 }}>
+  <div className="tile-pop relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 overflow-hidden shadow-2xl shadow-black/50 h-full" style={{ minHeight: 290 }}>
     <div className="absolute inset-0 bg-gradient-to-br from-zinc-950 via-blue-950/50 to-zinc-950 pointer-events-none" />
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_80%_at_50%_-10%,rgba(59,130,246,0.18),transparent)] pointer-events-none" />
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_90%_90%,rgba(245,158,11,0.09),transparent_60%)] pointer-events-none" />
@@ -470,7 +470,7 @@ const AudienceScore = ({ onClick }) => {
   const r = 52, circ = 2 * Math.PI * r, dash = circ * 0.95;
   return (
     <button onClick={onClick}
-      className="relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-amber-500/30 p-5 shadow-xl shadow-black/30 h-full flex flex-col overflow-hidden cursor-pointer transition-all group active:scale-[0.99]">
+      className="tile-pop relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-amber-500/30 p-5 shadow-xl shadow-black/30 h-full flex flex-col overflow-hidden cursor-pointer group">
       <BgAudienceScore />
       <div className="relative z-10 mb-4 flex items-start justify-between">
         <div>
@@ -515,7 +515,7 @@ const DealFlow = ({ onClick }) => {
   const r = 36, circ = 2 * Math.PI * r, dash = circ * 0.70;
   return (
     <button onClick={onClick}
-      className="relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-emerald-500/30 p-5 shadow-xl shadow-black/30 h-full flex flex-col overflow-hidden cursor-pointer transition-all group active:scale-[0.99]">
+      className="tile-pop relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-emerald-500/30 p-5 shadow-xl shadow-black/30 h-full flex flex-col overflow-hidden cursor-pointer group">
       <BgDealFlow />
       <div className="relative z-10 mb-4 flex items-start justify-between">
         <div>
@@ -572,7 +572,7 @@ const RevenueChart = ({ onClick }) => {
   const toggle = (key) => setActive(p => p.includes(key) ? (p.length > 1 ? p.filter(k => k !== key) : p) : [...p, key]);
 
   return (
-    <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-zinc-700 shadow-xl shadow-black/30 overflow-hidden transition-all group">
+    <div className="tile-pop relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-zinc-700 shadow-xl shadow-black/30 overflow-hidden group">
       <BgRevenueChart />
       <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800/60">
         <div>
@@ -652,7 +652,7 @@ const CustomBar = ({ x, y, width, height, index }) => {
 const PlatformChart = ({ onClick }) => {
   return (
     <button onClick={onClick}
-      className="relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-amber-500/30 shadow-xl shadow-black/30 overflow-hidden cursor-pointer transition-all group active:scale-[0.99]">
+      className="tile-pop relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 hover:ring-amber-500/30 shadow-xl shadow-black/30 overflow-hidden cursor-pointer group">
       <BgPlatformChart />
       <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-800/60">
         <div>
@@ -691,7 +691,7 @@ const PlatformChart = ({ onClick }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 const ProgressCard = ({ Icon, iconBg, iconColor, title, value, pct, color, sub, Bg, onClick, hoverRing }) => (
   <button onClick={onClick}
-    className={`relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 ${hoverRing} p-5 shadow-xl shadow-black/20 overflow-hidden cursor-pointer transition-all group active:scale-[0.98]`}>
+    className={`tile-pop relative w-full text-left bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 ${hoverRing} p-5 shadow-xl shadow-black/20 overflow-hidden cursor-pointer group`}>
     <Bg />
     <div className="relative z-10 flex items-center gap-3 mb-4">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} group-hover:scale-110 transition-transform duration-300`}>
@@ -734,7 +734,7 @@ const ProjectsTable = ({ onRowClick }) => {
     'Negotiating': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
   };
   return (
-    <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 shadow-xl shadow-black/20 overflow-hidden">
+    <div className="tile-pop relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 shadow-xl shadow-black/20 overflow-hidden">
       <BgProjectsTable />
       <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800/60">
         <div>
@@ -794,7 +794,7 @@ const ActivityTimeline = ({ onItemClick }) => {
     { Icon: Star,   color: C.emerald, label: 'Community milestone — 2,847 fans reached',    time: 'Apr 11, 10:30 AM',   page: 'music'       },
   ];
   return (
-    <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 shadow-xl shadow-black/20 overflow-hidden">
+    <div className="tile-pop relative bg-zinc-900 rounded-2xl ring-1 ring-zinc-800 shadow-xl shadow-black/20 overflow-hidden">
       <BgTimeline />
       <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-800/60">
         <div>
@@ -827,6 +827,207 @@ const ActivityTimeline = ({ onItemClick }) => {
             <ArrowRight size={11} className="text-zinc-700 group-hover:text-zinc-400 group-hover:translate-x-0.5 transition-all mt-2 flex-shrink-0" />
           </button>
         ))}
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// WEATHER TILE — live data via wttr.in (no API key required)
+// ══════════════════════════════════════════════════════════════════════════════
+
+const weatherIcon = (code) => {
+  const n = parseInt(code, 10);
+  if (n === 113)                       return '☀️';
+  if (n === 116)                       return '⛅';
+  if (n === 119 || n === 122)          return '☁️';
+  if ([143, 248, 260].includes(n))     return '🌫️';
+  if ([200, 386, 389, 392, 395].includes(n)) return '⛈️';
+  if ([227, 230].includes(n))          return '🌨️';
+  if (n >= 263 && n <= 284)            return '🌦️';
+  if (n >= 293 && n <= 314)            return '🌧️';
+  if (n >= 317 && n <= 338)            return '❄️';
+  if (n >= 350 && n <= 377)            return '🌨️';
+  return '🌤️';
+};
+
+const weatherBg = (code) => {
+  const n = parseInt(code, 10);
+  if (n === 113) return { from: 'rgba(251,191,36,0.12)', via: 'rgba(251,191,36,0.04)', neon: '#fbbf24' };
+  if (n <= 122)  return { from: 'rgba(34,211,238,0.10)', via: 'rgba(34,211,238,0.03)', neon: '#22d3ee' };
+  if ([200, 386, 389, 392, 395].includes(n))
+                 return { from: 'rgba(139,92,246,0.12)', via: 'rgba(139,92,246,0.04)', neon: '#a78bfa' };
+  if (n >= 317)  return { from: 'rgba(147,197,253,0.12)', via: 'rgba(147,197,253,0.04)', neon: '#93c5fd' };
+  return { from: 'rgba(34,211,238,0.08)', via: 'rgba(34,211,238,0.02)', neon: '#22d3ee' };
+};
+
+const WeatherTile = () => {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error,   setError]   = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchWeather = () => {
+    const controller = new AbortController();
+    setRefreshing(true);
+    fetch('https://wttr.in/?format=j1', { signal: controller.signal })
+      .then(r => r.json())
+      .then(data => {
+        const cur  = data.current_condition[0];
+        const area = data.nearest_area[0];
+        const ast  = data.weather?.[0]?.astronomy?.[0];
+        setWeather({
+          tempC:      parseInt(cur.temp_C, 10),
+          tempF:      parseInt(cur.temp_F, 10),
+          feelsC:     parseInt(cur.FeelsLikeC, 10),
+          desc:       cur.weatherDesc[0].value,
+          humidity:   cur.humidity,
+          windKmph:   cur.windspeedKmph,
+          windDir:    cur.winddir16Point,
+          uv:         cur.uvIndex,
+          visibility: cur.visibility,
+          code:       cur.weatherCode,
+          city:       area.areaName[0].value,
+          country:    area.country[0].value,
+          sunrise:    ast?.sunrise  || '—',
+          sunset:     ast?.sunset   || '—',
+        });
+        setLoading(false);
+        setRefreshing(false);
+      })
+      .catch((e) => {
+        if (e.name !== 'AbortError') { setError(true); setLoading(false); setRefreshing(false); }
+      });
+    return controller;
+  };
+
+  useEffect(() => {
+    const ctrl = fetchWeather();
+    return () => ctrl.abort();
+  }, []);
+
+  const theme = weather ? weatherBg(weather.code) : weatherBg(116);
+  const icon  = weather ? weatherIcon(weather.code) : '🌤️';
+
+  /* ── Loading skeleton ── */
+  if (loading) return (
+    <div className="relative w-full h-full rounded-2xl overflow-hidden tile-pop"
+      style={{ background: '#0e0e1a', border: '1px solid rgba(255,255,255,0.06)', minHeight: 220 }}>
+      <div className="p-5 space-y-3">
+        <div className="weather-skeleton h-3 w-24 mb-4" />
+        <div className="weather-skeleton h-12 w-20" />
+        <div className="weather-skeleton h-3 w-32" />
+        <div className="grid grid-cols-2 gap-2 mt-4">
+          {[1,2,3,4].map(i => <div key={i} className="weather-skeleton h-8 rounded-lg" />)}
+        </div>
+      </div>
+    </div>
+  );
+
+  /* ── Error state ── */
+  if (error) return (
+    <div className="relative w-full h-full rounded-2xl overflow-hidden tile-pop flex flex-col items-center justify-center gap-2"
+      style={{ background: '#0e0e1a', border: '1px solid rgba(255,255,255,0.06)', minHeight: 220 }}>
+      <span className="text-3xl">🌐</span>
+      <p className="text-xs text-zinc-500 text-center px-4">Weather unavailable.<br/>Check network connection.</p>
+      <button onClick={() => { setError(false); setLoading(true); fetchWeather(); }}
+        className="text-[10px] font-bold mt-1 px-3 py-1 rounded-lg transition-all"
+        style={{ background: 'rgba(34,211,238,0.1)', color: '#22d3ee', border: '1px solid rgba(34,211,238,0.2)' }}>
+        Retry
+      </button>
+    </div>
+  );
+
+  return (
+    <div className="relative w-full rounded-2xl overflow-hidden tile-pop cursor-default"
+      style={{
+        background: `linear-gradient(145deg, ${theme.from} 0%, ${theme.via} 40%, #0a0a12 100%)`,
+        border: `1px solid ${theme.neon}20`,
+        boxShadow: `0 0 30px ${theme.neon}08, 0 8px 32px rgba(0,0,0,0.4)`,
+        minHeight: 220,
+      }}>
+
+      {/* Ambient glow orb */}
+      <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full pointer-events-none"
+        style={{ background: `radial-gradient(circle, ${theme.neon}14 0%, transparent 70%)` }} />
+
+      {/* Top accent line */}
+      <div className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: `linear-gradient(to right, transparent, ${theme.neon}50, transparent)` }} />
+
+      <div className="relative z-10 p-5 flex flex-col h-full">
+
+        {/* Header row */}
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <MapPin size={11} style={{ color: theme.neon, opacity: 0.8 }} />
+            <span className="text-[10px] font-bold uppercase tracking-[0.2em]"
+              style={{ color: `${theme.neon}99` }}>
+              {weather.city}, {weather.country}
+            </span>
+          </div>
+          <button
+            onClick={() => { setRefreshing(true); fetchWeather(); }}
+            title="Refresh weather"
+            className="p-1 rounded-lg transition-all"
+            style={{ color: `${theme.neon}60` }}
+            onMouseEnter={e => e.currentTarget.style.color = theme.neon}
+            onMouseLeave={e => e.currentTarget.style.color = `${theme.neon}60`}
+          >
+            <RefreshCw size={12} className={refreshing ? 'animate-spin' : ''} />
+          </button>
+        </div>
+
+        {/* Main temp + icon */}
+        <div className="flex items-end gap-3 mb-1">
+          <div>
+            <div className="text-5xl leading-none font-black tabular-nums"
+              style={{ color: '#f4f4f5', textShadow: `0 0 20px ${theme.neon}40` }}>
+              {weather.tempC}°
+            </div>
+            <div className="text-[10px] font-mono mt-0.5" style={{ color: 'rgba(255,255,255,0.3)' }}>
+              {weather.tempF}°F · Feels {weather.feelsC}°C
+            </div>
+          </div>
+          <div className="text-4xl mb-0.5 leading-none select-none">{icon}</div>
+        </div>
+
+        {/* Condition label */}
+        <p className="text-xs font-semibold mb-4" style={{ color: `${theme.neon}cc` }}>
+          {weather.desc}
+        </p>
+
+        {/* Data grid */}
+        <div className="grid grid-cols-2 gap-2 mt-auto">
+          {[
+            { Icon: Droplets,    label: 'Humidity',   value: `${weather.humidity}%`           },
+            { Icon: Wind,        label: 'Wind',       value: `${weather.windKmph} km/h ${weather.windDir}` },
+            { Icon: Eye,         label: 'Visibility', value: `${weather.visibility} km`        },
+            { Icon: Thermometer, label: 'UV Index',   value: weather.uv                        },
+          ].map(({ Icon, label, value }) => (
+            <div key={label} className="flex items-center gap-2 rounded-xl px-3 py-2"
+              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <Icon size={12} style={{ color: theme.neon, flexShrink: 0, opacity: 0.7 }} />
+              <div className="min-w-0">
+                <p className="text-[9px] uppercase tracking-wider" style={{ color: 'rgba(255,255,255,0.25)' }}>{label}</p>
+                <p className="text-xs font-bold truncate" style={{ color: 'rgba(255,255,255,0.75)' }}>{value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Sunrise / Sunset */}
+        <div className="flex items-center justify-between mt-2 px-1">
+          <div className="flex items-center gap-1">
+            <Sunrise size={10} style={{ color: '#fbbf24', opacity: 0.7 }} />
+            <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>{weather.sunrise}</span>
+          </div>
+          <div className="h-px flex-1 mx-2" style={{ background: 'rgba(255,255,255,0.06)' }} />
+          <div className="flex items-center gap-1">
+            <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.3)' }}>{weather.sunset}</span>
+            <Sunset size={10} style={{ color: '#f97316', opacity: 0.7 }} />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -873,12 +1074,13 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
           onClick={() => nav('music')} linkLabel="View Community →" delay={240} />
       </div>
 
-      {/* Row 2 — WelcomeMark + AudienceScore + DealFlow */}
-      <SectionLabel label="Overview" sub="studio command" />
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: 290 }}>
-        <div className="lg:col-span-6"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
+      {/* Row 2 — WelcomeMark + AudienceScore + DealFlow + WeatherTile */}
+      <SectionLabel label="Overview" sub="studio command · live weather" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-4" style={{ minHeight: 290 }}>
+        <div className="sm:col-span-2 lg:col-span-5"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
         <div className="lg:col-span-3"><AudienceScore onClick={() => nav('music')} /></div>
-        <div className="lg:col-span-3"><DealFlow onClick={() => nav('financing')} /></div>
+        <div className="lg:col-span-2"><DealFlow onClick={() => nav('financing')} /></div>
+        <div className="lg:col-span-2"><WeatherTile /></div>
       </div>
 
       {/* Row 3 — Revenue AreaChart + Platform BarChart */}
