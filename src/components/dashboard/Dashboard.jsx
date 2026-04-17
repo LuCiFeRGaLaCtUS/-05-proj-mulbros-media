@@ -436,8 +436,7 @@ const StatCardAnimated = ({ title, value, numericValue, formatter, change, chang
     <button
       onClick={onClick}
       className="tile-pop relative w-full text-left rounded-2xl p-5 ring-1 ring-zinc-800/60 overflow-hidden shadow-xl shadow-black/40 group cursor-pointer"
-      style={{ background: 'linear-gradient(145deg, #100e15 0%, #0c0a10 60%, #0e0c13 100%)' }}
-      style={{ '--accent': accentColor }}
+      style={{ background: 'linear-gradient(145deg, #100e15 0%, #0c0a10 60%, #0e0c13 100%)', '--accent': accentColor }}
     >
       <Bg />
       <div className="relative z-10 flex items-center justify-between">
