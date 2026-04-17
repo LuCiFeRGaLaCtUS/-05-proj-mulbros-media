@@ -12,6 +12,14 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       host: true,
       proxy: {
+        // Weather: browser always fetches /api/weather (same-origin).
+        // In dev, Vite forwards directly to wttr.in.
+        // In production, Express /api/weather handles it server-side.
+        '/api/weather': {
+          target:       'https://wttr.in',
+          changeOrigin: true,
+          rewrite:      () => '/Los+Angeles,California?format=j1',
+        },
         '/api/ai': {
           target: 'https://api.openai.com',
           changeOrigin: true,

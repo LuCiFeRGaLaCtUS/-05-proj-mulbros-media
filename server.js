@@ -146,6 +146,37 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.0.0', timestamp: new Date().toISOString() });
 });
 
+// ── Weather proxy — avoids CSP connectSrc restriction on wttr.in ──────────────
+// Browser fetches /api/weather (same-origin → allowed), server fetches wttr.in
+const weatherLimiter = rateLimit({ windowMs: 60_000, max: 20, standardHeaders: true, legacyHeaders: false });
+app.get('/api/weather', weatherLimiter, async (req, res) => {
+  const city = 'Los+Angeles,California';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const upstream = await fetch(`https://wttr.in/${city}?format=j1`, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'MulBrosMediaOS/2.0 (weather-proxy)' },
+    });
+    if (!upstream.ok) {
+      return res.status(upstream.status).json({ error: 'Weather upstream error' });
+    }
+    const data = await upstream.json();
+    // Cache 10 minutes client-side — weather doesn't need per-request freshness
+    res.set('Cache-Control', 'public, max-age=600');
+    res.json(data);
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      res.status(504).json({ error: 'Weather request timed out' });
+    } else {
+      console.error('Weather proxy error:', err.message);
+      res.status(500).json({ error: 'Failed to fetch weather' });
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+});
+
 // ── Static SPA ────────────────────────────────────────────────────────────────
 app.use(express.static(join(__dirname, 'dist')));
 app.get('*', (req, res) => {

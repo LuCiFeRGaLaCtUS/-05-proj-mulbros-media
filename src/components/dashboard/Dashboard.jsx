@@ -940,7 +940,7 @@ const WeatherTile = () => {
   const fetchWeather = () => {
     const controller = new AbortController();
     setRefreshing(true);
-    fetch('https://wttr.in/Los+Angeles,California?format=j1', { signal: controller.signal })
+    fetch('/api/weather', { signal: controller.signal })
       .then(r => r.json())
       .then(data => {
         const cur  = data.current_condition[0];
