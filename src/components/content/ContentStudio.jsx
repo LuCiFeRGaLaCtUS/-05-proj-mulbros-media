@@ -6,7 +6,7 @@ import { getAgentById } from '../../config/agents';
 import { callClaude, getApiKey } from '../../utils/claude';
 
 const agentMap = {
-  'Last County (Film)': 'distribution-marketing',
+  'Last County (Film)': 'last-county-distribution',  // fix: was 'distribution-marketing' (non-existent)
   'Talise (Artist)': 'talise-marketing',
   'Luke Mulholland (Composer)': 'luke-sales',
   'Community (Newsletter)': 'community-manager'
@@ -41,9 +41,13 @@ export const ContentStudio = () => {
 
       const agentId = agentMap[target];
       const agent = getAgentById(agentId);
-      
+
+      if (!agent) {
+        throw new Error(`No agent configured for "${target}". Check agent configuration.`);
+      }
+
       const userMessage = `Create a ${contentType} for ${target}. Tone: ${tone}. ${additionalContext || ''}`;
-      
+
       const response = await callClaude(
         agent.systemPrompt,
         [{ role: 'user', content: userMessage }],

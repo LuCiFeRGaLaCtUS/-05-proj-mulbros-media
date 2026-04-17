@@ -119,7 +119,7 @@ const QUICK_ACTIONS = [
 ];
 
 const QuickActionsBar = ({ onAgentClick }) => (
-  <div className="grid grid-cols-5 gap-3">
+  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
     {QUICK_ACTIONS.map(({ id, label, sub, Icon, colorCls }) => (
       <button
         key={id}
@@ -846,7 +846,7 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
 
       {/* Row 1 — 4 interactive themed stat cards */}
       <SectionLabel label="Metrics" sub="live indicators" />
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCardAnimated title="Box Office Revenue" numericValue={30000} formatter={v => `$${v.toLocaleString()}`}
           change="+12.4%" changeUp sub="confirmed"
           Icon={DollarSign} iconBg="bg-blue-500/20" iconColor="text-blue-400"
@@ -872,24 +872,24 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
           onClick={() => nav('music')} linkLabel="View Community →" delay={240} />
       </div>
 
-      {/* Row 2 — WelcomeMark (6) + AudienceScore (3) + DealFlow (3) */}
+      {/* Row 2 — WelcomeMark + AudienceScore + DealFlow */}
       <SectionLabel label="Overview" sub="studio command" />
-      <div className="grid grid-cols-12 gap-4" style={{ minHeight: 290 }}>
-        <div className="col-span-6"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
-        <div className="col-span-3"><AudienceScore onClick={() => nav('music')} /></div>
-        <div className="col-span-3"><DealFlow onClick={() => nav('financing')} /></div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4" style={{ minHeight: 290 }}>
+        <div className="lg:col-span-6"><WelcomeMark onGoToAgents={() => nav('agents')} /></div>
+        <div className="lg:col-span-3"><AudienceScore onClick={() => nav('music')} /></div>
+        <div className="lg:col-span-3"><DealFlow onClick={() => nav('financing')} /></div>
       </div>
 
-      {/* Row 3 — Revenue AreaChart (7) + Platform BarChart (5) */}
+      {/* Row 3 — Revenue AreaChart + Platform BarChart */}
       <SectionLabel label="Analytics" sub="6-month forecast · platform reach" />
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-7"><RevenueChart onClick={() => nav('financing')} /></div>
-        <div className="col-span-5"><PlatformChart onClick={() => nav('music')} /></div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-7"><RevenueChart onClick={() => nav('financing')} /></div>
+        <div className="lg:col-span-5"><PlatformChart onClick={() => nav('music')} /></div>
       </div>
 
       {/* Row 4 — 4 progress metric cards */}
       <SectionLabel label="Targets" sub="progress to goal" />
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <ProgressCard Icon={Film}       iconBg="bg-emerald-500/20" iconColor="text-emerald-400"
           title="Last County Streams" value="142,847" pct={71} color={C.emerald} sub="Target: 200K"
           Bg={BgFilmFrame} hoverRing="hover:ring-emerald-500/25" onClick={() => nav('productions')} />
@@ -907,11 +907,11 @@ export const Dashboard = ({ onAgentClick, setActivePage }) => {
           Bg={BgEmail} hoverRing="hover:ring-purple-500/25" onClick={() => nav('music')} />
       </div>
 
-      {/* Row 5 — Projects table (7) + Activity timeline (5) */}
+      {/* Row 5 — Projects table + Activity timeline */}
       <SectionLabel label="Operations" sub="projects · studio activity" />
-      <div className="grid grid-cols-12 gap-4">
-        <div className="col-span-7"><ProjectsTable onRowClick={(page) => nav(page)} /></div>
-        <div className="col-span-5"><ActivityTimeline onItemClick={(page) => nav(page)} /></div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        <div className="lg:col-span-7"><ProjectsTable onRowClick={(page) => nav(page)} /></div>
+        <div className="lg:col-span-5"><ActivityTimeline onItemClick={(page) => nav(page)} /></div>
       </div>
 
       {/* Row 6 — Agent Fleet */}

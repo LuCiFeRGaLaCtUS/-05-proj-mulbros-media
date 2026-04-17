@@ -1,6 +1,17 @@
 import React from 'react';
 import { fanSegments } from '../../config/mockData';
 
+// Static map — Tailwind's JIT/purge cannot handle dynamic bg-${color}-500 class strings.
+// All colours used by fanSegments must be listed here explicitly.
+const COLOR_DOT = {
+  blue:    'bg-blue-500',
+  emerald: 'bg-emerald-500',
+  amber:   'bg-amber-500',
+  purple:  'bg-purple-500',
+  rose:    'bg-rose-500',
+  zinc:    'bg-zinc-500',
+};
+
 export const FanSegments = () => {
   return (
     <div className="relative bg-zinc-900 rounded-xl p-6 border border-purple-900/30 overflow-hidden">
@@ -18,7 +29,7 @@ export const FanSegments = () => {
               className="flex items-center justify-between p-3 bg-zinc-800/50 hover:bg-zinc-800/80 rounded-lg transition-all cursor-pointer border border-transparent hover:border-purple-500/20"
             >
               <div className="flex items-center gap-3">
-                <span className={`w-3 h-3 rounded-full bg-${segment.color}-500`}></span>
+                <span className={`w-3 h-3 rounded-full ${COLOR_DOT[segment.color] || 'bg-zinc-500'}`}></span>
                 <span className="text-sm font-medium text-zinc-200">{segment.name}</span>
               </div>
               <div className="flex items-center gap-6">

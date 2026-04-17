@@ -9,6 +9,7 @@ import { CalendarView } from './components/verticals/CalendarView';
 import { AgentChat } from './components/agents/AgentChat';
 import { Settings } from './components/settings/Settings';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './utils/useTheme';
 
 // Toaster that reacts to theme changes via the mulbros-theme custom event
@@ -73,7 +74,9 @@ function App() {
   return (
     <>
       <Layout activePage={activePage} setActivePage={setActivePage} setPreselectedAgent={setPreselectedAgent}>
-        {renderPage()}
+        <ErrorBoundary key={activePage}>
+          {renderPage()}
+        </ErrorBoundary>
         <FloatingChatbot appState={appState} />
       </Layout>
       <ThemedToaster />

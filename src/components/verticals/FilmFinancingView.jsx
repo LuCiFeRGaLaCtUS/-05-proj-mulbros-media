@@ -233,7 +233,7 @@ const financingActivities = activities.filter(a => a.vertical === 'financing');
 
 // ─── Lead Gen Tab ─────────────────────────────────────────────────────────────
 
-const LeadGenTab = () => {
+const LeadGenTab = ({ onAddToPipeline }) => {
   const defaultSources = ['reddit', 'kickstarter', 'indiegogo', 'stage32', 'slated', 'linkedin'];
   const [activeSources, setActiveSources] = useState(defaultSources);
   const [activeSubreddits, setActiveSubreddits] = useState(['r/indiefilm', 'r/filmmakers', 'r/lowbudgetfilmmaking']);
@@ -273,7 +273,14 @@ const LeadGenTab = () => {
     }, 2200);
   };
 
-  const addToPipeline = (id) => setAddedIds(prev => [...prev, id]);
+  const addToPipeline = (id) => {
+    setAddedIds(prev => [...prev, id]);
+    // Also push to the shared pipeline state (passed down from FilmFinancingView)
+    if (onAddToPipeline) {
+      const lead = results.find(r => r.id === id);
+      if (lead) onAddToPipeline(lead);
+    }
+  };
   const sendOutreach  = (id) => setOutreachIds(prev => [...prev, id]);
 
   const highSignal = results.filter(r => r.signal === 'high').length;
@@ -1185,12 +1192,7 @@ const FFDroppableColumn = ({ id, children, color }) => {
 
 // ─── Pipeline tab (with DnD) ──────────────────────────────────────────────────
 
-const PipelineTab = () => {
-  const [pipeline, setPipeline] = useState(() =>
-    Object.fromEntries(
-      Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
-    )
-  );
+const PipelineTab = ({ pipeline, setPipeline }) => {
   const [activeCardId, setActiveCardId] = useState(null);
 
   const sensors = useSensors(
@@ -1226,7 +1228,7 @@ const PipelineTab = () => {
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveCardId(null)}
     >
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {STAGES.map(stage => {
           const leads = pipeline[stage.key] || [];
           const colors = stageColorMap[stage.color];
@@ -1299,6 +1301,29 @@ export const FilmFinancingView = () => {
   const [activeTab, setActiveTab] = useState('Lead Gen');
   const tabs = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
+  // ── Shared pipeline state — lifted so LeadGen and Pipeline tabs stay in sync ──
+  const [pipeline, setPipeline] = useState(() =>
+    Object.fromEntries(
+      Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
+    )
+  );
+
+  // Called by LeadGenTab when user clicks "Add to Pipeline"
+  const handleAddToPipeline = (lead) => {
+    const card = {
+      id:       lead.id,
+      name:     lead.username,
+      project:  lead.snippet?.substring(0, 60) + '…',
+      budget:   lead.budget,
+      country:  lead.country,
+      tags:     lead.tags || [],
+    };
+    setPipeline(prev => ({
+      ...prev,
+      discovery: [...(prev.discovery || []), card],
+    }));
+  };
+
   return (
     <div className="space-y-5">
       {/* ── Cinematic page header ───────────────────────────────────────── */}
@@ -1327,7 +1352,7 @@ export const FilmFinancingView = () => {
       </div>
 
       {/* ── KPIs ────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map(k => (
           <div key={k.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
             <BlueBg />
@@ -1359,14 +1384,14 @@ export const FilmFinancingView = () => {
         </div>
       </div>
 
-      {/* Lead Gen */}
-      {activeTab === 'Lead Gen' && <LeadGenTab />}
+      {/* Lead Gen — passes handleAddToPipeline so leads land in shared pipeline */}
+      {activeTab === 'Lead Gen' && <LeadGenTab onAddToPipeline={handleAddToPipeline} />}
 
       {/* Incentive Analyst */}
       {activeTab === 'Incentive Analyst' && <IncentiveAnalystTab />}
 
-      {/* Pipeline */}
-      {activeTab === 'Pipeline' && <PipelineTab />}
+      {/* Pipeline — reads shared pipeline state, changes visible immediately after LeadGen adds */}
+      {activeTab === 'Pipeline' && <PipelineTab pipeline={pipeline} setPipeline={setPipeline} />}
 
       {/* Activity */}
       {activeTab === 'Activity' && (

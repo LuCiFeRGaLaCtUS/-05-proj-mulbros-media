@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, Search, X, Settings, Sun, Moon, CircleUserRound, LogOut, BadgeCheck } from 'lucide-react';
+import { Bell, Search, X, Settings, Sun, Moon, CircleUserRound, LogOut, BadgeCheck, Menu } from 'lucide-react';
 import { agents } from '../../config/agents';
 import { campaigns, activities } from '../../config/mockData';
 
@@ -51,7 +51,7 @@ const applyTheme = (theme) => {
   window.dispatchEvent(new CustomEvent('mulbros-theme', { detail: theme }));
 };
 
-export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
+export const TopBar = ({ activePage, setActivePage, setPreselectedAgent, onMenuClick }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -110,13 +110,21 @@ export const TopBar = ({ activePage, setActivePage, setPreselectedAgent }) => {
   const recentNotifs = activities.slice(0, 6);
 
   return (
-    <div className="fixed top-0 left-64 right-0 h-16 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800/80 flex items-center justify-between px-6 z-50">
+    <div className="fixed top-0 left-0 lg:left-64 right-0 h-16 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800/80 flex items-center justify-between px-4 lg:px-6 z-50">
       {/* Cinematic top highlight line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-amber-500/30 to-transparent pointer-events-none" />
       {/* Subtle left amber glow behind title */}
       <div className="absolute left-0 top-0 w-48 h-16 bg-amber-500/3 blur-xl pointer-events-none" />
 
       <div className="relative z-10 flex items-center gap-3">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+          className="lg:hidden p-2 -ml-1 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+        >
+          <Menu size={20} />
+        </button>
         <div className="text-lg font-semibold text-zinc-100">
           {pageNames[activePage] || 'Dashboard'}
         </div>
