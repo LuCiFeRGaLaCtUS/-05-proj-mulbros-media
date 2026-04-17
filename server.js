@@ -22,7 +22,13 @@ app.use(helmet({
       scriptSrc:   ["'self'", "'unsafe-inline'"],   // Vite needs inline scripts
       styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
-      connectSrc:  ["'self'", 'https://api.openai.com', 'https://api.anthropic.com'],
+      connectSrc:  [
+        "'self'",
+        'https://api.openai.com',
+        'https://api.anthropic.com',
+        'https://*.supabase.co',
+        'wss://*.supabase.co',   // realtime subscriptions
+      ],
       imgSrc:      ["'self'", 'data:'],
     },
   },
