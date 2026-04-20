@@ -72,7 +72,7 @@ function App() {
 
   const renderPage = () => {
     switch (activePage) {
-      case 'dashboard':   return <Dashboard onAgentClick={handleAgentClick} setActivePage={setActivePage} />;
+      case 'dashboard':   return <Dashboard onAgentClick={handleAgentClick} setActivePage={setActivePage} user={user} />;
       case 'financing':   return <FilmFinancingView user={user} />;
       case 'productions': return <ProductionsView />;
       case 'music':       return <MusicView onAgentClick={handleAgentClick} user={user} />;

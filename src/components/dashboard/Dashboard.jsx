@@ -22,7 +22,7 @@ const C = {
 };
 
 // Logged-in user — consistent with TopBar.jsx; wire to auth/settings when ready
-const USER_NAME = 'Arghya Chowdhury';
+// USER_NAME removed — real name comes from the logged-in user via props
 
 const REVENUE_DATA = [
   { month: 'Oct', financing: 12000, music: 4500,  productions: 8000  },
@@ -79,7 +79,7 @@ const SectionLabel = ({ label, sub }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 // WELCOME HERO — replaces Quick Launch; shows greeting + live clock + weather
 // ══════════════════════════════════════════════════════════════════════════════
-const WelcomeHero = () => {
+const WelcomeHero = ({ user }) => {
   const [liveNow, setLiveNow] = useState(new Date());
 
   useEffect(() => {
@@ -98,7 +98,9 @@ const WelcomeHero = () => {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
   const timeStr = liveNow.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  const [firstName] = USER_NAME.split(' ');
+  const fullName    = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
+  const rawFirst    = fullName.split(' ')[0];
+  const firstName   = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -1106,14 +1108,14 @@ const WeatherTile = () => {
 // ══════════════════════════════════════════════════════════════════════════════
 // MAIN EXPORT
 // ══════════════════════════════════════════════════════════════════════════════
-export const Dashboard = ({ onAgentClick, setActivePage }) => {
+export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
   const nav = (page) => setActivePage?.(page);
 
   return (
     <div className="space-y-5">
 
       {/* Hero — Welcome greeting + live weather */}
-      <WelcomeHero />
+      <WelcomeHero user={user} />
 
       {/* Row 1 — 4 interactive themed stat cards */}
       <SectionLabel label="Metrics" sub="live indicators" />
