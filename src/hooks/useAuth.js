@@ -1,29 +1,37 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+// ── Detect password recovery from the URL immediately on page load ────────────
+// Supabase implicit flow: hash contains #access_token=...&type=recovery
+// Supabase PKCE flow:     query contains ?code=...  (type detected via event)
+// We check the hash first so the reset form shows before any state resolves.
+const getInitialAuthEvent = () => {
+  try {
+    const hash   = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    const search = new URLSearchParams(window.location.search);
+    if (hash.get('type') === 'recovery' || search.get('type') === 'recovery') {
+      return 'PASSWORD_RECOVERY';
+    }
+  } catch { /* SSR guard */ }
+  return null;
+};
+
 export const useAuth = () => {
   const [session,   setSession]   = useState(null);
   const [user,      setUser]      = useState(null);
   const [loading,   setLoading]   = useState(true);
-  // null = not yet resolved; 'PASSWORD_RECOVERY' = reset link clicked; other = normal event
-  const [authEvent, setAuthEvent] = useState(null);
+  // Initialised from URL so recovery is detected synchronously on first render
+  const [authEvent, setAuthEvent] = useState(getInitialAuthEvent);
 
   useEffect(() => {
-    // onAuthStateChange fires immediately for the current session (including
-    // SIGNED_IN from a recovery / verification link in the URL), so we
-    // subscribe first and use getSession only as a fallback for environments
-    // where the subscription doesn't fire synchronously.
+    // onAuthStateChange is the single source of truth.
+    // Supabase v2 fires INITIAL_SESSION immediately on subscribe, so we do NOT
+    // call getSession() — that caused a race where getSession resolved first
+    // (setting loading=false without authEvent) before PASSWORD_RECOVERY fired.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setAuthEvent(event);
       setSession(session);
       setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Fallback: covers edge cases where onAuthStateChange fires after a tick
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(prev => (prev !== undefined ? prev : session));
-      setUser(prev    => (prev !== undefined ? prev : session?.user ?? null));
       setLoading(false);
     });
 

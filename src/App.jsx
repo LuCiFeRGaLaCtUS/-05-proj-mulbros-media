@@ -73,14 +73,15 @@ function AppInner({ session, user, loading: authLoading, signOut, authEvent }) {
   const { profile, loading: profileLoading, updateProfile } = useProfile(user);
   const [preselectedAgent, setPreselectedAgent] = useState(null);
 
+  // Password-reset link clicked — detected synchronously from the URL hash
+  // (implicit flow) or from the onAuthStateChange event (PKCE flow).
+  // Must be checked BEFORE the loading gate so the race with getSession()
+  // cannot send the user to the dashboard first.
+  if (authEvent === 'PASSWORD_RECOVERY') return <ResetPasswordPage />;
+
   // Wait for auth, then wait for profile if logged in
   const loading = authLoading || (!!session && profileLoading);
   if (loading) return <FullScreenLoader />;
-
-  // Password-reset link was clicked — Supabase creates a temporary session
-  // with the PASSWORD_RECOVERY event. Show the reset form immediately,
-  // bypassing onboarding and all other gates.
-  if (authEvent === 'PASSWORD_RECOVERY') return <ResetPasswordPage />;
 
   // Not authenticated
   if (!session) return <LoginPage />;
