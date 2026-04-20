@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Send, Loader2, Zap, Cpu, RotateCcw } from 'lucide-react';
+import { Send, Loader2, Zap, Cpu, RotateCcw, Search } from 'lucide-react';
 import { AgentSelector } from './AgentSelector';
 import { ChatMessage, TypingIndicator } from './ChatMessage';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { getAgentById } from '../../config/agents';
-import { callAI, getApiKey } from '../../utils/ai';
+import { callAI, getApiKey, callRedditSearch, formatRedditResults } from '../../utils/ai';
 import { verticalColors } from '../../config/verticalColors';
 import { useAgentChats } from '../../hooks/useAgentChats';
 
@@ -48,13 +48,39 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
     await addMessage('user', userContent);
 
     try {
-      const apiKey = getApiKey();
+      const apiKey = getApiKey(agent.model);
       if (!apiKey) {
         throw new Error('No API key configured. Go to Settings → API Keys and paste your OpenAI key.');
       }
-      // Build message history for the API call
+
+      // Build message history
       const apiMessages = [...messages, { role: 'user', content: userContent }]
         .map(({ role, content }) => ({ role, content }));
+
+      // ── Search-enabled agents: inject Firecrawl results as context ───────────
+      if (agent.searchEnabled && agent.searchSubreddits) {
+        const today = new Date().toLocaleDateString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        });
+        try {
+          const searchData = await callRedditSearch(userContent, agent.searchSubreddits, 'year');
+          const searchContext = formatRedditResults(searchData);
+          const last = apiMessages[apiMessages.length - 1];
+          apiMessages[apiMessages.length - 1] = {
+            ...last,
+            content: `[Today is ${today}]\n\n${searchContext}\n\n---\n\nUser request: ${last.content}`,
+          };
+        } catch (searchErr) {
+          console.warn('Search failed, proceeding without live context:', searchErr.message);
+          // Inject date only — tell agent search is unavailable so it doesn't hallucinate
+          const last = apiMessages[apiMessages.length - 1];
+          apiMessages[apiMessages.length - 1] = {
+            ...last,
+            content: `[Today is ${today}. Live search unavailable — do NOT invent usernames, URLs, or project details. Inform the user you could not retrieve live data.]\n\n${last.content}`,
+          };
+        }
+      }
+
       const response = await callAI(agent.systemPrompt, apiMessages, apiKey, agent.model);
       await addMessage('assistant', response);
     } catch (error) {
@@ -78,13 +104,13 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
       <AgentSelector selectedAgent={selectedAgent} onSelectAgent={switchAgent} />
 
       {/* ── Main chat area ── */}
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: '#050509' }}>
+      <div className="flex-1 flex flex-col min-w-0" style={{ background: '#F7F7FA' }}>
 
         {/* Agent header bar */}
         <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 relative"
           style={{
-            borderBottom: '1px solid rgba(255,255,255,0.05)',
-            background: 'rgba(7,7,14,0.8)',
+            borderBottom: '1px solid rgba(0,0,0,0.07)',
+            background: 'rgba(255,255,255,0.97)',
             backdropFilter: 'blur(12px)',
           }}>
           {/* Bottom neon line */}
@@ -102,12 +128,12 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               }}>
               {initials(agent.name)}
               <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)', border: '1.5px solid #050509' }} />
+                style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)', border: '1.5px solid #ffffff' }} />
             </div>
 
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-sm font-bold text-zinc-100">{agent.name}</h2>
+                <h2 className="text-sm font-bold text-zinc-900">{agent.name}</h2>
                 <span className="chip" style={{
                   background: `${vc.neon}10`,
                   color: `${vc.neon}90`,
@@ -116,8 +142,18 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
                 }}>
                   ONLINE
                 </span>
+                {agent.searchEnabled && (
+                  <span className="flex items-center gap-1 chip" style={{
+                    background: `${vc.neon}10`,
+                    color: `${vc.neon}70`,
+                    border: `1px solid ${vc.neon}20`,
+                    fontSize: '8px',
+                  }}>
+                    <Search size={7} /> LIVE SEARCH
+                  </span>
+                )}
               </div>
-              <p className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+              <p className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.35)' }}>
                 {messages.length > 0 ? `${messages.length} messages · Neural link active` : 'Ready for input'}
               </p>
             </div>
@@ -130,12 +166,12 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               title="Clear conversation"
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold"
               style={{
-                background: 'rgba(255,255,255,0.03)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                color: 'rgba(255,255,255,0.3)',
+                background: 'rgba(0,0,0,0.025)',
+                border: '1px solid rgba(0,0,0,0.07)',
+                color: 'rgba(0,0,0,0.35)',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#f87171'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#dc2626'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = 'rgba(0,0,0,0.35)'; }}
             >
               <RotateCcw size={11} />
               Clear
@@ -145,7 +181,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
 
         {/* ── Messages area ── */}
         <div
-          className="flex-1 overflow-y-auto p-6 bg-dot-grid"
+          className="flex-1 overflow-y-auto p-6"
           aria-live="polite"
           aria-label={`Chat with ${agent.name}`}
           style={{ backgroundSize: '24px 24px' }}
@@ -159,14 +195,14 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
                   style={{ background: `radial-gradient(circle, ${vc.neon}10 0%, transparent 70%)` }} />
                 <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative"
                   style={{
-                    background: `linear-gradient(135deg, ${vc.dim}, rgba(255,255,255,0.02))`,
+                    background: `linear-gradient(135deg, ${vc.dim}, rgba(0,0,0,0.03))`,
                     border: `1px solid ${vc.neon}30`,
                     color: vc.neon,
-                    boxShadow: `0 0 30px ${vc.neon}15, 0 8px 32px rgba(0,0,0,0.4)`,
+                    boxShadow: `0 0 30px ${vc.neon}15, 0 8px 32px rgba(0,0,0,0.1)`,
                   }}>
                   {initials(agent.name)}
                   <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
-                    style={{ background: '#22d3ee', boxShadow: '0 0 8px rgba(34,211,238,0.9)', border: '2px solid #050509' }} />
+                    style={{ background: '#22d3ee', boxShadow: '0 0 8px rgba(34,211,238,0.9)', border: '2px solid #ffffff' }} />
                 </div>
               </div>
 
@@ -175,13 +211,13 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               </h2>
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-px w-8" style={{ background: `${vc.neon}30` }} />
-                <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.2)' }}>
+                <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.3)' }}>
                   Neural Agent Online
                 </span>
                 <div className="h-px w-8" style={{ background: `${vc.neon}30` }} />
               </div>
 
-              <p className="text-sm text-center max-w-sm mb-8 leading-relaxed" style={{ color: 'rgba(255,255,255,0.35)' }}>
+              <p className="text-sm text-center max-w-sm mb-8 leading-relaxed" style={{ color: 'rgba(0,0,0,0.45)' }}>
                 {agent.description}
               </p>
 
@@ -206,8 +242,8 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
         {/* ── Input bar ── */}
         <div className="flex-shrink-0 p-4 relative"
           style={{
-            background: 'rgba(7,7,14,0.9)',
-            borderTop: '1px solid rgba(255,255,255,0.05)',
+            background: 'rgba(255,255,255,0.97)',
+            borderTop: '1px solid rgba(0,0,0,0.07)',
             backdropFilter: 'blur(12px)',
           }}>
           {/* Top accent line */}
@@ -223,9 +259,9 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
                 placeholder={`Message ${agent.name}…`}
                 className="w-full rounded-xl px-4 py-3 text-sm resize-none transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.04)',
-                  border: input ? `1px solid ${vc.neon}30` : '1px solid rgba(255,255,255,0.08)',
-                  color: '#e4e4e7',
+                  background: '#ffffff',
+                  border: input ? `1px solid ${vc.neon}50` : '1px solid rgba(0,0,0,0.12)',
+                  color: '#18181b',
                   outline: 'none',
                   boxShadow: input ? `0 0 0 3px ${vc.neon}06, 0 0 16px ${vc.neon}08` : 'none',
                 }}
@@ -235,7 +271,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               {/* Character hint */}
               {input.length > 200 && (
                 <span className="absolute bottom-2 right-3 text-[10px] font-mono"
-                  style={{ color: 'rgba(255,255,255,0.2)' }}>
+                  style={{ color: 'rgba(0,0,0,0.25)' }}>
                   {input.length}
                 </span>
               )}
@@ -248,12 +284,12 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               className="rounded-xl px-4 transition-all flex items-center justify-center font-bold"
               style={{
                 background: (!input.trim() || isLoading)
-                  ? 'rgba(255,255,255,0.04)'
+                  ? 'rgba(0,0,0,0.04)'
                   : `linear-gradient(135deg, ${vc.neon}22 0%, ${vc.neon}10 100%)`,
                 border: (!input.trim() || isLoading)
-                  ? '1px solid rgba(255,255,255,0.06)'
+                  ? '1px solid rgba(0,0,0,0.09)'
                   : `1px solid ${vc.neon}35`,
-                color: (!input.trim() || isLoading) ? 'rgba(255,255,255,0.2)' : vc.neon,
+                color: (!input.trim() || isLoading) ? 'rgba(0,0,0,0.25)' : vc.neon,
                 boxShadow: (!input.trim() || isLoading) ? 'none' : `0 0 16px ${vc.neon}15`,
               }}
             >
@@ -267,10 +303,21 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
 
           <div className="flex items-center justify-center gap-3 mt-2">
             <div className="flex items-center gap-1">
-              <Cpu size={9} style={{ color: 'rgba(34,211,238,0.4)' }} />
-              <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.15)' }}>
-                Enter to send · Shift+Enter new line
-              </span>
+              {isLoading && agent.searchEnabled ? (
+                <>
+                  <Search size={9} style={{ color: vc.neon }} className="animate-pulse" />
+                  <span className="text-[10px] font-mono" style={{ color: vc.neon + '99' }}>
+                    Searching Reddit via Firecrawl…
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Cpu size={9} style={{ color: 'rgba(34,211,238,0.4)' }} />
+                  <span className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.35)' }}>
+                    Enter to send · Shift+Enter new line
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

@@ -2,29 +2,29 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 
-export const Layout = ({ children, activePage, setActivePage, setPreselectedAgent, user, signOut }) => {
+export const Layout = ({ children, profile, user, signOut, setPreselectedAgent }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen transition-colors duration-300" style={{ background: '#050507' }}>
+    <div className="min-h-screen transition-colors duration-300" style={{ background: '#F7F7FA' }}>
 
-      {/* ── Global ambient grid ───────────────────────────────────────────── */}
-      <div className="fixed inset-0 bg-dot-grid pointer-events-none" style={{ zIndex: 0, opacity: 0.6 }} />
+      {/* ── Global ambient grid — dark dots on white ──────────────────────── */}
+      <div className="fixed inset-0 bg-dot-grid pointer-events-none" style={{ zIndex: 0, opacity: 1 }} />
 
-      {/* ── Ambient corner glow ───────────────────────────────────────────── */}
+      {/* ── Ambient corner glow — very subtle ────────────────────────────── */}
       <div className="fixed pointer-events-none" style={{
         zIndex: 0,
         top: '-10%', right: '-5%',
         width: '40vw', height: '40vw',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(245,158,11,0.025) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(245,158,11,0.06) 0%, transparent 70%)',
       }} />
       <div className="fixed pointer-events-none" style={{
         zIndex: 0,
         bottom: '-10%', left: '15%',
         width: '35vw', height: '35vw',
         borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(34,211,238,0.018) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(34,211,238,0.04) 0%, transparent 70%)',
       }} />
 
       {/* ── Mobile overlay ────────────────────────────────────────────────── */}
@@ -44,22 +44,17 @@ export const Layout = ({ children, activePage, setActivePage, setPreselectedAgen
         }`}
       >
         <Sidebar
-          activePage={activePage}
-          setActivePage={(page) => {
-            setActivePage(page);
-            setSidebarOpen(false);
-          }}
+          profile={profile}
+          onClose={() => setSidebarOpen(false)}
         />
       </div>
 
       {/* ── TopBar + main content ─────────────────────────────────────────── */}
       <TopBar
-        activePage={activePage}
-        setActivePage={setActivePage}
-        setPreselectedAgent={setPreselectedAgent}
         onMenuClick={() => setSidebarOpen(true)}
         user={user}
         signOut={signOut}
+        setPreselectedAgent={setPreselectedAgent}
       />
 
       <main className="relative lg:ml-64 pt-16 min-h-screen" style={{ zIndex: 1 }}>

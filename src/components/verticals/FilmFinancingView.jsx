@@ -20,11 +20,11 @@ import {
   Loader2, DollarSign, MapPin, FileText, TrendingUp, ArrowRight, Download, GripVertical
 } from 'lucide-react';
 
-// ── Cinematic background — blue theme ────────────────────────────────────────
+// ── Light background — blue theme ─────────────────────────────────────────────
 const BlueBg = () => (
   <>
-    <div className="absolute inset-0 bg-gradient-to-br from-blue-950/25 via-zinc-900 to-zinc-950 pointer-events-none" />
-    <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-500/10 blur-xl rounded-full pointer-events-none" />
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-transparent to-transparent pointer-events-none" />
+    <div className="absolute -top-4 -right-4 w-16 h-16 bg-blue-100 blur-xl rounded-full pointer-events-none" />
   </>
 );
 
@@ -39,11 +39,11 @@ const STAGES = [
 ];
 
 const stageColorMap = {
-  zinc:    { header: 'bg-zinc-800 text-zinc-300',             card: 'border-zinc-700/50 bg-zinc-800/30',   badge: 'bg-zinc-700 text-zinc-300' },
-  blue:    { header: 'bg-blue-500/10 text-blue-400',          card: 'border-blue-500/20 bg-blue-500/5',    badge: 'bg-blue-500/10 text-blue-400' },
-  amber:   { header: 'bg-amber-500/10 text-amber-400',        card: 'border-amber-500/20 bg-amber-500/5',  badge: 'bg-amber-500/10 text-amber-400' },
-  purple:  { header: 'bg-purple-500/10 text-purple-400',      card: 'border-purple-500/20 bg-purple-500/5',badge: 'bg-purple-500/10 text-purple-400' },
-  emerald: { header: 'bg-emerald-500/10 text-emerald-400',    card: 'border-emerald-500/20 bg-emerald-500/5', badge: 'bg-emerald-500/10 text-emerald-400' },
+  zinc:    { header: 'bg-zinc-100 text-zinc-700',          card: 'border-zinc-200 bg-zinc-50',          badge: 'bg-zinc-100 text-zinc-700' },
+  blue:    { header: 'bg-blue-50 text-blue-700',           card: 'border-blue-200 bg-blue-50/50',       badge: 'bg-blue-50 text-blue-700' },
+  amber:   { header: 'bg-amber-50 text-amber-700',         card: 'border-amber-200 bg-amber-50/50',     badge: 'bg-amber-50 text-amber-700' },
+  purple:  { header: 'bg-purple-50 text-purple-700',       card: 'border-purple-200 bg-purple-50/50',   badge: 'bg-purple-50 text-purple-700' },
+  emerald: { header: 'bg-emerald-50 text-emerald-700',     card: 'border-emerald-200 bg-emerald-50/50', badge: 'bg-emerald-50 text-emerald-700' },
 };
 
 // ─── KPIs ─────────────────────────────────────────────────────────────────────
@@ -106,15 +106,14 @@ const SOURCE_GROUPS = [
   },
 ];
 
-// flat list for filtering mock results
 const ALL_SOURCE_IDS = SOURCE_GROUPS.flatMap(g => g.sources.map(s => s.id));
 
 const groupColorMap = {
-  orange: { active: 'bg-orange-500/10 text-orange-400 border-orange-500/20', dot: 'bg-orange-400' },
-  green:  { active: 'bg-green-500/10 text-green-400 border-green-500/20',   dot: 'bg-green-400' },
-  blue:   { active: 'bg-blue-500/10 text-blue-400 border-blue-500/20',      dot: 'bg-blue-400' },
-  purple: { active: 'bg-purple-500/10 text-purple-400 border-purple-500/20',dot: 'bg-purple-400' },
-  rose:   { active: 'bg-rose-500/10 text-rose-400 border-rose-500/20',      dot: 'bg-rose-400' },
+  orange: { active: 'bg-orange-50 text-orange-700 border-orange-200', dot: 'bg-orange-400' },
+  green:  { active: 'bg-green-50 text-green-700 border-green-200',   dot: 'bg-green-500' },
+  blue:   { active: 'bg-blue-50 text-blue-700 border-blue-200',      dot: 'bg-blue-500' },
+  purple: { active: 'bg-purple-50 text-purple-700 border-purple-200',dot: 'bg-purple-500' },
+  rose:   { active: 'bg-rose-50 text-rose-700 border-rose-200',      dot: 'bg-rose-500' },
 };
 
 const ALL_SUBREDDITS = [
@@ -209,27 +208,27 @@ const MOCK_RESULTS = [
 ];
 
 const sourceColorMap = {
-  reddit:        'bg-orange-500/10 text-orange-400 border border-orange-500/20',
-  facebook:      'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20',
-  discord:       'bg-violet-500/10 text-violet-400 border border-violet-500/20',
-  linkedin:      'bg-sky-500/10 text-sky-400 border border-sky-500/20',
-  kickstarter:   'bg-green-500/10 text-green-400 border border-green-500/20',
-  indiegogo:     'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  filmocracy:    'bg-teal-500/10 text-teal-400 border border-teal-500/20',
-  stage32:       'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  slated:        'bg-cyan-500/10 text-cyan-400 border border-cyan-500/20',
-  filmhedge:     'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  shootingpeople:'bg-sky-500/10 text-sky-400 border border-sky-500/20',
-  mandy:         'bg-blue-500/10 text-blue-400 border border-blue-500/20',
-  cannes:        'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-  afm:           'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-  efm:           'bg-purple-500/10 text-purple-400 border border-purple-500/20',
-  imdbpro:       'bg-rose-500/10 text-rose-400 border border-rose-500/20',
+  reddit:        'bg-orange-50 text-orange-700 border border-orange-200',
+  facebook:      'bg-indigo-50 text-indigo-700 border border-indigo-200',
+  discord:       'bg-violet-50 text-violet-700 border border-violet-200',
+  linkedin:      'bg-sky-50 text-sky-700 border border-sky-200',
+  kickstarter:   'bg-green-50 text-green-700 border border-green-200',
+  indiegogo:     'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  filmocracy:    'bg-teal-50 text-teal-700 border border-teal-200',
+  stage32:       'bg-blue-50 text-blue-700 border border-blue-200',
+  slated:        'bg-cyan-50 text-cyan-700 border border-cyan-200',
+  filmhedge:     'bg-blue-50 text-blue-700 border border-blue-200',
+  shootingpeople:'bg-sky-50 text-sky-700 border border-sky-200',
+  mandy:         'bg-blue-50 text-blue-700 border border-blue-200',
+  cannes:        'bg-purple-50 text-purple-700 border border-purple-200',
+  afm:           'bg-purple-50 text-purple-700 border border-purple-200',
+  efm:           'bg-purple-50 text-purple-700 border border-purple-200',
+  imdbpro:       'bg-rose-50 text-rose-700 border border-rose-200',
 };
 
 const signalBadge = {
-  high:   'bg-emerald-500/10 text-emerald-400',
-  medium: 'bg-amber-500/10 text-amber-400',
+  high:   'bg-emerald-50 text-emerald-700 border border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border border-amber-200',
 };
 
 const financingActivities = activities.filter(a => a.vertical === 'financing');
@@ -239,7 +238,6 @@ const financingActivities = activities.filter(a => a.vertical === 'financing');
 const LeadGenTab = ({ onAddToPipeline }) => {
   const defaultSources = ['reddit', 'kickstarter', 'indiegogo', 'stage32', 'slated', 'linkedin'];
   const [activeSources, setActiveSources] = useState(defaultSources);
-  // M5: track timeout so it can be cancelled if component unmounts mid-scan
   const scanTimerRef = useRef(null);
   useEffect(() => () => { if (scanTimerRef.current) clearTimeout(scanTimerRef.current); }, []);
   const [activeSubreddits, setActiveSubreddits] = useState(['r/indiefilm', 'r/filmmakers', 'r/lowbudgetfilmmaking']);
@@ -281,7 +279,6 @@ const LeadGenTab = ({ onAddToPipeline }) => {
 
   const addToPipeline = (id) => {
     setAddedIds(prev => [...prev, id]);
-    // Also push to the shared pipeline state (passed down from FilmFinancingView)
     if (onAddToPipeline) {
       const lead = results.find(r => r.id === id);
       if (lead) onAddToPipeline(lead);
@@ -295,12 +292,15 @@ const LeadGenTab = ({ onAddToPipeline }) => {
   return (
     <div className="space-y-5">
       {/* Config panel */}
-      <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+      <div
+        className="relative tile-pop bg-white rounded-2xl overflow-hidden"
+        style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+      >
         <BlueBg />
-        <div className="relative z-10 px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent flex items-center gap-2">
-          <Search size={14} className="text-blue-400" />
-          <span className="text-sm font-semibold text-zinc-100">Configure Global Lead Scan</span>
-          <span className="ml-auto flex items-center gap-1 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full">
+        <div className="relative z-10 px-5 py-4 border-b border-zinc-200 bg-gradient-to-r from-blue-50 to-transparent flex items-center gap-2">
+          <Search size={14} className="text-blue-500" />
+          <span className="text-sm font-semibold text-zinc-900">Configure Global Lead Scan</span>
+          <span className="ml-auto flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
             <Sparkles size={9} /> AI-Powered
           </span>
         </div>
@@ -313,7 +313,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
               const gc = groupColorMap[group.color];
               return (
                 <div key={group.label}>
-                  <div className="text-xs text-zinc-600 font-medium mb-1.5">{group.label}</div>
+                  <div className="text-xs text-zinc-500 font-medium mb-1.5">{group.label}</div>
                   <div className="flex flex-wrap gap-1.5">
                     {group.sources.map(s => {
                       const isOn = activeSources.includes(s.id);
@@ -322,10 +322,10 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                           key={s.id}
                           onClick={() => toggleSource(s.id)}
                           className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium transition-all ${
-                            isOn ? gc.active : 'border-zinc-700/50 text-zinc-600 bg-zinc-800/20 hover:text-zinc-400'
+                            isOn ? gc.active : 'border-zinc-200 text-zinc-400 bg-zinc-50 hover:text-zinc-700'
                           }`}
                         >
-                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOn ? gc.dot : 'bg-zinc-700'}`} />
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isOn ? gc.dot : 'bg-zinc-300'}`} />
                           {s.label}
                         </button>
                       );
@@ -340,7 +340,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
               <div>
                 <button
                   onClick={() => setShowSubreddits(v => !v)}
-                  className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 mb-2 hover:text-zinc-300 transition-colors"
+                  className="flex items-center gap-1.5 text-xs font-medium text-zinc-500 mb-2 hover:text-zinc-800 transition-colors"
                 >
                   Subreddits to scan
                   {showSubreddits ? <ChevronUp size={11} /> : <ChevronDown size={11} />}
@@ -353,8 +353,8 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                         onClick={() => toggleSubreddit(sr)}
                         className={`text-xs px-2 py-1 rounded-lg border transition-all ${
                           activeSubreddits.includes(sr)
-                            ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                            : 'border-zinc-700/40 text-zinc-600 hover:text-zinc-400'
+                            ? 'bg-orange-50 text-orange-700 border-orange-200'
+                            : 'border-zinc-200 text-zinc-400 hover:text-zinc-700'
                         }`}
                       >
                         {sr}
@@ -376,7 +376,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                 value={keywords}
                 onChange={e => setKeywords(e.target.value)}
                 rows={2}
-                className="w-full bg-zinc-800 border border-zinc-700/50 rounded-lg px-3 py-2 text-xs text-zinc-300 placeholder:text-zinc-600 focus:outline-none focus:border-blue-500/50 resize-none"
+                className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-xs text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:border-blue-400 resize-none"
                 placeholder="e.g. tax incentive, BFI grant, co-production treaty..."
               />
             </div>
@@ -387,22 +387,22 @@ const LeadGenTab = ({ onAddToPipeline }) => {
               </label>
               <div className="flex items-center gap-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
                   <input
                     type="text"
                     value={Number(budgetMin).toLocaleString()}
                     onChange={e => setBudgetMin(e.target.value.replace(/,/g, ''))}
-                    className="w-full bg-zinc-800 border border-zinc-700/50 rounded-lg pl-6 pr-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-white border border-zinc-200 rounded-lg pl-6 pr-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-blue-400"
                   />
                 </div>
-                <span className="text-zinc-600 text-xs flex-shrink-0">to</span>
+                <span className="text-zinc-400 text-xs flex-shrink-0">to</span>
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-500">$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
                   <input
                     type="text"
                     value={Number(budgetMax).toLocaleString()}
                     onChange={e => setBudgetMax(e.target.value.replace(/,/g, ''))}
-                    className="w-full bg-zinc-800 border border-zinc-700/50 rounded-lg pl-6 pr-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50"
+                    className="w-full bg-white border border-zinc-200 rounded-lg pl-6 pr-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-blue-400"
                   />
                 </div>
               </div>
@@ -414,7 +414,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                 <select
                   value={region}
                   onChange={e => setRegion(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700/50 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50"
+                  className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-blue-400"
                 >
                   {REGIONS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -424,7 +424,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                 <select
                   value={language}
                   onChange={e => setLanguage(e.target.value)}
-                  className="w-full bg-zinc-800 border border-zinc-700/50 rounded-lg px-3 py-2 text-xs text-zinc-300 focus:outline-none focus:border-blue-500/50"
+                  className="w-full bg-white border border-zinc-200 rounded-lg px-3 py-2 text-xs text-zinc-900 focus:outline-none focus:border-blue-400"
                 >
                   {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
                 </select>
@@ -454,7 +454,10 @@ const LeadGenTab = ({ onAddToPipeline }) => {
 
       {/* Scanning animation */}
       {scanning && (
-        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-6 flex flex-col items-center gap-3 overflow-hidden">
+        <div
+          className="relative tile-pop bg-white rounded-2xl p-6 flex flex-col items-center gap-3 overflow-hidden"
+          style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+        >
           <BlueBg />
           <div className="relative z-10 flex gap-1.5">
             {[0, 1, 2, 3, 4].map(i => (
@@ -465,7 +468,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
               />
             ))}
           </div>
-          <div className="relative z-10 text-sm text-zinc-300 font-medium">
+          <div className="relative z-10 text-sm text-zinc-700 font-medium">
             AI scanning {activeSources.join(', ')}…
           </div>
           <div className="relative z-10 text-xs text-zinc-500">Extracting high-intent signals from posts and profiles</div>
@@ -476,20 +479,23 @@ const LeadGenTab = ({ onAddToPipeline }) => {
       {scanned && !scanning && (
         <div className="space-y-4">
           {/* Stats bar */}
-          <div className="relative flex items-center gap-4 bg-zinc-900 rounded-xl ring-1 ring-blue-900/30 px-5 py-3 flex-wrap overflow-hidden">
+          <div
+            className="relative flex items-center gap-4 bg-white rounded-xl px-5 py-3 flex-wrap overflow-hidden"
+            style={{ border: '1px solid rgba(0,0,0,0.07)' }}
+          >
             <BlueBg />
             <div className="flex items-center gap-2 text-sm">
-              <Users size={14} className="text-blue-400" />
-              <span className="font-bold text-zinc-100">{results.length}</span>
+              <Users size={14} className="text-blue-500" />
+              <span className="font-bold text-zinc-900">{results.length}</span>
               <span className="text-zinc-500">leads found</span>
             </div>
-            <div className="h-4 w-px bg-zinc-700" />
+            <div className="h-4 w-px bg-zinc-200" />
             <div className="flex items-center gap-2 text-sm">
-              <AlertCircle size={14} className="text-emerald-400" />
-              <span className="font-bold text-emerald-400">{highSignal}</span>
+              <AlertCircle size={14} className="text-emerald-500" />
+              <span className="font-bold text-emerald-600">{highSignal}</span>
               <span className="text-zinc-500">high signal</span>
             </div>
-            <div className="h-4 w-px bg-zinc-700" />
+            <div className="h-4 w-px bg-zinc-200" />
             <span className="text-xs text-zinc-500">
               {[...new Set(results.map(r => r.country))].join(' · ')}
             </span>
@@ -502,19 +508,20 @@ const LeadGenTab = ({ onAddToPipeline }) => {
               return (
               <div
                 key={lead.id}
-                className={`relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/20 p-4 flex flex-col gap-3 overflow-hidden ${
+                className={`relative tile-pop bg-white rounded-2xl p-4 flex flex-col gap-3 overflow-hidden ${
                   addedIds.includes(lead.id) ? 'opacity-60' : ''
                 }`}
+                style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
               >
                 <BlueBg />
                 {/* Top row */}
                 <div className="relative z-10 flex items-start justify-between gap-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColorMap[lead.source] || 'bg-zinc-700 text-zinc-300 border border-zinc-600'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${sourceColorMap[lead.source] || 'bg-zinc-100 text-zinc-700 border border-zinc-200'}`}>
                       {srcLabel}
                     </span>
                     {lead.subreddit && (
-                      <span className="text-xs text-orange-400/70">{lead.subreddit}</span>
+                      <span className="text-xs text-orange-600">{lead.subreddit}</span>
                     )}
                   </div>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-semibold flex-shrink-0 ${signalBadge[lead.signal]}`}>
@@ -523,23 +530,23 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                 </div>
 
                 {/* Username */}
-                <div className="relative z-10 text-xs font-semibold text-zinc-300">{lead.username}</div>
+                <div className="relative z-10 text-xs font-semibold text-zinc-700">{lead.username}</div>
 
                 {/* Signal snippet */}
-                <p className="relative z-10 text-xs text-zinc-400 leading-relaxed line-clamp-3 italic">{lead.snippet}</p>
+                <p className="relative z-10 text-xs text-zinc-500 leading-relaxed line-clamp-3 italic">{lead.snippet}</p>
 
                 {/* Meta */}
                 <div className="relative z-10 flex items-center gap-3 flex-wrap">
-                  <span className="text-xs font-semibold text-emerald-400">{lead.budget}</span>
-                  <span className="text-xs bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded border border-zinc-700/40">{lead.country}</span>
-                  <span className="text-xs bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700/40">{lead.language}</span>
-                  <span className="text-xs text-zinc-600">{lead.postedAgo}</span>
+                  <span className="text-xs font-semibold text-emerald-600">{lead.budget}</span>
+                  <span className="text-xs bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded border border-zinc-200">{lead.country}</span>
+                  <span className="text-xs bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">{lead.language}</span>
+                  <span className="text-xs text-zinc-400">{lead.postedAgo}</span>
                 </div>
 
                 {/* Tags */}
                 <div className="relative z-10 flex flex-wrap gap-1">
                   {lead.tags.map(t => (
-                    <span key={t} className="text-xs bg-zinc-800 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-700/40">{t}</span>
+                    <span key={t} className="text-xs bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded border border-zinc-200">{t}</span>
                   ))}
                 </div>
 
@@ -548,7 +555,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                   <button
                     onClick={() => addToPipeline(lead.id)}
                     disabled={addedIds.includes(lead.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold bg-blue-600/20 hover:bg-blue-600/40 disabled:opacity-50 text-blue-400 border border-blue-500/20 rounded-lg py-1.5 transition-all"
+                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold bg-blue-50 hover:bg-blue-100 disabled:opacity-50 text-blue-700 border border-blue-200 rounded-lg py-1.5 transition-all"
                   >
                     {addedIds.includes(lead.id)
                       ? <><CheckCircle2 size={12} /> Added</>
@@ -558,7 +565,7 @@ const LeadGenTab = ({ onAddToPipeline }) => {
                   <button
                     onClick={() => sendOutreach(lead.id)}
                     disabled={outreachIds.includes(lead.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-300 border border-zinc-700/50 rounded-lg py-1.5 transition-all"
+                    className="flex-1 flex items-center justify-center gap-1.5 text-xs font-semibold bg-zinc-100 hover:bg-zinc-200 disabled:opacity-50 text-zinc-700 border border-zinc-200 rounded-lg py-1.5 transition-all"
                   >
                     {outreachIds.includes(lead.id)
                       ? <><CheckCircle2 size={12} /> Sent</>
@@ -575,12 +582,15 @@ const LeadGenTab = ({ onAddToPipeline }) => {
 
       {/* Empty state before first scan */}
       {!scanning && !scanned && (
-        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
+        <div
+          className="relative tile-pop bg-white rounded-2xl p-10 flex flex-col items-center gap-3 text-center overflow-hidden"
+          style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+        >
           <BlueBg />
-          <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-            <Search size={22} className="text-blue-400" />
+          <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+            <Search size={22} className="text-blue-500" />
           </div>
-          <div className="relative z-10 text-sm font-semibold text-zinc-300">Configure sources and run a scan</div>
+          <div className="relative z-10 text-sm font-semibold text-zinc-700">Configure sources and run a scan</div>
           <div className="relative z-10 text-xs text-zinc-500 max-w-sm leading-relaxed">
             The AI agent will scan selected platforms for posts containing high-intent signals — filmmakers discussing tax incentives, gap financing, production budgets, and location decisions.
           </div>
@@ -680,21 +690,17 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
   const handleExportPDF = async () => {
     if (!result) return;
-    // M3: dynamically import jsPDF — 568KB chunk only downloaded when the user actually clicks Export
     const { jsPDF } = await import('jspdf');
     const doc = new jsPDF({ unit: 'pt', format: 'letter' });
     const W = doc.internal.pageSize.getWidth();
     const MARGIN = 40;
     const INNER_W = W - MARGIN * 2;
-    const LINE_H = 14; // base line height for 9pt text
+    const LINE_H = 14;
     let y = 68;
 
-    // Helper: strip emoji / non-latin chars that jsPDF can't render
     const safe = (s = '') => s.replace(/[\u{1F000}-\u{1FFFF}]/gu, '').replace(/[^\x00-\xFF]/g, '').trim();
-    // Helper: show only the credit percentage, not the full type string
-    const creditPct = (s = '') => s.split(' ')[0]; // "25–40% Tax Credit" → "25–40%"
+    const creditPct = (s = '') => s.split(' ')[0];
 
-    // ── Header bar ──────────────────────────────────────────────────────
     doc.setFillColor(30, 64, 175);
     doc.rect(0, 0, W, 36, 'F');
     doc.setFont('helvetica', 'bold');
@@ -708,7 +714,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
       W - MARGIN, 23, { align: 'right' }
     );
 
-    // ── Project title + meta ─────────────────────────────────────────────
     doc.setTextColor(20, 20, 20);
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
@@ -723,24 +728,20 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     );
     y += 22;
 
-    // divider
     doc.setDrawColor(220, 220, 220);
     doc.line(MARGIN, y, W - MARGIN, y);
     y += 16;
 
-    // ── Top Recommendation ──────────────────────────────────────────────
-    // Calculate how many lines the reason needs (left column only, 55% width)
     const REASON_W = INNER_W * 0.58;
-    const RIGHT_W  = INNER_W * 0.38; // right stats panel
+    const RIGHT_W  = INNER_W * 0.38;
     doc.setFontSize(9);
     const reasonLines = doc.splitTextToSize(safe(result.topPick?.reason) || '', REASON_W);
-    const heroInnerH  = 20 + 20 + (reasonLines.length * LINE_H) + 16; // label + location + reason + padding
+    const heroInnerH  = 20 + 20 + (reasonLines.length * LINE_H) + 16;
     const heroH       = Math.max(heroInnerH, 90);
 
     doc.setFillColor(235, 245, 255);
     doc.roundedRect(MARGIN - 8, y, INNER_W + 16, heroH, 6, 6, 'F');
 
-    // Left column
     const lx = MARGIN;
     doc.setFontSize(7.5);
     doc.setFont('helvetica', 'bold');
@@ -756,7 +757,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     doc.setTextColor(80, 80, 80);
     doc.text(reasonLines, lx, y + 46);
 
-    // Right column — top-aligned, no overlap with reason
     const rx = W - MARGIN;
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(22);
@@ -780,15 +780,12 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
     y += heroH + 20;
 
-    // ── Comparison table ─────────────────────────────────────────────────
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.setTextColor(20, 20, 20);
     doc.text('Location Comparison', MARGIN, y);
     y += 12;
 
-    // Columns: Location | Credit % | Est. Savings | Min. Spend | Refundable
-    // (drop Qualified Spend — it's too verbose for narrow columns)
     const cX = [MARGIN, 220, 300, 390, 470, 530];
     const cH = ['Location', 'Credit %', 'Est. Savings', 'Min. Spend', 'Qualified', 'Refundable'];
 
@@ -804,7 +801,7 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     (result.comparison || []).forEach((row, idx) => {
       const isTop = safe(row.location) === safe(result.topPick?.location);
       if (isTop) {
-        doc.setFillColor(219, 234, 254); // blue-100
+        doc.setFillColor(219, 234, 254);
       } else if (idx % 2 === 0) {
         doc.setFillColor(248, 248, 248);
       } else {
@@ -827,7 +824,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
       doc.setTextColor(80, 80, 80);
       doc.text(safe(row.minSpend) || '', cX[3], y + 12);
 
-      // Qualified — first 12 chars max
       const qual = (safe(row.qualified) || '').slice(0, 12);
       doc.text(qual, cX[4], y + 12);
 
@@ -839,7 +835,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     });
     y += 16;
 
-    // ── Budget template ──────────────────────────────────────────────────
     if (y > 580) { doc.addPage(); y = MARGIN; }
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
@@ -847,7 +842,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     doc.text(`Itemized Budget Template  —  ${safe(result.topPick?.location) || ''}`, MARGIN, y);
     y += 12;
 
-    // Columns: Category | Estimate | Qualified | Notes
     const bX = [MARGIN, 200, 295, 360];
     const bH = ['Category', 'Estimate', 'Qualified', 'Notes'];
 
@@ -861,7 +855,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
     doc.setFontSize(9);
     (result.budgetTemplate || []).forEach((row, idx) => {
-      // Wrap notes — calculate row height dynamically
       const noteLines = doc.splitTextToSize(safe(row.notes) || '', INNER_W - (bX[3] - MARGIN) - 8);
       const rowH = Math.max(18, (noteLines.length * LINE_H) + 8);
 
@@ -888,7 +881,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     });
     y += 16;
 
-    // ── Next step box ────────────────────────────────────────────────────
     if (y > 680) { doc.addPage(); y = MARGIN; }
     doc.setFontSize(9);
     const nextLines = doc.splitTextToSize(safe(result.nextStep) || '', INNER_W - 24);
@@ -908,7 +900,6 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
     doc.text(nextLines, MARGIN, y + 28);
     y += nextH + 8;
 
-    // ── Footer ───────────────────────────────────────────────────────────
     const pageH = doc.internal.pageSize.getHeight();
     doc.setFontSize(7.5);
     doc.setTextColor(180, 180, 180);
@@ -924,56 +915,59 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
   return (
     <div className="space-y-6">
       {/* Input form */}
-      <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
+      <div
+        className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
+        style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+      >
         <BlueBg />
         <div className="relative z-10 flex items-center gap-2 mb-4">
-          <TrendingUp size={16} className="text-blue-400" />
-          <span className="text-sm font-semibold text-zinc-100">Project Details</span>
+          <TrendingUp size={16} className="text-blue-500" />
+          <span className="text-sm font-semibold text-zinc-900">Project Details</span>
           <span className="text-xs text-zinc-500 ml-1">— the AI will generate a personalized incentive benchmark</span>
         </div>
         <div className="relative z-10 grid grid-cols-3 gap-4 mb-4">
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Project Title</label>
             <input value={form.title} onChange={e => set('title', e.target.value)}
-              placeholder="e.g. Saltwater" className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm" />
+              placeholder="e.g. Saltwater" className="w-full bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-blue-400 text-sm placeholder-zinc-400" />
           </div>
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Genre</label>
             <select value={form.genre} onChange={e => set('genre', e.target.value)}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm">
+              className="w-full bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-blue-400 text-sm">
               {GENRES.map(g => <option key={g}>{g}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Budget (USD)</label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-sm">$</span>
               <input type="number" value={form.budget} onChange={e => set('budget', e.target.value)}
-                placeholder="2000000" className="w-full bg-zinc-800 text-zinc-200 rounded-lg pl-6 pr-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm" />
+                placeholder="2000000" className="w-full bg-white text-zinc-900 rounded-lg pl-6 pr-3 py-2 border border-zinc-200 focus:outline-none focus:border-blue-400 text-sm" />
             </div>
           </div>
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Shoot Duration (weeks)</label>
             <input type="number" value={form.duration} onChange={e => set('duration', e.target.value)}
-              placeholder="8" className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm" />
+              placeholder="8" className="w-full bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-blue-400 text-sm" />
           </div>
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Preferred Region</label>
             <select value={form.region} onChange={e => set('region', e.target.value)}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm">
+              className="w-full bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-blue-400 text-sm">
               {REGIONS.slice(1).map(r => <option key={r}>{r}</option>)}
             </select>
           </div>
           <div>
             <label className="text-xs text-zinc-500 mb-1 block">Language of Film</label>
             <select value={form.language} onChange={e => set('language', e.target.value)}
-              className="w-full bg-zinc-800 text-zinc-200 rounded-lg px-3 py-2 border border-zinc-700/50 focus:outline-none focus:border-blue-500/50 text-sm">
+              className="w-full bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-blue-400 text-sm">
               {LANGUAGES.slice(1).map(l => <option key={l}>{l}</option>)}
             </select>
           </div>
         </div>
         <button onClick={handleGenerate} disabled={!form.budget || generating}
-          className="relative z-10 flex items-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-white rounded-xl px-5 py-2.5 text-sm font-semibold transition-all">
+          className="relative z-10 flex items-center gap-2 bg-blue-500 hover:bg-blue-400 disabled:bg-zinc-100 disabled:text-zinc-400 text-white rounded-xl px-5 py-2.5 text-sm font-semibold transition-all">
           {generating ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
           {generating ? 'Generating Benchmark…' : 'Generate AI Benchmark'}
         </button>
@@ -981,12 +975,15 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
       {/* Empty state */}
       {!generating && !result && (
-        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-3 text-center overflow-hidden">
+        <div
+          className="relative tile-pop bg-white rounded-2xl p-10 flex flex-col items-center gap-3 text-center overflow-hidden"
+          style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+        >
           <BlueBg />
-          <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-            <MapPin size={22} className="text-blue-400" />
+          <div className="relative z-10 w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center">
+            <MapPin size={22} className="text-blue-500" />
           </div>
-          <div className="relative z-10 text-sm font-semibold text-zinc-300">Enter your project details above</div>
+          <div className="relative z-10 text-sm font-semibold text-zinc-700">Enter your project details above</div>
           <div className="relative z-10 text-xs text-zinc-500 max-w-sm leading-relaxed">
             The AI will rank the top 3–5 states or countries by tax credit %, estimate your savings in dollars, and generate an itemized budget template for your chosen location.
           </div>
@@ -995,10 +992,13 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
 
       {/* Generating state */}
       {generating && (
-        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-10 flex flex-col items-center gap-4 overflow-hidden">
+        <div
+          className="relative tile-pop bg-white rounded-2xl p-10 flex flex-col items-center gap-4 overflow-hidden"
+          style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+        >
           <BlueBg />
-          <Loader2 size={28} className="relative z-10 text-blue-400 animate-spin" />
-          <div className="relative z-10 text-sm font-semibold text-zinc-300">Analyzing incentives across 40+ jurisdictions…</div>
+          <Loader2 size={28} className="relative z-10 text-blue-500 animate-spin" />
+          <div className="relative z-10 text-sm font-semibold text-zinc-700">Analyzing incentives across 40+ jurisdictions…</div>
           <div className="relative z-10 text-xs text-zinc-500">Comparing tax credits, rebates, qualified spend rules, and cost benchmarks</div>
         </div>
       )}
@@ -1007,33 +1007,35 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
       {result && !generating && (
         <div className="space-y-5">
           {parseError && (
-            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-2.5 text-xs text-amber-400">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-2.5 text-xs text-amber-700">
               Showing sample benchmark — add your OpenAI key in Settings to generate a personalized report.
             </div>
           )}
 
           {/* Top pick hero */}
-          <div className="relative tile-pop bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 overflow-hidden">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 blur-2xl rounded-full pointer-events-none" />
+          <div
+            className="relative tile-pop bg-blue-50 border border-blue-200 rounded-2xl p-5 overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-40 h-40 bg-blue-100 blur-2xl rounded-full pointer-events-none" />
             <div className="flex items-center gap-2 mb-3">
-              <span className="text-xs font-semibold uppercase tracking-wider text-blue-400">Top Recommendation</span>
-              <span className="text-xs bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">★ Best Pick</span>
-              <span className="text-xs text-zinc-600">—</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-blue-600">Top Recommendation</span>
+              <span className="text-xs bg-blue-100 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full font-semibold">★ Best Pick</span>
+              <span className="text-xs text-zinc-400">—</span>
               <span className="text-xs text-zinc-500 italic">{result.project.title} · {result.project.genre} · {result.project.budget}</span>
             </div>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <div className="text-2xl font-bold text-zinc-100 mb-1">{result.topPick?.location}</div>
-                <p className="text-sm text-zinc-400 leading-relaxed max-w-xl">{result.topPick?.reason}</p>
+                <div className="text-2xl font-bold text-zinc-900 mb-1">{result.topPick?.location}</div>
+                <p className="text-sm text-zinc-700 leading-relaxed max-w-xl">{result.topPick?.reason}</p>
                 {(() => {
                   const topRow = (result.comparison || []).find(r => r.location === result.topPick?.location);
                   return topRow ? (
                     <div className="flex items-center gap-2 mt-3">
-                      <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${topRow.refundable ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-zinc-800 text-zinc-400 border-zinc-700'}`}>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-semibold border ${topRow.refundable ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-zinc-100 text-zinc-700 border-zinc-200'}`}>
                         {topRow.refundable ? '✓ Refundable credit' : '○ Non-refundable (transferable)'}
                       </span>
                       {topRow.minSpend && (
-                        <span className="text-xs bg-zinc-800 text-zinc-400 border border-zinc-700 px-2.5 py-1 rounded-full">
+                        <span className="text-xs bg-zinc-100 text-zinc-700 border border-zinc-200 px-2.5 py-1 rounded-full">
                           Min spend: {topRow.minSpend}
                         </span>
                       )}
@@ -1042,24 +1044,27 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
                 })()}
               </div>
               <div className="text-right flex-shrink-0">
-                <div className="text-3xl font-bold font-mono text-emerald-400">{result.topPick?.savings}</div>
+                <div className="text-3xl font-bold font-mono text-emerald-600">{result.topPick?.savings}</div>
                 <div className="text-xs text-zinc-500 mt-0.5">Estimated savings</div>
-                <div className="text-2xl font-bold text-blue-400 mt-2">{result.topPick?.credit}</div>
+                <div className="text-2xl font-bold text-blue-600 mt-2">{result.topPick?.credit}</div>
                 <div className="text-xs text-zinc-500">Tax credit rate</div>
               </div>
             </div>
           </div>
 
           {/* Comparison table */}
-          <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+          <div
+            className="relative tile-pop bg-white rounded-2xl overflow-hidden"
+            style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+          >
             <BlueBg />
-            <div className="relative z-10 px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Location Comparison</span>
+            <div className="relative z-10 px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-blue-50 to-transparent">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Location Comparison</span>
             </div>
             <div className="relative z-10 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-xs text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500">
                     <th className="text-left py-2.5 px-5 font-medium">Location</th>
                     <th className="text-left py-2.5 px-4 font-medium">Credit %</th>
                     <th className="text-left py-2.5 px-4 font-medium">Est. Savings</th>
@@ -1072,17 +1077,17 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
                   {(result.comparison || []).map((row, i) => {
                     const isTop = row.location === result.topPick?.location;
                     return (
-                    <tr key={i} className={`border-b border-zinc-800/40 transition-colors ${isTop ? 'bg-blue-500/5 hover:bg-blue-500/8' : 'hover:bg-zinc-800/20'}`}>
+                    <tr key={i} className={`border-b border-zinc-100 transition-colors ${isTop ? 'bg-blue-50 hover:bg-blue-100' : 'hover:bg-zinc-50'}`}>
                       <td className="py-2.5 px-5 font-medium">
-                        <span className={isTop ? 'text-zinc-100' : 'text-zinc-300'}>{row.flag} {row.location}</span>
-                        {isTop && <span className="ml-2 text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-1.5 py-0.5 rounded-full">★ Top</span>}
+                        <span className={isTop ? 'text-zinc-900' : 'text-zinc-700'}>{row.flag} {row.location}</span>
+                        {isTop && <span className="ml-2 text-xs bg-blue-100 text-blue-700 border border-blue-200 px-1.5 py-0.5 rounded-full">★ Top</span>}
                       </td>
-                      <td className="py-2.5 px-4 text-blue-400 font-bold font-mono">{row.credit}</td>
-                      <td className="py-2.5 px-4 text-emerald-400 font-semibold font-mono">{row.savings}</td>
-                      <td className="py-2.5 px-4 text-zinc-400">{row.minSpend}</td>
-                      <td className="py-2.5 px-4 text-zinc-400 text-xs">{row.qualified}</td>
+                      <td className="py-2.5 px-4 text-blue-600 font-bold font-mono">{row.credit}</td>
+                      <td className="py-2.5 px-4 text-emerald-600 font-semibold font-mono">{row.savings}</td>
+                      <td className="py-2.5 px-4 text-zinc-700">{row.minSpend}</td>
+                      <td className="py-2.5 px-4 text-zinc-500 text-xs">{row.qualified}</td>
                       <td className="py-2.5 px-4">
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${row.refundable ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-700 text-zinc-400'}`}>
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${row.refundable ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-zinc-100 text-zinc-700 border border-zinc-200'}`}>
                           {row.refundable ? 'Yes' : 'No'}
                         </span>
                       </td>
@@ -1095,16 +1100,19 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
           </div>
 
           {/* Budget template */}
-          <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+          <div
+            className="relative tile-pop bg-white rounded-2xl overflow-hidden"
+            style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+          >
             <BlueBg />
-            <div className="relative z-10 px-5 py-3 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Itemized Budget Template — {result.topPick?.location}</span>
-              <span className="text-xs text-zinc-600">Based on {result.project.budget} budget</span>
+            <div className="relative z-10 px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-blue-50 to-transparent flex items-center justify-between">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Itemized Budget Template — {result.topPick?.location}</span>
+              <span className="text-xs text-zinc-400">Based on {result.project.budget} budget</span>
             </div>
             <div className="relative z-10 overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-zinc-800 text-xs text-zinc-500">
+                  <tr className="border-b border-zinc-200 text-xs text-zinc-500">
                     <th className="text-left py-2.5 px-5 font-medium">Category</th>
                     <th className="text-left py-2.5 px-4 font-medium">Estimate</th>
                     <th className="text-left py-2.5 px-4 font-medium">Qualified Spend</th>
@@ -1113,10 +1121,10 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
                 </thead>
                 <tbody>
                   {(result.budgetTemplate || []).map((row, i) => (
-                    <tr key={i} className="border-b border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
-                      <td className="py-2.5 px-5 text-zinc-200 font-medium">{row.category}</td>
-                      <td className="py-2.5 px-4 text-zinc-300 font-mono">{row.estimate}</td>
-                      <td className="py-2.5 px-4 text-emerald-400 font-mono">{row.qualified}</td>
+                    <tr key={i} className="border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
+                      <td className="py-2.5 px-5 text-zinc-900 font-medium">{row.category}</td>
+                      <td className="py-2.5 px-4 text-zinc-700 font-mono">{row.estimate}</td>
+                      <td className="py-2.5 px-4 text-emerald-600 font-mono">{row.qualified}</td>
                       <td className="py-2.5 px-4 text-zinc-500 text-xs">{row.notes}</td>
                     </tr>
                   ))}
@@ -1126,15 +1134,17 @@ Generate a tax-incentive benchmark JSON. Pick the best 4-5 locations from the el
           </div>
 
           {/* CTA */}
-          <div className="tile-pop bg-blue-500/5 border border-blue-500/20 rounded-2xl p-5 flex items-center justify-between gap-4">
+          <div
+            className="tile-pop bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-center justify-between gap-4"
+          >
             <div>
-              <div className="text-sm font-semibold text-zinc-100 mb-1">Ready to move forward?</div>
-              <p className="text-xs text-zinc-400 leading-relaxed">{result.nextStep}</p>
+              <div className="text-sm font-semibold text-zinc-900 mb-1">Ready to move forward?</div>
+              <p className="text-xs text-zinc-700 leading-relaxed">{result.nextStep}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
             <button
               onClick={handleExportPDF}
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap border border-zinc-700/50">
+              className="flex items-center gap-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all whitespace-nowrap border border-zinc-200">
               <Download size={14} /> Export PDF
             </button>
             <button
@@ -1183,11 +1193,11 @@ const FFDraggableCard = ({ id, children }) => {
 
 const FFDroppableColumn = ({ id, children, color }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
-  const hoverRing = color === 'emerald' ? 'ring-emerald-500/30 bg-emerald-500/5'
-    : color === 'amber'   ? 'ring-amber-500/30 bg-amber-500/5'
-    : color === 'purple'  ? 'ring-purple-500/30 bg-purple-500/5'
-    : color === 'blue'    ? 'ring-blue-500/30 bg-blue-500/5'
-    : 'ring-zinc-600/30 bg-zinc-800/20';
+  const hoverRing = color === 'emerald' ? 'ring-emerald-300 bg-emerald-50'
+    : color === 'amber'   ? 'ring-amber-300 bg-amber-50'
+    : color === 'purple'  ? 'ring-purple-300 bg-purple-50'
+    : color === 'blue'    ? 'ring-blue-300 bg-blue-50'
+    : 'ring-zinc-300 bg-zinc-100';
   return (
     <div
       ref={setNodeRef}
@@ -1253,35 +1263,37 @@ const PipelineTab = ({ pipeline, setPipeline }) => {
                   const cardId = `${stage.key}::${i}`;
                   return (
                     <FFDraggableCard key={cardId} id={cardId}>
-                      <div className={`rounded-xl border p-3 ${colors.card}`}>
+                      <div
+                        className={`rounded-xl border p-3 ${colors.card}`}
+                      >
                         <div className="flex items-start gap-1.5 mb-1">
-                          <GripVertical size={11} className="text-zinc-700 flex-shrink-0 mt-0.5" />
-                          <div className="text-xs font-semibold text-zinc-200 leading-snug">{lead.title}</div>
+                          <GripVertical size={11} className="text-zinc-400 flex-shrink-0 mt-0.5" />
+                          <div className="text-xs font-semibold text-zinc-900 leading-snug">{lead.title}</div>
                         </div>
                         {lead.director && <div className="text-xs text-zinc-500 mb-1 pl-4">{lead.director}</div>}
                         <div className="flex items-center gap-1.5 flex-wrap mt-2 pl-4">
                           <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${colors.badge}`}>{lead.budget}</span>
-                          {lead.country && <span className="text-xs text-zinc-600 truncate">{lead.country}</span>}
+                          {lead.country && <span className="text-xs text-zinc-400 truncate">{lead.country}</span>}
                         </div>
                         {lead.daysInStage !== undefined && (
-                          <div className="flex items-center gap-1 mt-2 pl-4 text-zinc-600">
+                          <div className="flex items-center gap-1 mt-2 pl-4 text-zinc-400">
                             <Clock size={10} />
                             <span className="text-xs">{lead.daysInStage}d</span>
                           </div>
                         )}
                         {lead.incentiveSavings && (
-                          <div className="text-xs text-emerald-400 mt-1 pl-4 font-medium">Saves {lead.incentiveSavings}</div>
+                          <div className="text-xs text-emerald-600 mt-1 pl-4 font-medium">Saves {lead.incentiveSavings}</div>
                         )}
                         {lead.signal && (
                           <div className="text-xs text-zinc-500 mt-1 pl-4 italic leading-snug">"{lead.signal}"</div>
                         )}
-                        {lead.status && <div className="text-xs text-zinc-400 mt-1 pl-4">{lead.status}</div>}
+                        {lead.status && <div className="text-xs text-zinc-700 mt-1 pl-4">{lead.status}</div>}
                       </div>
                     </FFDraggableCard>
                   );
                 })}
                 {leads.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-zinc-700/40 p-4 text-center text-xs text-zinc-600">
+                  <div className="rounded-xl border border-dashed border-zinc-200 p-4 text-center text-xs text-zinc-400">
                     Drop here
                   </div>
                 )}
@@ -1294,10 +1306,13 @@ const PipelineTab = ({ pipeline, setPipeline }) => {
       {/* Ghost card overlay */}
       <DragOverlay>
         {draggedCard ? (
-          <div className="rounded-xl border border-blue-500/30 bg-zinc-900 p-3 shadow-2xl shadow-blue-500/10 rotate-1 scale-105 opacity-95">
-            <div className="text-xs font-semibold text-zinc-200 mb-1">{draggedCard.title}</div>
+          <div
+            className="rounded-xl bg-white p-3 shadow-lg rotate-1 scale-105 opacity-95"
+            style={{ border: '1px solid rgba(59,130,246,0.3)' }}
+          >
+            <div className="text-xs font-semibold text-zinc-900 mb-1">{draggedCard.title}</div>
             {draggedCard.director && <div className="text-xs text-zinc-500">{draggedCard.director}</div>}
-            <div className="text-xs bg-zinc-800 text-zinc-400 inline-block px-1.5 py-0.5 rounded mt-1">{draggedCard.budget}</div>
+            <div className="text-xs bg-zinc-100 text-zinc-700 border border-zinc-200 inline-block px-1.5 py-0.5 rounded mt-1">{draggedCard.budget}</div>
           </div>
         ) : null}
       </DragOverlay>
@@ -1311,18 +1326,15 @@ export const FilmFinancingView = ({ user }) => {
   const [activeTab, setActiveTab] = useState('Lead Gen');
   const tabs = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
-  // ── Shared pipeline state — persisted to Supabase ────────────────────────
   const { pipeline, setPipeline } = useFilmPipeline(user?.id);
 
-  // Called by LeadGenTab when user clicks "Add to Pipeline"
   const handleAddToPipeline = (lead) => {
-    // Map LeadGen result fields → pipeline card fields (matches mockData schema)
     const card = {
-      title:       lead.username,                                         // card header
+      title:       lead.username,
       budget:      lead.budget,
       country:     lead.country || 'Unknown',
       source:      lead.source,
-      signal:      lead.snippet ? lead.snippet.substring(0, 80) + '…' : '', // italic context row
+      signal:      lead.snippet ? lead.snippet.substring(0, 80) + '…' : '',
       daysInStage: 0,
     };
     setPipeline(prev => ({
@@ -1333,26 +1345,28 @@ export const FilmFinancingView = ({ user }) => {
 
   return (
     <div className="space-y-5">
-      {/* ── Cinematic page header ───────────────────────────────────────── */}
-      <div className="relative overflow-hidden tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-950/40 via-zinc-900 to-zinc-950 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-48 h-24 bg-blue-500/5 blur-xl rounded-full pointer-events-none" />
+      {/* ── Page header ─────────────────────────────────────────────────── */}
+      <div
+        className="relative overflow-hidden tile-pop bg-white rounded-2xl p-5"
+        style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 w-48 h-24 bg-blue-100 blur-xl rounded-full pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(59,130,246,0.04),transparent_70%)] pointer-events-none" />
         {/* Film strip holes across top */}
         <div className="absolute top-1.5 left-0 right-0 flex gap-1.5 px-4 pointer-events-none opacity-10">
-          {Array.from({ length: 16 }).map((_, i) => <div key={i} className="flex-1 h-1.5 bg-white rounded-[1px]" />)}
+          {Array.from({ length: 16 }).map((_, i) => <div key={i} className="flex-1 h-1.5 bg-zinc-400 rounded-[1px]" />)}
         </div>
-        {/* Ticket perforation rings */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-blue-500/10 pointer-events-none" />
-        <div className="absolute right-12 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-blue-500/15 pointer-events-none" />
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-blue-200 pointer-events-none" />
+        <div className="absolute right-12 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-blue-200 pointer-events-none" />
         <div className="relative z-10 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Film Financing</h1>
+            <h1 className="text-2xl font-bold text-zinc-900">Film Financing</h1>
             <p className="text-sm text-zinc-500 mt-1">
               AI-driven lead discovery → tax incentive modeling → production planning → qualified spend tracking → tax filing
             </p>
           </div>
-          <span className="text-xs bg-blue-500/10 text-blue-400 border border-blue-500/20 px-3 py-1.5 rounded-lg font-medium">
+          <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-medium">
             Vertical A
           </span>
         </div>
@@ -1361,11 +1375,15 @@ export const FilmFinancingView = ({ user }) => {
       {/* ── KPIs ────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 p-5 overflow-hidden">
+          <div
+            key={k.label}
+            className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
+            style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+          >
             <BlueBg />
             <div className="relative z-10">
-              <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
-              <div className="text-sm font-medium text-zinc-300 mb-0.5">{k.label}</div>
+              <div className="text-3xl font-bold font-mono text-zinc-900 mb-1">{k.value}</div>
+              <div className="text-sm font-medium text-zinc-700 mb-0.5">{k.label}</div>
               <div className="text-xs text-zinc-500">{k.sub}</div>
             </div>
           </div>
@@ -1373,7 +1391,7 @@ export const FilmFinancingView = ({ user }) => {
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-zinc-800">
+      <div className="border-b border-zinc-200">
         <div className="flex gap-4">
           {tabs.map(tab => (
             <button
@@ -1381,8 +1399,8 @@ export const FilmFinancingView = ({ user }) => {
               onClick={() => setActiveTab(tab)}
               className={`py-3 px-1 text-sm font-medium transition-all border-b-2 ${
                 activeTab === tab
-                  ? 'text-blue-400 border-blue-400'
-                  : 'text-zinc-400 border-transparent hover:text-zinc-100'
+                  ? 'text-blue-600 border-blue-500'
+                  : 'text-zinc-500 border-transparent hover:text-zinc-800'
               }`}
             >
               {tab}
@@ -1391,31 +1409,31 @@ export const FilmFinancingView = ({ user }) => {
         </div>
       </div>
 
-      {/* Lead Gen — passes handleAddToPipeline so leads land in shared pipeline */}
       {activeTab === 'Lead Gen' && <LeadGenTab onAddToPipeline={handleAddToPipeline} />}
 
-      {/* Incentive Analyst */}
       {activeTab === 'Incentive Analyst' && <IncentiveAnalystTab />}
 
-      {/* Pipeline — reads shared pipeline state, changes visible immediately after LeadGen adds */}
       {activeTab === 'Pipeline' && <PipelineTab pipeline={pipeline} setPipeline={setPipeline} />}
 
       {/* Activity */}
       {activeTab === 'Activity' && (
-        <div className="relative tile-pop bg-zinc-900 rounded-2xl ring-1 ring-blue-900/30 overflow-hidden">
+        <div
+          className="relative tile-pop bg-white rounded-2xl overflow-hidden"
+          style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+        >
           <BlueBg />
-          <div className="relative z-10 px-5 py-4 border-b border-zinc-800/60 bg-gradient-to-r from-blue-500/5 to-transparent">
-            <h3 className="text-sm font-semibold text-zinc-100">Recent Agent Activity</h3>
+          <div className="relative z-10 px-5 py-4 border-b border-zinc-200 bg-gradient-to-r from-blue-50 to-transparent">
+            <h3 className="text-sm font-semibold text-zinc-900">Recent Agent Activity</h3>
           </div>
-          <div className="relative z-10 divide-y divide-zinc-800/40">
+          <div className="relative z-10 divide-y divide-zinc-100">
             {financingActivities.map((a, i) => (
-              <div key={i} className="flex gap-3 px-5 py-3 hover:bg-zinc-800/20 transition-colors">
+              <div key={i} className="flex gap-3 px-5 py-3 hover:bg-zinc-50 transition-colors">
                 <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-zinc-300 leading-snug">{a.action}</p>
+                  <p className="text-sm text-zinc-700 leading-snug">{a.action}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-xs text-zinc-500">{a.agent}</span>
-                    <span className="text-zinc-600">·</span>
+                    <span className="text-zinc-300">·</span>
                     <span className="text-xs text-zinc-500">{a.time}</span>
                   </div>
                 </div>

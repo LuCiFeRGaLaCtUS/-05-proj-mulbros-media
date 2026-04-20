@@ -11,11 +11,14 @@ export const MODELS = {
   fast:    'gpt-4o-mini',
 };
 
-export const getApiKey = () =>
-  localStorage.getItem('mulbros_openai_key') || '';
+/** Return the localStorage API key appropriate for the given model */
+export const getApiKey = (model = '') =>
+  model.startsWith('claude-')
+    ? localStorage.getItem('mulbros_anthropic_key') || ''
+    : localStorage.getItem('mulbros_openai_key')    || '';
 
 const callProxy = async (model, systemPrompt, messages, apiKey) => {
-  const key = apiKey || getApiKey();
+  const key = apiKey !== undefined ? apiKey : getApiKey(model);
 
   const response = await fetch(AI_PROXY, {
     method: 'POST',
@@ -47,10 +50,76 @@ export const callAI = (systemPrompt, messages, apiKey, model) =>
 export const callAIFast = (systemPrompt, messages, apiKey) =>
   callProxy(MODELS.fast, systemPrompt, messages, apiKey);
 
+/** Test an OpenAI key */
 export const testAIKey = async (key) => {
   try {
-    await callProxy(MODELS.primary, 'Respond with exactly: OK', [{ role: 'user', content: 'Test' }], key);
-    return { success: true, message: `Connected — ${MODELS.primary}` };
+    await callProxy(MODELS.fast, 'Respond with exactly: OK', [{ role: 'user', content: 'Test' }], key);
+    return { success: true, message: `Connected — ${MODELS.fast}` };
+  } catch (error) {
+    return { success: false, message: error.message };
+  }
+};
+
+/**
+ * Search Reddit via Firecrawl (Google-indexed) — primary search path.
+ * Returns the same { posts, query, count, source } shape as all other search routes.
+ */
+export const callFirecrawlSearch = async (query, subreddits, _timeframe = 'year') => {
+  const response = await fetch('/api/firecrawl-search', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ query, subreddits, limit: 12 }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Firecrawl search error ${response.status}`);
+  }
+  return response.json(); // { posts, query, count, source: 'firecrawl' }
+};
+
+/**
+ * Search Reddit via Apify actor (headless browser, 30–60s) — secondary/deep scrape.
+ */
+export const callApifyReddit = async (query, subreddits) => {
+  const response = await fetch('/api/apify-reddit', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ query, subreddits, limit: 10 }),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `Apify error ${response.status}`);
+  }
+  return response.json(); // { posts, query, count, source: 'apify' }
+};
+
+// Keep callRedditSearch as alias → now points to Firecrawl
+export const callRedditSearch = callFirecrawlSearch;
+
+/** Format search results (Firecrawl, Apify, or Reddit API) into an LLM context block */
+export const formatRedditResults = ({ posts, query, count, source }) => {
+  const sourceLabel = source === 'firecrawl' ? 'Firecrawl (Google-indexed)'
+    : source === 'apify' ? 'Apify (scraped)'
+    : 'Reddit API';
+  if (!posts?.length) {
+    return `[Reddit Search via ${sourceLabel} — "${query}"]\nNo posts found for this query. The topic may use different terminology or be in private communities.\n[End Search Data]`;
+  }
+  const lines = posts.map((p, i) => [
+    `[${i + 1}] r/${p.subreddit} — u/${p.author} — ${p.created}`,
+    `Title: ${p.title}`,
+    p.content ? `Content: ${p.content.substring(0, 500)}${p.content.length > 500 ? '…' : ''}` : '',
+    `Link: ${p.url}`,
+    p.score != null ? `Score: ${p.score} · ${p.numComments} comments` : '',
+  ].filter(Boolean).join('\n')).join('\n\n');
+
+  return `[Live Reddit Search via ${sourceLabel} — "${query}" — ${count} posts found]\n\n${lines}\n\n[End Search Data — Use ONLY this real data. Do NOT invent any usernames, projects, or details not present above.]`;
+};
+
+/** Test an Anthropic key */
+export const testAnthropicKey = async (key) => {
+  try {
+    await callProxy('claude-3-5-haiku-20241022', 'Respond with exactly: OK', [{ role: 'user', content: 'Test' }], key);
+    return { success: true, message: 'Connected — claude-3-5-haiku' };
   } catch (error) {
     return { success: false, message: error.message };
   }

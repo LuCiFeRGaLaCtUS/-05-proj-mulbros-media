@@ -3,7 +3,7 @@ import { callAIFast } from '../../utils/ai';
 import { useCalendar } from '../../hooks/useCalendar';
 import {
   ChevronLeft, ChevronRight, Plus, Sparkles,
-  Clock, CheckCircle2, FileText, Loader2, Trash2,
+  Clock, CheckCircle2, FileText, Loader2, Trash2, Pencil, X,
   Music, Piano, CalendarDays, LayoutGrid,
 } from 'lucide-react';
 import {
@@ -32,17 +32,17 @@ const PLATFORMS = {
 };
 
 const PLATFORM_STYLE = {
-  instagram: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-  tiktok:    'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
-  twitter:   'bg-zinc-700 text-zinc-300 border-zinc-600',
-  youtube:   'bg-red-500/10 text-red-400 border-red-500/20',
-  spotify:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  linkedin:  'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  imdb:      'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  instagram: 'bg-rose-50 text-rose-600 border-rose-200',
+  tiktok:    'bg-cyan-50 text-cyan-700 border-cyan-200',
+  twitter:   'bg-zinc-100 text-zinc-600 border-zinc-200',
+  youtube:   'bg-red-50 text-red-600 border-red-200',
+  spotify:   'bg-emerald-50 text-emerald-600 border-emerald-200',
+  linkedin:  'bg-blue-50 text-blue-600 border-blue-200',
+  imdb:      'bg-amber-50 text-amber-600 border-amber-200',
 };
 
 const STATUS_CFG = {
-  draft:     { label: 'Draft',     badge: 'bg-zinc-700/80 text-zinc-400',          Icon: FileText,     next: 'scheduled', dot: 'bg-zinc-500'    },
+  draft:     { label: 'Draft',     badge: 'bg-zinc-100 text-zinc-500',             Icon: FileText,     next: 'scheduled', dot: 'bg-zinc-500'    },
   scheduled: { label: 'Scheduled', badge: 'bg-blue-500/10 text-blue-400',          Icon: Clock,        next: 'posted',    dot: 'bg-blue-400'    },
   posted:    { label: 'Posted',    badge: 'bg-emerald-500/10 text-emerald-400',    Icon: CheckCircle2, next: 'draft',     dot: 'bg-emerald-400' },
 };
@@ -60,21 +60,115 @@ const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 // ── Violet bg accent ──────────────────────────────────────────────────────────
 const VioletBg = () => (
   <>
-    <div className="absolute inset-0 bg-gradient-to-br from-violet-950/20 via-zinc-900 to-zinc-950 pointer-events-none" />
-    <div className="absolute -top-4 -right-4 w-20 h-20 bg-violet-500/10 blur-xl rounded-full pointer-events-none" />
+    <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-white pointer-events-none" />
+    <div className="absolute -top-4 -right-4 w-20 h-20 bg-violet-500/5 blur-xl rounded-full pointer-events-none" />
   </>
 );
 
+// ── Edit Post form ────────────────────────────────────────────────────────────
+const EditPostForm = ({ post, onSave, onClose }) => {
+  const talent    = post.talent;
+  const platforms = PLATFORMS[talent] || [];
+  const [platform, setPlatform] = useState(post.platform);
+  const [content,  setContent]  = useState(post.content || '');
+  const [time,     setTime]     = useState(post.scheduledTime || '');
+  const [saving,   setSaving]   = useState(false);
+
+  const handleSave = async () => {
+    if (!content.trim()) return;
+    setSaving(true);
+    await onSave(post.id, { platform, content: content.trim(), scheduledTime: time || null });
+    setSaving(false);
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative w-full max-w-md bg-white rounded-2xl ring-1 ring-violet-500/20 p-5 space-y-4 shadow-xl animate-hud-in" style={{ boxShadow: '0 8px 32px rgba(0,0,0,0.12)' }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50/40 via-white to-white rounded-2xl pointer-events-none" />
+
+        {/* Header */}
+        <div className="relative z-10 flex items-center justify-between">
+          <div>
+            <h3 className="text-sm font-bold text-zinc-900">Edit Post</h3>
+            <p className="text-xs text-zinc-500 mt-0.5 capitalize">{talent} · {post.date}</p>
+          </div>
+          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors p-1">
+            <X size={16} />
+          </button>
+        </div>
+
+        {/* Platform pills */}
+        <div className="relative z-10 flex flex-wrap gap-1.5">
+          {platforms.map(p => (
+            <button
+              key={p.key}
+              onClick={() => setPlatform(p.key)}
+              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+                platform === p.key
+                  ? PLATFORM_STYLE[p.key] || 'bg-zinc-100 text-zinc-700 border-zinc-200'
+                  : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:text-zinc-700'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Textarea */}
+        <div className="relative z-10">
+          <textarea
+            rows={5}
+            value={content}
+            onChange={e => setContent(e.target.value)}
+            placeholder="Post content…"
+            className="w-full bg-white text-zinc-900 text-xs rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-violet-500/50 resize-none placeholder-zinc-400 leading-relaxed"
+          />
+        </div>
+
+        {/* Time + actions */}
+        <div className="relative z-10 flex items-center gap-2">
+          <input
+            type="time"
+            value={time}
+            onChange={e => setTime(e.target.value)}
+            className="bg-white text-zinc-700 text-xs rounded-lg px-2 py-1.5 border border-zinc-200 focus:outline-none focus:border-violet-500/40 w-28"
+          />
+          <div className="flex-1" />
+          <button
+            onClick={onClose}
+            className="text-xs text-zinc-500 hover:text-zinc-700 px-3 py-1.5 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!content.trim() || saving}
+            className="text-xs bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-100 disabled:text-zinc-400 text-white px-4 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5"
+          >
+            {saving && <Loader2 size={11} className="animate-spin" />}
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── Post card ─────────────────────────────────────────────────────────────────
-const PostCard = ({ post, onCycle, onDelete }) => {
+const PostCard = ({ post, onCycle, onDelete, onEdit }) => {
   const st  = STATUS_CFG[post.status] || STATUS_CFG.draft;
   const { Icon } = st;
-  const plStyle = PLATFORM_STYLE[post.platform] || 'bg-zinc-700 text-zinc-300 border-zinc-600';
+  const plStyle = PLATFORM_STYLE[post.platform] || 'bg-zinc-100 text-zinc-700 border-zinc-200';
   const plLabel = [...PLATFORMS.talise, ...PLATFORMS.luke].find(p => p.key === post.platform)?.label || post.platform;
 
   return (
-    <div className="relative bg-zinc-900 rounded-xl ring-1 ring-violet-900/20 p-2.5 overflow-hidden group">
-      <div className="absolute inset-0 bg-gradient-to-br from-violet-950/10 via-zinc-900 to-zinc-950 pointer-events-none" />
+    <div className="relative bg-white rounded-xl ring-1 ring-violet-200 p-2.5 overflow-hidden group" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div className="absolute inset-0 bg-gradient-to-br from-violet-50/30 via-white to-white pointer-events-none" />
       <div className="relative z-10">
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${plStyle}`}>{plLabel}</span>
@@ -85,14 +179,25 @@ const PostCard = ({ post, onCycle, onDelete }) => {
           >
             <Icon size={9} /> {st.label}
           </button>
-          <button
-            onClick={() => onDelete(post.id)}
-            className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-red-400 p-0.5"
-          >
-            <Trash2 size={10} />
-          </button>
+          {/* Edit + Delete — visible on hover */}
+          <div className="ml-auto flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              onClick={() => onEdit(post)}
+              title="Edit post"
+              className="text-zinc-600 hover:text-violet-400 p-0.5 transition-colors"
+            >
+              <Pencil size={10} />
+            </button>
+            <button
+              onClick={() => onDelete(post.id)}
+              title="Delete post"
+              className="text-zinc-600 hover:text-red-400 p-0.5 transition-colors"
+            >
+              <Trash2 size={10} />
+            </button>
+          </div>
         </div>
-        <p className="text-xs text-zinc-300 leading-snug line-clamp-3 whitespace-pre-line">{post.content}</p>
+        <p className="text-xs text-zinc-700 leading-snug line-clamp-3 whitespace-pre-line">{post.content}</p>
         {post.scheduledTime && post.status === 'scheduled' && (
           <div className="flex items-center gap-1 mt-1.5 text-zinc-500">
             <Clock size={9} /><span className="text-[10px]">{post.scheduledTime}</span>
@@ -138,7 +243,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
   };
 
   return (
-    <div className="bg-zinc-800/50 rounded-xl border border-violet-500/20 p-3 space-y-2.5">
+    <div className="bg-white rounded-xl border border-violet-200 p-3 space-y-2.5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
       {/* Platform pills */}
       <div className="flex flex-wrap gap-1">
         {platforms.map(p => (
@@ -148,7 +253,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
             className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
               platform === p.key
                 ? `${PLATFORM_STYLE[p.key]}`
-                : 'bg-zinc-800 text-zinc-500 border-zinc-700 hover:text-zinc-300'
+                : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:text-zinc-700'
             }`}
           >
             {p.label}
@@ -162,7 +267,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
         value={content}
         onChange={e => setContent(e.target.value)}
         placeholder={`Write your ${format(date, 'MMM d')} post…`}
-        className="w-full bg-zinc-900 text-zinc-200 text-xs rounded-lg px-3 py-2 border border-zinc-700 focus:outline-none focus:border-violet-500/50 resize-none placeholder-zinc-600 leading-relaxed"
+        className="w-full bg-white text-zinc-900 text-xs rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-violet-500/50 resize-none placeholder-zinc-400 leading-relaxed"
       />
 
       {/* Bottom row */}
@@ -171,7 +276,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
           type="time"
           value={time}
           onChange={e => setTime(e.target.value)}
-          className="bg-zinc-900 text-zinc-400 text-xs rounded-lg px-2 py-1.5 border border-zinc-700 focus:outline-none focus:border-violet-500/40 w-28"
+          className="bg-white text-zinc-700 text-xs rounded-lg px-2 py-1.5 border border-zinc-200 focus:outline-none focus:border-violet-500/40 w-28"
         />
         <button
           onClick={handleSuggest}
@@ -182,11 +287,11 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
           AI Suggest
         </button>
         <div className="flex-1" />
-        <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-300 px-2 py-1.5 transition-colors">Cancel</button>
+        <button onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-700 px-2 py-1.5 transition-colors">Cancel</button>
         <button
           onClick={handleAdd}
           disabled={!content.trim()}
-          className="text-xs bg-violet-500 hover:bg-violet-400 disabled:bg-zinc-700 disabled:text-zinc-500 text-white px-3 py-1.5 rounded-lg font-semibold transition-all"
+          className="text-xs bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-100 disabled:text-zinc-400 text-white px-3 py-1.5 rounded-lg font-semibold transition-all"
         >
           Add post
         </button>
@@ -196,7 +301,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
 };
 
 // ── Weekly view ───────────────────────────────────────────────────────────────
-const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete }) => {
+const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete, onEdit }) => {
   const days = eachDayOfInterval({ start: weekStart, end: endOfWeek(weekStart, { weekStartsOn: 1 }) });
   const [addingDay, setAddingDay] = useState(null);
 
@@ -210,17 +315,17 @@ const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete }) => {
         return (
           <div key={ds} className="space-y-2">
             {/* Day header */}
-            <div className={`text-center py-1.5 rounded-xl ${isToday(day) ? 'bg-violet-500/20 ring-1 ring-violet-500/30' : 'bg-zinc-800/40'}`}>
+            <div className={`text-center py-1.5 rounded-xl ${isToday(day) ? 'bg-violet-500/20 ring-1 ring-violet-500/30' : 'bg-zinc-50'}`}>
               <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{format(day, 'EEE')}</div>
-              <div className={`text-base font-bold leading-none mt-0.5 ${isToday(day) ? 'text-violet-400' : 'text-zinc-300'}`}>
+              <div className={`text-base font-bold leading-none mt-0.5 ${isToday(day) ? 'text-violet-500' : 'text-zinc-700'}`}>
                 {format(day, 'd')}
               </div>
-              <div className="text-[9px] text-zinc-600 mt-0.5">{format(day, 'MMM')}</div>
+              <div className="text-[9px] text-zinc-400 mt-0.5">{format(day, 'MMM')}</div>
             </div>
 
             {/* Posts */}
             <div className="space-y-1.5">
-              {dayPosts.map(p => <PostCard key={p.id} post={p} onCycle={onCycle} onDelete={onDelete} />)}
+              {dayPosts.map(p => <PostCard key={p.id} post={p} onCycle={onCycle} onDelete={onDelete} onEdit={onEdit} />)}
             </div>
 
             {/* Add form or button */}
@@ -234,7 +339,7 @@ const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete }) => {
             ) : (
               <button
                 onClick={() => setAddingDay(day)}
-                className="w-full flex items-center justify-center gap-1 py-1.5 text-[10px] text-zinc-600 hover:text-violet-400 hover:bg-violet-500/5 rounded-lg border border-dashed border-zinc-800 hover:border-violet-500/30 transition-all"
+                className="w-full flex items-center justify-center gap-1 py-1.5 text-[10px] text-zinc-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg border border-dashed border-zinc-200 hover:border-violet-300 transition-all"
               >
                 <Plus size={10} /> Add
               </button>
@@ -247,7 +352,7 @@ const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete }) => {
 };
 
 // ── Monthly view ──────────────────────────────────────────────────────────────
-const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
+const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete, onEdit }) => {
   const [selectedDay,    setSelectedDay]    = useState(null);
   const [addingToDay,    setAddingToDay]    = useState(false);
 
@@ -262,7 +367,7 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
       {/* DOW headers */}
       <div className="grid grid-cols-7 gap-1">
         {DOW.map(d => (
-          <div key={d} className="text-center text-[10px] font-bold text-zinc-600 uppercase tracking-widest py-1">{d}</div>
+          <div key={d} className="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest py-1">{d}</div>
         ))}
       </div>
 
@@ -289,10 +394,10 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
                 !inMonth   ? 'opacity-25 border-transparent bg-transparent'
                 : isSelected ? 'bg-violet-500/20 border-violet-500/40 ring-1 ring-violet-500/30'
                 : today    ? 'bg-violet-500/10 border-violet-500/20'
-                : 'bg-zinc-900/60 border-zinc-800/60 hover:bg-zinc-800/50 hover:border-zinc-700/60'
+                : 'bg-white border-zinc-100 hover:bg-zinc-50 hover:border-zinc-200'
               }`}
             >
-              <div className={`text-xs font-bold mb-1.5 ${today ? 'text-violet-400' : isSelected ? 'text-violet-300' : 'text-zinc-400'}`}>
+              <div className={`text-xs font-bold mb-1.5 ${today ? 'text-violet-500' : isSelected ? 'text-violet-600' : 'text-zinc-500'}`}>
                 {format(day, 'd')}
               </div>
               {dayPosts.length > 0 && (
@@ -301,7 +406,7 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
                   {byStatus.scheduled > 0 && <span className="w-1.5 h-1.5 rounded-full bg-blue-400"   title={`${byStatus.scheduled} scheduled`} />}
                   {byStatus.posted    > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title={`${byStatus.posted} posted`} />}
                   {dayPosts.length > 4 && (
-                    <span className="text-[8px] text-zinc-600 leading-none">+{dayPosts.length - 4}</span>
+                    <span className="text-[8px] text-zinc-400 leading-none">+{dayPosts.length - 4}</span>
                   )}
                 </div>
               )}
@@ -312,12 +417,12 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
 
       {/* Selected day panel */}
       {selectedDay && (
-        <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-violet-900/30 p-5 overflow-hidden">
+        <div className="relative bg-white rounded-2xl ring-1 ring-violet-200 p-5 overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
           <VioletBg />
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-sm font-semibold text-zinc-100">{format(selectedDay, 'EEEE, MMMM d yyyy')}</div>
+                <div className="text-sm font-semibold text-zinc-900">{format(selectedDay, 'EEEE, MMMM d yyyy')}</div>
                 <div className="text-xs text-zinc-500 mt-0.5">{selPosts.length} post{selPosts.length !== 1 ? 's' : ''}</div>
               </div>
               <button
@@ -341,10 +446,10 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
 
             {selPosts.length > 0 ? (
               <div className="grid grid-cols-3 gap-3">
-                {selPosts.map(p => <PostCard key={p.id} post={p} onCycle={onCycle} onDelete={onDelete} />)}
+                {selPosts.map(p => <PostCard key={p.id} post={p} onCycle={onCycle} onDelete={onDelete} onEdit={onEdit} />)}
               </div>
             ) : !addingToDay && (
-              <p className="text-xs text-zinc-600 text-center py-4">No posts yet — click Add Post to schedule one.</p>
+              <p className="text-xs text-zinc-400 text-center py-4">No posts yet — click Add Post to schedule one.</p>
             )}
           </div>
         </div>
@@ -355,11 +460,12 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete }) => {
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export const CalendarView = ({ user }) => {
-  const [talent,  setTalent]  = useState('talise');
-  const [view,    setView]    = useState('week');   // 'week' | 'month'
-  const [cursor,  setCursor]  = useState(new Date());
+  const [talent,      setTalent]      = useState('talise');
+  const [view,        setView]        = useState('week');   // 'week' | 'month'
+  const [cursor,      setCursor]      = useState(new Date());
+  const [editingPost, setEditingPost] = useState(null);     // post being edited
 
-  const { posts, addPost, deletePost, cycleStatus } = useCalendar(user?.id);
+  const { posts, addPost, updatePost, deletePost, cycleStatus } = useCalendar(user?.id);
 
   const handleCycleStatus = (id) => {
     const post = posts.find(p => p.id === id);
@@ -367,6 +473,9 @@ export const CalendarView = ({ user }) => {
     const nextStatus = STATUS_CFG[post.status]?.next || 'draft';
     cycleStatus(id, nextStatus);
   };
+
+  const handleEdit = (post) => setEditingPost(post);
+  const handleEditSave = (id, changes) => updatePost(id, changes);
 
   const weekStart  = startOfWeek(cursor, { weekStartsOn: 1 });
   const monthStart = startOfMonth(cursor);
@@ -391,11 +500,20 @@ export const CalendarView = ({ user }) => {
   return (
     <div className="space-y-5">
 
+      {/* ── Edit modal ───────────────────────────────────────────────────── */}
+      {editingPost && (
+        <EditPostForm
+          post={editingPost}
+          onSave={handleEditSave}
+          onClose={() => setEditingPost(null)}
+        />
+      )}
+
       {/* ── Cinematic page header ────────────────────────────────────────── */}
-      <div className="relative overflow-hidden bg-zinc-900 rounded-2xl ring-1 ring-violet-900/30 p-5">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-950/40 via-zinc-900 to-zinc-950 pointer-events-none" />
+      <div className="relative overflow-hidden bg-white rounded-2xl ring-1 ring-violet-200 p-5" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-50/50 via-white to-white pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-24 bg-violet-500/5 blur-xl rounded-full pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(139,92,246,0.05),transparent_70%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(139,92,246,0.03),transparent_70%)] pointer-events-none" />
         {/* Calendar grid lines decoration */}
         <div className="absolute top-2 right-16 grid grid-cols-4 gap-1.5 opacity-8 pointer-events-none">
           {Array.from({ length: 20 }).map((_, i) => (
@@ -404,12 +522,12 @@ export const CalendarView = ({ user }) => {
         </div>
         <div className="relative z-10 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-100">Content Calendar</h1>
+            <h1 className="text-2xl font-bold text-zinc-900">Content Calendar</h1>
             <p className="text-sm text-zinc-500 mt-1">
               Plan, schedule, and track content for Talise and Luke across Instagram, TikTok, YouTube, LinkedIn, and more.
             </p>
           </div>
-          <span className="text-xs bg-violet-500/10 text-violet-400 border border-violet-500/20 px-3 py-1.5 rounded-lg font-medium">
+          <span className="text-xs bg-violet-50 text-violet-700 border border-violet-200 px-3 py-1.5 rounded-lg font-medium">
             Content Studio
           </span>
         </div>
@@ -418,11 +536,11 @@ export const CalendarView = ({ user }) => {
       {/* ── KPIs ─────────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-4">
         {kpis.map(k => (
-          <div key={k.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-violet-900/30 p-5 overflow-hidden">
+          <div key={k.label} className="relative bg-white rounded-2xl ring-1 ring-violet-200 p-5 overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
             <VioletBg />
             <div className="relative z-10">
-              <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
-              <div className="text-sm font-medium text-zinc-300 mb-0.5">{k.label}</div>
+              <div className="text-3xl font-bold font-mono text-zinc-900 mb-1">{k.value}</div>
+              <div className="text-sm font-medium text-zinc-700 mb-0.5">{k.label}</div>
               <div className="text-xs text-zinc-500">{k.sub}</div>
             </div>
           </div>
@@ -433,13 +551,13 @@ export const CalendarView = ({ user }) => {
       <div className="flex items-center gap-3 flex-wrap">
 
         {/* Talent selector */}
-        <div className="flex items-center gap-1 bg-zinc-800/60 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-zinc-100 rounded-xl p-1">
           <button
             onClick={() => setTalent('talise')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               talent === 'talise'
-                ? 'bg-violet-500/20 text-violet-400 ring-1 ring-violet-500/30'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-violet-500/20 text-violet-600 ring-1 ring-violet-500/30'
+                : 'text-zinc-500 hover:text-zinc-800'
             }`}
           >
             <Music size={13} /> Talise
@@ -448,8 +566,8 @@ export const CalendarView = ({ user }) => {
             onClick={() => setTalent('luke')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               talent === 'luke'
-                ? 'bg-violet-500/20 text-violet-400 ring-1 ring-violet-500/30'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-violet-500/20 text-violet-600 ring-1 ring-violet-500/30'
+                : 'text-zinc-500 hover:text-zinc-800'
             }`}
           >
             <Piano size={13} /> Luke
@@ -457,13 +575,13 @@ export const CalendarView = ({ user }) => {
         </div>
 
         {/* View toggle */}
-        <div className="flex items-center gap-1 bg-zinc-800/60 rounded-xl p-1">
+        <div className="flex items-center gap-1 bg-zinc-100 rounded-xl p-1">
           <button
             onClick={() => setView('week')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               view === 'week'
-                ? 'bg-violet-500/20 text-violet-400 ring-1 ring-violet-500/30'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-violet-500/20 text-violet-600 ring-1 ring-violet-500/30'
+                : 'text-zinc-500 hover:text-zinc-800'
             }`}
           >
             <CalendarDays size={13} /> Week
@@ -472,8 +590,8 @@ export const CalendarView = ({ user }) => {
             onClick={() => setView('month')}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
               view === 'month'
-                ? 'bg-violet-500/20 text-violet-400 ring-1 ring-violet-500/30'
-                : 'text-zinc-400 hover:text-zinc-200'
+                ? 'bg-violet-500/20 text-violet-600 ring-1 ring-violet-500/30'
+                : 'text-zinc-500 hover:text-zinc-800'
             }`}
           >
             <LayoutGrid size={13} /> Month
@@ -484,26 +602,26 @@ export const CalendarView = ({ user }) => {
         <div className="flex items-center gap-1">
           <button
             onClick={goBack}
-            className="p-2 rounded-xl bg-zinc-800/60 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-all"
+            className="p-2 rounded-xl bg-zinc-100 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 transition-all"
           >
             <ChevronLeft size={16} />
           </button>
           <button
             onClick={goToday}
-            className="px-3 py-1.5 rounded-xl bg-zinc-800/60 text-xs font-semibold text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-all"
+            className="px-3 py-1.5 rounded-xl bg-zinc-100 text-xs font-semibold text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 transition-all"
           >
             Today
           </button>
           <button
             onClick={goNext}
-            className="p-2 rounded-xl bg-zinc-800/60 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-700/60 transition-all"
+            className="p-2 rounded-xl bg-zinc-100 text-zinc-500 hover:text-zinc-800 hover:bg-zinc-200 transition-all"
           >
             <ChevronRight size={16} />
           </button>
         </div>
 
         {/* Nav label */}
-        <div className="text-sm font-semibold text-zinc-300">{navLabel}</div>
+        <div className="text-sm font-semibold text-zinc-700">{navLabel}</div>
 
         {/* Legend */}
         <div className="ml-auto flex items-center gap-3 text-[10px] text-zinc-500">
@@ -514,7 +632,7 @@ export const CalendarView = ({ user }) => {
       </div>
 
       {/* ── Calendar body ─────────────────────────────────────────────────── */}
-      <div className="relative bg-zinc-900 rounded-2xl ring-1 ring-violet-900/30 p-5 overflow-hidden">
+      <div className="relative bg-white rounded-2xl ring-1 ring-violet-200 p-5 overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
         <VioletBg />
         <div className="relative z-10">
           {view === 'week' ? (
@@ -525,6 +643,7 @@ export const CalendarView = ({ user }) => {
               onAdd={addPost}
               onCycle={handleCycleStatus}
               onDelete={deletePost}
+              onEdit={handleEdit}
             />
           ) : (
             <MonthView
@@ -534,6 +653,7 @@ export const CalendarView = ({ user }) => {
               onAdd={addPost}
               onCycle={handleCycleStatus}
               onDelete={deletePost}
+              onEdit={handleEdit}
             />
           )}
         </div>

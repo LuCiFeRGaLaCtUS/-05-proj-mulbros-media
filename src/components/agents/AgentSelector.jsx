@@ -21,13 +21,13 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
   return (
     <div className="w-72 flex-shrink-0 flex flex-col"
       style={{
-        background: '#07070e',
-        borderRight: '1px solid rgba(255,255,255,0.05)',
+        background: '#ffffff',
+        borderRight: '1px solid rgba(0,0,0,0.07)',
       }}>
 
       {/* Header */}
       <div className="px-4 py-4 flex-shrink-0 relative"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        style={{ borderBottom: '1px solid rgba(0,0,0,0.07)' }}>
         <div className="absolute bottom-0 left-0 right-0 h-px"
           style={{ background: 'linear-gradient(to right, transparent, rgba(34,211,238,0.2), transparent)' }} />
         <div className="flex items-center gap-2">
@@ -36,10 +36,10 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
             <Cpu size={14} style={{ color: '#22d3ee' }} />
           </div>
           <div>
-            <h3 className="text-sm font-bold" style={{ color: 'rgba(34,211,238,0.9)' }}>
+            <h3 className="text-sm font-bold" style={{ color: 'rgba(34,211,238,0.8)' }}>
               Neural Agents
             </h3>
-            <p className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <p className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.35)' }}>
               SELECT AGENT
             </p>
           </div>
@@ -66,14 +66,14 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
                         border: `1px solid ${vc.neon}30`,
                         boxShadow: vc.glow,
                       } : {
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.05)',
+                        background: 'rgba(0,0,0,0.02)',
+                        border: '1px solid rgba(0,0,0,0.06)',
                       }}
                     >
                       {/* Hover shimmer */}
                       {!isSelected && (
                         <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ background: 'rgba(255,255,255,0.02)' }} />
+                          style={{ background: 'rgba(0,0,0,0.025)' }} />
                       )}
 
                       {/* Selected left bar */}
@@ -91,22 +91,22 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
                             color: vc.neon,
                             boxShadow: `0 0 10px ${vc.neon}20`,
                           } : {
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            color: 'rgba(255,255,255,0.35)',
+                            background: 'rgba(0,0,0,0.04)',
+                            border: '1px solid rgba(0,0,0,0.09)',
+                            color: 'rgba(0,0,0,0.4)',
                           }}>
                           {initials(agent.name)}
                           {/* Online dot overlay */}
                           {agent.status === 'active' && (
                             <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                              style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)', border: '1.5px solid #07070e' }} />
+                              style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)', border: '1.5px solid #ffffff' }} />
                           )}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-sm font-semibold truncate"
-                              style={{ color: isSelected ? '#e4e4e7' : 'rgba(255,255,255,0.5)' }}>
+                              style={{ color: isSelected ? '#18181b' : 'rgba(0,0,0,0.55)' }}>
                               {agent.name}
                             </span>
                             {isSelected && (
@@ -114,7 +114,7 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
                             )}
                           </div>
                           <p className="text-xs mt-0.5 leading-snug line-clamp-1"
-                            style={{ color: 'rgba(255,255,255,0.25)' }}>
+                            style={{ color: 'rgba(0,0,0,0.4)' }}>
                             {agent.description}
                           </p>
                         </div>

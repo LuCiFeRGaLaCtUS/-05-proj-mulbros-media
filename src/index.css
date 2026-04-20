@@ -15,25 +15,26 @@
 
 /* ── CSS Custom Properties ─────────────────────────────────────────────────── */
 :root {
+  /* ── Brand Accent (UNCHANGED) ───────────────────────────────────────────── */
   --brand:          #f59e0b;
-  --brand-dim:      rgba(245,158,11,0.15);
-  --brand-glow:     rgba(245,158,11,0.35);
+  --brand-dim:      rgba(245,158,11,0.12);
+  --brand-glow:     rgba(245,158,11,0.25);
   --cyan:           #22d3ee;
-  --cyan-dim:       rgba(34,211,238,0.12);
-  --cyan-glow:      rgba(34,211,238,0.30);
+  --cyan-dim:       rgba(34,211,238,0.10);
+  --cyan-glow:      rgba(34,211,238,0.22);
   --magenta:        #e879f9;
-  --magenta-dim:    rgba(232,121,249,0.10);
+  --magenta-dim:    rgba(232,121,249,0.08);
   --neon-green:     #4ade80;
-  /* Cinema Noir surfaces — warm obsidian undertone, not cold blue-black */
-  --surface-0:      #060508;
-  --surface-1:      #09080c;
-  --surface-2:      #0e0c12;
-  --surface-3:      #131118;
-  --surface-card:   #100e15;
-  --border-dim:     rgba(255,255,255,0.05);
-  --border-mid:     rgba(255,255,255,0.09);
-  --border-bright:  rgba(255,255,255,0.15);
-  --grid-color:     rgba(255,255,255,0.022);
+  /* Studio White surfaces */
+  --surface-0:      #F7F7FA;
+  --surface-1:      #FFFFFF;
+  --surface-2:      #F1F1F5;
+  --surface-3:      #E8E8EF;
+  --surface-card:   #FFFFFF;
+  --border-dim:     rgba(0,0,0,0.06);
+  --border-mid:     rgba(0,0,0,0.10);
+  --border-bright:  rgba(0,0,0,0.16);
+  --grid-color:     rgba(0,0,0,0.040);
   /* Typography — editorial display + technical mono */
   --font-display:   'Cormorant Garamond', 'Georgia', 'Times New Roman', serif;
   --font-mono:      'DM Mono', 'JetBrains Mono', 'Fira Code', monospace;
@@ -43,54 +44,19 @@
 html, body, #root {
   height: 100%;
   font-family: var(--font-sans);
-  background-color: var(--surface-0);
-  color: #e4e4e7;
-  font-feature-settings: 'kern' 1, 'liga' 1;
+  background-color: #F7F7FA;
+  color: #18181B;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* ── Cinema: film grain overlay ──────────────────────────────────────────────
-   Uses the existing @keyframes noise (renamed alias: grain) to animate an
-   SVG fractalNoise texture across the viewport — imperceptible individually
-   but adds that 35mm film weight to the entire OS.
-   ──────────────────────────────────────────────────────────────────────────── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: -150%;
-  width: 400%;
-  height: 400%;
-  z-index: 9998;
-  pointer-events: none;
-  opacity: 0.03;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 256px 256px;
-  animation: noise 0.5s steps(1) infinite;
-  will-change: transform;
-}
-
-/* ── Cinema: vignette ────────────────────────────────────────────────────────
-   Darkens the viewport edges like a cinema lens — not visible as an effect,
-   only felt as depth and focus.
-   ──────────────────────────────────────────────────────────────────────────── */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 9997;
-  pointer-events: none;
-  background: radial-gradient(
-    ellipse 110% 90% at 50% 50%,
-    transparent 45%,
-    rgba(2,1,4,0.45) 100%
-  );
-}
+/* Film grain + vignette removed — Studio White light theme */
 
 /* ── Premium text selection ── */
-::selection      { background: rgba(245,158,11,0.22); color: #fcd34d; }
-::-moz-selection { background: rgba(245,158,11,0.22); color: #fcd34d; }
+::selection      { background: rgba(245,158,11,0.20); color: #92400e; }
+::-moz-selection { background: rgba(245,158,11,0.20); color: #92400e; }
 
 /* ── Premium cursor ──────────────────────────────────────────────────────────
    A minimal amber crosshair ring — subtle enough not to distract,
@@ -223,13 +189,13 @@ input, textarea, [contenteditable] { cursor: text !important; }
   background-size: 32px 32px;
 }
 
-/* ── Dot grid background ── */
+/* ── Dot grid background — dark dots on white ── */
 .bg-dot-grid {
-  background-image: radial-gradient(circle, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(0,0,0,0.045) 1px, transparent 1px);
   background-size: 24px 24px;
 }
 
-/* ── Scanline overlay ── */
+/* ── Scanline overlay — subtle on light ── */
 .scanlines::after {
   content: '';
   position: absolute;
@@ -238,8 +204,8 @@ input, textarea, [contenteditable] { cursor: text !important; }
     0deg,
     transparent,
     transparent 2px,
-    rgba(0,0,0,0.08) 2px,
-    rgba(0,0,0,0.08) 4px
+    rgba(0,0,0,0.015) 2px,
+    rgba(0,0,0,0.015) 4px
   );
   pointer-events: none;
   z-index: 1;
@@ -268,17 +234,17 @@ input, textarea, [contenteditable] { cursor: text !important; }
   border-width: 0 1px 1px 0;
 }
 
-/* ── Glass panel ── */
+/* ── Glass panel — white glass for light theme ── */
 .glass {
-  background: rgba(10,9,14,0.88);
-  backdrop-filter: blur(24px) saturate(200%) brightness(0.96);
-  -webkit-backdrop-filter: blur(24px) saturate(200%) brightness(0.96);
+  background: rgba(255,255,255,0.85);
+  backdrop-filter: blur(20px) saturate(180%) brightness(1.02);
+  -webkit-backdrop-filter: blur(20px) saturate(180%) brightness(1.02);
 }
 
 .glass-light {
-  background: rgba(15,14,20,0.72);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  background: rgba(255,255,255,0.72);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
 }
 
 /* ── Studio lens flare — apply to premium panels for directional light ── */
@@ -390,17 +356,17 @@ input, textarea, [contenteditable] { cursor: text !important; }
 .tile-pop:hover {
   transform: translateY(-5px) scale(1.016);
   box-shadow:
-    0 28px 60px rgba(0,0,0,0.55),
-    0 10px 24px rgba(0,0,0,0.35),
-    0 0 0 1px rgba(245,158,11,0.10),
-    0 0 40px rgba(245,158,11,0.05);
+    0 8px 32px rgba(0,0,0,0.10),
+    0 2px 8px rgba(0,0,0,0.06),
+    0 0 0 1px rgba(245,158,11,0.18),
+    0 0 24px rgba(245,158,11,0.06);
 }
 .tile-pop:active {
   transform: translateY(-1px) scale(0.985) !important;
   transition-duration: 0.09s !important;
 }
 
-/* ── Weather shimmer loading skeleton ── */
+/* ── Weather shimmer loading skeleton — light theme ── */
 @keyframes shimmer {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
@@ -408,9 +374,9 @@ input, textarea, [contenteditable] { cursor: text !important; }
 .weather-skeleton {
   background: linear-gradient(
     90deg,
-    rgba(255,255,255,0.04) 0%,
-    rgba(255,255,255,0.10) 40%,
-    rgba(255,255,255,0.04) 80%
+    rgba(0,0,0,0.04) 0%,
+    rgba(0,0,0,0.08) 40%,
+    rgba(0,0,0,0.04) 80%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
@@ -418,188 +384,26 @@ input, textarea, [contenteditable] { cursor: text !important; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   SCROLLBARS — Cyberpunk
+   SCROLLBARS — light
    ══════════════════════════════════════════════════════════════════════════════ */
 ::-webkit-scrollbar              { width: 4px; height: 4px; }
-::-webkit-scrollbar-track        { background: var(--surface-1); }
-::-webkit-scrollbar-thumb        { background: rgba(245,158,11,0.25); border-radius: 2px; }
+::-webkit-scrollbar-track        { background: #F1F1F5; }
+::-webkit-scrollbar-thumb        { background: rgba(0,0,0,0.18); border-radius: 2px; }
 ::-webkit-scrollbar-thumb:hover  { background: rgba(245,158,11,0.50); }
 
 /* ══════════════════════════════════════════════════════════════════════════════
-   RECHARTS — SVG axes, grids, tick labels
+   RECHARTS — SVG axes, grids, tick labels — light theme
    ══════════════════════════════════════════════════════════════════════════════ */
-.recharts-cartesian-axis-line         { stroke: rgba(255,255,255,0.06) !important; }
-.recharts-cartesian-axis-tick-line    { stroke: rgba(255,255,255,0.06) !important; }
+.recharts-cartesian-axis-line,
+.recharts-cartesian-axis-tick-line    { stroke: rgba(0,0,0,0.10) !important; }
 .recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical   line { stroke: rgba(255,255,255,0.04) !important; }
+.recharts-cartesian-grid-vertical   line { stroke: rgba(0,0,0,0.06) !important; }
 .recharts-text tspan  {
-  fill: #52525b !important;
+  fill: #71717a !important;
   font-size: 10px !important;
   font-family: var(--font-mono) !important;
   letter-spacing: 0.04em !important;
 }
+.recharts-legend-item-text { color: #52525b !important; font-family: var(--font-mono) !important; }
 
-/* ══════════════════════════════════════════════════════════════════════════════
-   LIGHT THEME — complete override system
-   Mechanism: TopBar adds/removes .light on <html>.
-   ══════════════════════════════════════════════════════════════════════════════ */
-
-html.light,
-html.light body,
-html.light #root {
-  background-color: #f1f1f4 !important;
-  color: #18181b !important;
-  --surface-0: #f1f1f4;
-  --surface-1: #ffffff;
-  --surface-2: #e8e8ec;
-  --grid-color: rgba(0,0,0,0.03);
-}
-
-/* ── Solid zinc backgrounds ─────────────────────────────────────────────────── */
-html.light .bg-zinc-950  { background-color: #e8e8ec !important; }
-html.light .bg-zinc-900  { background-color: #ffffff !important; }
-html.light .bg-zinc-800  { background-color: #e4e4e7 !important; }
-html.light .bg-zinc-700  { background-color: #d4d4d8 !important; }
-html.light .bg-zinc-600  { background-color: #a1a1aa !important; }
-
-/* ── Zinc with opacity ─────────────────────────────────────────────────────── */
-html.light .bg-zinc-950\/95 { background-color: rgba(242,242,245,0.97) !important; }
-html.light .bg-zinc-950\/30 { background-color: rgba(228,228,231,0.30) !important; }
-html.light .bg-zinc-900\/80 { background-color: rgba(255,255,255,0.92) !important; }
-html.light .bg-zinc-900\/50 { background-color: rgba(255,255,255,0.65) !important; }
-html.light .bg-zinc-800\/10 { background-color: rgba(228,228,231,0.18) !important; }
-html.light .bg-zinc-800\/20 { background-color: rgba(228,228,231,0.32) !important; }
-html.light .bg-zinc-800\/30 { background-color: rgba(228,228,231,0.48) !important; }
-html.light .bg-zinc-800\/40 { background-color: rgba(228,228,231,0.58) !important; }
-html.light .bg-zinc-800\/50 { background-color: rgba(228,228,231,0.68) !important; }
-html.light .bg-zinc-800\/60 { background-color: rgba(228,228,231,0.78) !important; }
-html.light .bg-zinc-800\/70 { background-color: rgba(228,228,231,0.84) !important; }
-html.light .bg-zinc-800\/80 { background-color: rgba(228,228,231,0.90) !important; }
-html.light .bg-zinc-800\/95 { background-color: rgba(228,228,231,0.96) !important; }
-html.light .bg-zinc-700\/30 { background-color: rgba(212,212,216,0.42) !important; }
-html.light .bg-zinc-700\/50 { background-color: rgba(212,212,216,0.62) !important; }
-html.light .bg-zinc-700\/80 { background-color: rgba(212,212,216,0.88) !important; }
-html.light .bg-white\/10    { background-color: rgba(0,0,0,0.06) !important; }
-html.light .bg-black\/50    { background-color: rgba(0,0,0,0.35) !important; }
-
-/* ── Text ─────────────────────────────────────────────────────────────────── */
-html.light .text-white    { color: #18181b !important; }
-html.light .text-zinc-100 { color: #18181b !important; }
-html.light .text-zinc-200 { color: #27272a !important; }
-html.light .text-zinc-300 { color: #3f3f46 !important; }
-html.light .text-zinc-400 { color: #52525b !important; }
-html.light .text-zinc-500 { color: #71717a !important; }
-html.light .text-zinc-600 { color: #a1a1aa !important; }
-html.light .text-zinc-700 { color: #d4d4d8 !important; }
-html.light .hover\:text-zinc-100:hover { color: #18181b !important; }
-html.light .hover\:text-zinc-200:hover { color: #27272a !important; }
-html.light .hover\:text-zinc-300:hover { color: #3f3f46 !important; }
-
-/* ── Borders ─────────────────────────────────────────────────────────────── */
-html.light .border-zinc-800     { border-color: #d4d4d8 !important; }
-html.light .border-zinc-800\/20 { border-color: rgba(212,212,216,0.32) !important; }
-html.light .border-zinc-800\/30 { border-color: rgba(212,212,216,0.44) !important; }
-html.light .border-zinc-800\/40 { border-color: rgba(212,212,216,0.56) !important; }
-html.light .border-zinc-800\/50 { border-color: rgba(212,212,216,0.66) !important; }
-html.light .border-zinc-800\/60 { border-color: rgba(212,212,216,0.76) !important; }
-html.light .border-zinc-800\/80 { border-color: rgba(212,212,216,0.90) !important; }
-html.light .border-zinc-700     { border-color: #d4d4d8 !important; }
-html.light .border-zinc-700\/30 { border-color: rgba(212,212,216,0.44) !important; }
-html.light .border-zinc-700\/40 { border-color: rgba(212,212,216,0.56) !important; }
-html.light .border-zinc-700\/50 { border-color: rgba(212,212,216,0.66) !important; }
-html.light .border-zinc-700\/60 { border-color: rgba(212,212,216,0.76) !important; }
-html.light .border-zinc-700\/80 { border-color: rgba(212,212,216,0.90) !important; }
-html.light .hover\:border-zinc-700:hover { border-color: #c4c4c8 !important; }
-html.light .hover\:border-zinc-600:hover { border-color: #a1a1aa !important; }
-
-/* ── Ring ────────────────────────────────────────────────────────────────── */
-html.light .ring-zinc-800 { --tw-ring-color: #d4d4d8 !important; }
-html.light .ring-zinc-700 { --tw-ring-color: #c8c8cc !important; }
-html.light .ring-zinc-600 { --tw-ring-color: #a1a1aa !important; }
-
-/* ── Hover backgrounds ─────────────────────────────────────────────────────── */
-html.light .hover\:bg-zinc-800:hover     { background-color: #e8e8eb !important; }
-html.light .hover\:bg-zinc-800\/20:hover { background-color: rgba(228,228,231,0.38) !important; }
-html.light .hover\:bg-zinc-800\/30:hover { background-color: rgba(228,228,231,0.52) !important; }
-html.light .hover\:bg-zinc-800\/40:hover { background-color: rgba(228,228,231,0.62) !important; }
-html.light .hover\:bg-zinc-800\/50:hover { background-color: rgba(228,228,231,0.72) !important; }
-html.light .hover\:bg-zinc-800\/70:hover { background-color: rgba(228,228,231,0.86) !important; }
-html.light .hover\:bg-zinc-800\/80:hover { background-color: rgba(228,228,231,0.92) !important; }
-html.light .hover\:bg-zinc-700:hover     { background-color: #d4d4d8 !important; }
-html.light .hover\:bg-zinc-700\/80:hover { background-color: rgba(212,212,216,0.88) !important; }
-
-/* ── Divide ─────────────────────────────────────────────────────────────── */
-html.light .divide-zinc-800\/40 > * + * { border-color: rgba(212,212,216,0.52) !important; }
-
-/* ── Gradient overrides ─────────────────────────────────────────────────── */
-html.light .from-zinc-950 {
-  --tw-gradient-from: #ebebee var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(235,235,238,0)) !important;
-}
-html.light .from-zinc-900 {
-  --tw-gradient-from: #ffffff var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(255,255,255,0)) !important;
-}
-html.light [class*="from-zinc-800"] {
-  --tw-gradient-from: rgba(228,228,231,0.30) var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(228,228,231,0)) !important;
-}
-html.light [class*="from-amber-950"] {
-  --tw-gradient-from: rgba(245,158,11,0.06) var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(245,158,11,0)) !important;
-}
-html.light [class*="from-blue-950"] {
-  --tw-gradient-from: rgba(59,130,246,0.05) var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(59,130,246,0)) !important;
-}
-html.light [class*="from-emerald-950"] {
-  --tw-gradient-from: rgba(16,185,129,0.05) var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(16,185,129,0)) !important;
-}
-html.light [class*="from-purple-950"] {
-  --tw-gradient-from: rgba(168,85,247,0.05) var(--tw-gradient-from-position) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(168,85,247,0)) !important;
-}
-html.light .via-zinc-950 {
-  --tw-gradient-stops: var(--tw-gradient-from), rgba(235,235,238,0.55) var(--tw-gradient-via-position), var(--tw-gradient-to, rgba(235,235,238,0)) !important;
-}
-html.light .via-zinc-900 {
-  --tw-gradient-stops: var(--tw-gradient-from), rgba(255,255,255,0.60) var(--tw-gradient-via-position), var(--tw-gradient-to, rgba(255,255,255,0)) !important;
-}
-html.light [class*="via-blue-950"] {
-  --tw-gradient-stops: var(--tw-gradient-from), rgba(59,130,246,0.04) var(--tw-gradient-via-position), var(--tw-gradient-to, rgba(59,130,246,0)) !important;
-}
-html.light .to-zinc-950 { --tw-gradient-to: #ebebee var(--tw-gradient-to-position) !important; }
-html.light .to-zinc-900 { --tw-gradient-to: #ffffff var(--tw-gradient-to-position) !important; }
-
-/* ── SVG fixes ───────────────────────────────────────────────────────────── */
-html.light [stroke="#1f1f23"] { stroke: #e4e4e7 !important; }
-html.light [stroke="#27272a"] { stroke: #d4d4d8 !important; }
-html.light [stroke="#3f3f46"] { stroke: #e4e4e7 !important; }
-
-/* ── Recharts light ──────────────────────────────────────────────────────── */
-html.light .recharts-cartesian-axis-line     { stroke: #d4d4d8 !important; }
-html.light .recharts-cartesian-axis-tick-line { stroke: #d4d4d8 !important; }
-html.light .recharts-cartesian-grid-horizontal line,
-html.light .recharts-cartesian-grid-vertical   line { stroke: #e8e8eb !important; }
-html.light .recharts-text tspan { fill: #71717a !important; }
-html.light .recharts-legend-item-text { color: #52525b !important; }
-
-/* ── Form controls light ─────────────────────────────────────────────────── */
-html.light input[type="text"],
-html.light input[type="email"],
-html.light input[type="password"],
-html.light input:not([type]),
-html.light textarea,
-html.light select {
-  background-color: rgba(228,228,231,0.55) !important;
-  color: #27272a !important;
-  border-color: #d4d4d8 !important;
-}
-html.light input::placeholder,
-html.light textarea::placeholder { color: #a1a1aa !important; }
-
-/* ── Scrollbars light ────────────────────────────────────────────────────── */
-html.light ::-webkit-scrollbar-track { background: #ebebee; }
-html.light ::-webkit-scrollbar-thumb { background: #d4d4d8; border-radius: 4px; }
-html.light ::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
+/* html.light block removed — Studio White is now the permanent default theme */

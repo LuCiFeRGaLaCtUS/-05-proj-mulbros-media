@@ -1,11 +1,48 @@
 import React, { useState } from 'react';
 import { supabase } from '../../lib/supabase';
-import { Loader2, Film, Mail, Lock, UserPlus, LogIn, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Film, Mail, Lock, UserPlus, LogIn, Eye, EyeOff, CheckCircle2, KeyRound } from 'lucide-react';
+
+// ── Canonical app URL for Supabase redirects ──────────────────────────────────
+// Set VITE_APP_URL in your Render environment variables to the production URL
+// (e.g. https://mulbros-media.onrender.com). Falls back to the current origin
+// so localhost still works in dev.
+const appUrl = () => import.meta.env.VITE_APP_URL || window.location.origin;
+
+// ── Password strength helper ──────────────────────────────────────────────────
+const calcStrength = (pw) =>
+  Math.min(
+    Math.floor(pw.length / 3) +
+    (/[A-Z]/.test(pw) ? 1 : 0) +
+    (/[0-9!@#$%^&*]/.test(pw) ? 1 : 0),
+    4
+  );
+
+const StrengthBar = ({ password }) => {
+  if (!password) return null;
+  const strength = calcStrength(password);
+  return (
+    <div className="flex gap-1 px-0.5">
+      {[...Array(4)].map((_, i) => (
+        <div
+          key={i}
+          className={`h-0.5 flex-1 rounded-full transition-colors ${
+            i < strength
+              ? strength <= 1 ? 'bg-red-500'
+              : strength <= 2 ? 'bg-amber-500'
+              : strength <= 3 ? 'bg-yellow-400'
+              : 'bg-emerald-500'
+              : 'bg-zinc-200'
+          }`}
+        />
+      ))}
+    </div>
+  );
+};
 
 // ── Shared input component ────────────────────────────────────────────────────
-const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoComplete, rightSlot }) => (
+const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoComplete, rightSlot, disabled }) => (
   <div className="relative">
-    <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
+    <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
     <input
       type={type}
       value={value}
@@ -13,7 +50,8 @@ const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoCo
       placeholder={placeholder}
       required
       autoComplete={autoComplete}
-      className="w-full bg-zinc-900 border border-zinc-800 rounded-xl pl-10 pr-10 py-3 text-sm text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-amber-500/50 transition-colors"
+      disabled={disabled}
+      className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-10 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-60"
     />
     {rightSlot && (
       <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -23,7 +61,6 @@ const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoCo
   </div>
 );
 
-// ── Sign In form ──────────────────────────────────────────────────────────────
 // ── Forgot Password flow ──────────────────────────────────────────────────────
 const ForgotPasswordForm = ({ onBack }) => {
   const [email,   setEmail]   = useState('');
@@ -36,7 +73,7 @@ const ForgotPasswordForm = ({ onBack }) => {
     setLoading(true);
     setError('');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: window.location.origin,
+      redirectTo: appUrl(),
     });
     if (error) {
       setError(error.message);
@@ -53,16 +90,16 @@ const ForgotPasswordForm = ({ onBack }) => {
           <Mail size={22} className="text-amber-400" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-zinc-100 mb-1">Reset link sent</p>
+          <p className="text-sm font-semibold text-zinc-900 mb-1">Reset link sent</p>
           <p className="text-xs text-zinc-500 leading-relaxed">
             Check your inbox at{' '}
-            <span className="text-zinc-300 font-medium">{email}</span>.<br />
+            <span className="text-zinc-700 font-medium">{email}</span>.<br />
             Click the link to set a new password.
           </p>
         </div>
         <button
           onClick={onBack}
-          className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+          className="text-xs text-amber-600 hover:text-amber-700 transition-colors"
         >
           ← Back to Sign In
         </button>
@@ -73,7 +110,7 @@ const ForgotPasswordForm = ({ onBack }) => {
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-sm font-semibold text-zinc-100 mb-1">Reset your password</p>
+        <p className="text-sm font-semibold text-zinc-900 mb-1">Reset your password</p>
         <p className="text-xs text-zinc-500">Enter your email and we'll send you a reset link.</p>
       </div>
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -86,7 +123,7 @@ const ForgotPasswordForm = ({ onBack }) => {
           autoComplete="email"
         />
         {error && (
-          <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+          <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
             {error}
           </p>
         )}
@@ -101,7 +138,7 @@ const ForgotPasswordForm = ({ onBack }) => {
         <button
           type="button"
           onClick={onBack}
-          className="w-full text-xs text-zinc-500 hover:text-zinc-300 transition-colors py-1"
+          className="w-full text-xs text-zinc-500 hover:text-zinc-700 transition-colors py-1"
         >
           ← Back to Sign In
         </button>
@@ -112,12 +149,12 @@ const ForgotPasswordForm = ({ onBack }) => {
 
 // ── Sign In form ──────────────────────────────────────────────────────────────
 const SignInForm = () => {
-  const [email,        setEmail]        = useState('');
-  const [password,     setPassword]     = useState('');
-  const [showPw,       setShowPw]       = useState(false);
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState('');
-  const [forgotMode,   setForgotMode]   = useState(false);
+  const [email,      setEmail]      = useState('');
+  const [password,   setPassword]   = useState('');
+  const [showPw,     setShowPw]     = useState(false);
+  const [loading,    setLoading]    = useState(false);
+  const [error,      setError]      = useState('');
+  const [forgotMode, setForgotMode] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -161,12 +198,11 @@ const SignInForm = () => {
             </button>
           }
         />
-        {/* Forgot password link */}
         <div className="flex justify-end">
           <button
             type="button"
             onClick={() => { setForgotMode(true); setError(''); }}
-            className="text-xs text-zinc-500 hover:text-amber-400 transition-colors pr-1"
+            className="text-xs text-zinc-500 hover:text-amber-500 transition-colors pr-1"
           >
             Forgot password?
           </button>
@@ -174,7 +210,7 @@ const SignInForm = () => {
       </div>
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           {error}
         </p>
       )}
@@ -193,37 +229,32 @@ const SignInForm = () => {
 
 // ── Sign Up form ──────────────────────────────────────────────────────────────
 const SignUpForm = () => {
-  const [email,     setEmail]     = useState('');
-  const [password,  setPassword]  = useState('');
-  const [confirm,   setConfirm]   = useState('');
-  const [showPw,    setShowPw]    = useState(false);
-  const [showCf,    setShowCf]    = useState(false);
-  const [loading,   setLoading]   = useState(false);
-  const [error,     setError]     = useState('');
-  const [sent,      setSent]      = useState(false);
+  const [email,    setEmail]    = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm,  setConfirm]  = useState('');
+  const [showPw,   setShowPw]   = useState(false);
+  const [showCf,   setShowCf]   = useState(false);
+  const [loading,  setLoading]  = useState(false);
+  const [error,    setError]    = useState('');
+  const [sent,     setSent]     = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
-      return;
-    }
-    if (password !== confirm) {
-      setError('Passwords do not match.');
-      return;
-    }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
 
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin, // redirect back to app after verification
+        // Uses VITE_APP_URL in production so verification emails link to the
+        // deployed Render URL, not localhost.
+        emailRedirectTo: appUrl(),
       },
     });
-
     if (error) {
       setError(error.message);
     } else {
@@ -239,16 +270,16 @@ const SignUpForm = () => {
           <Mail size={22} className="text-emerald-400" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-zinc-100 mb-1">Check your inbox</p>
+          <p className="text-sm font-semibold text-zinc-900 mb-1">Check your inbox</p>
           <p className="text-xs text-zinc-500 leading-relaxed">
             We sent a verification link to{' '}
-            <span className="text-zinc-300 font-medium">{email}</span>.
+            <span className="text-zinc-700 font-medium">{email}</span>.
             <br />Click it to activate your account, then sign in.
           </p>
         </div>
         <button
           onClick={() => { setSent(false); setEmail(''); setPassword(''); setConfirm(''); }}
-          className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+          className="text-xs text-amber-600 hover:text-amber-700 transition-colors"
         >
           Use a different email
         </button>
@@ -274,12 +305,8 @@ const SignUpForm = () => {
         onChange={e => setPassword(e.target.value)}
         autoComplete="new-password"
         rightSlot={
-          <button
-            type="button"
-            onClick={() => setShowPw(v => !v)}
-            className="text-zinc-600 hover:text-zinc-400 transition-colors"
-            tabIndex={-1}
-          >
+          <button type="button" onClick={() => setShowPw(v => !v)}
+            className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
             {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         }
@@ -292,46 +319,17 @@ const SignUpForm = () => {
         onChange={e => setConfirm(e.target.value)}
         autoComplete="new-password"
         rightSlot={
-          <button
-            type="button"
-            onClick={() => setShowCf(v => !v)}
-            className="text-zinc-600 hover:text-zinc-400 transition-colors"
-            tabIndex={-1}
-          >
+          <button type="button" onClick={() => setShowCf(v => !v)}
+            className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
             {showCf ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         }
       />
 
-      {/* Password strength hint */}
-      {password && (
-        <div className="flex gap-1 px-0.5">
-          {[...Array(4)].map((_, i) => {
-            const strength = Math.min(
-              Math.floor(password.length / 3) +
-              (/[A-Z]/.test(password) ? 1 : 0) +
-              (/[0-9!@#$%^&*]/.test(password) ? 1 : 0),
-              4
-            );
-            return (
-              <div
-                key={i}
-                className={`h-0.5 flex-1 rounded-full transition-colors ${
-                  i < strength
-                    ? strength <= 1 ? 'bg-red-500'
-                    : strength <= 2 ? 'bg-amber-500'
-                    : strength <= 3 ? 'bg-yellow-400'
-                    : 'bg-emerald-500'
-                    : 'bg-zinc-800'
-                }`}
-              />
-            );
-          })}
-        </div>
-      )}
+      <StrengthBar password={password} />
 
       {error && (
-        <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+        <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           {error}
         </p>
       )}
@@ -345,10 +343,148 @@ const SignUpForm = () => {
         {loading ? 'Creating account…' : 'Create account'}
       </button>
 
-      <p className="text-center text-xs text-zinc-600">
+      <p className="text-center text-xs text-zinc-500">
         A verification link will be sent to your email
       </p>
     </form>
+  );
+};
+
+// ── Logo header — shared between LoginPage and ResetPasswordPage ──────────────
+const LogoHeader = ({ subtitle }) => (
+  <div className="text-center mb-8">
+    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
+      <Film size={24} className="text-amber-400" />
+    </div>
+    <h1 className="font-display text-3xl font-semibold text-zinc-900 tracking-wide">
+      MULBROS
+    </h1>
+    <p className="text-xs text-zinc-500 mt-1 tracking-[0.2em] uppercase font-mono">
+      {subtitle}
+    </p>
+  </div>
+);
+
+// ── Reset Password Page ───────────────────────────────────────────────────────
+// Rendered by App.jsx when Supabase fires the PASSWORD_RECOVERY auth event.
+// At this point the user has a valid (temporary) session — we can call updateUser.
+export const ResetPasswordPage = () => {
+  const [password,  setPassword]  = useState('');
+  const [confirm,   setConfirm]   = useState('');
+  const [showPw,    setShowPw]    = useState(false);
+  const [showCf,    setShowCf]    = useState(false);
+  const [loading,   setLoading]   = useState(false);
+  const [error,     setError]     = useState('');
+  const [done,      setDone]      = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    } else {
+      setDone(true);
+      // Give the user a moment to read the success state, then let
+      // onAuthStateChange (USER_UPDATED event) clear the PASSWORD_RECOVERY
+      // flag in App.jsx and redirect to the dashboard automatically.
+      setTimeout(() => {
+        // Sign out to force a clean re-login so the user sees the normal flow.
+        // Remove this if you prefer to auto-sign-in after reset.
+        supabase.auth.signOut();
+      }, 2500);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F7F7FA' }}>
+      <div className="w-full max-w-sm">
+        <LogoHeader subtitle="Media OS · Set New Password" />
+
+        {done ? (
+          /* ── Success state ── */
+          <div className="text-center space-y-4 py-4">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
+              <CheckCircle2 size={22} className="text-emerald-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-zinc-900 mb-1">Password updated!</p>
+              <p className="text-xs text-zinc-500 leading-relaxed">
+                Your password has been changed successfully.<br />
+                Redirecting you to sign in…
+              </p>
+            </div>
+            <div className="w-5 h-5 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mx-auto" />
+          </div>
+        ) : (
+          /* ── Reset form ── */
+          <div className="space-y-4">
+            <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
+              <KeyRound size={16} className="text-amber-600 flex-shrink-0" />
+              <p className="text-xs text-amber-700 leading-relaxed">
+                Choose a strong password — at least 8 characters with uppercase and numbers.
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <Input
+                icon={Lock}
+                type={showPw ? 'text' : 'password'}
+                placeholder="New password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="new-password"
+                disabled={loading}
+                rightSlot={
+                  <button type="button" onClick={() => setShowPw(v => !v)}
+                    className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
+                    {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                }
+              />
+              <Input
+                icon={Lock}
+                type={showCf ? 'text' : 'password'}
+                placeholder="Confirm new password"
+                value={confirm}
+                onChange={e => setConfirm(e.target.value)}
+                autoComplete="new-password"
+                disabled={loading}
+                rightSlot={
+                  <button type="button" onClick={() => setShowCf(v => !v)}
+                    className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
+                    {showCf ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                }
+              />
+
+              <StrengthBar password={password} />
+
+              {error && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {error}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading || !password || !confirm}
+                className="w-full py-3 mt-1 rounded-xl text-sm font-semibold text-zinc-900 bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={15} className="animate-spin" /> : <KeyRound size={15} />}
+                {loading ? 'Updating password…' : 'Set new password'}
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 
@@ -357,30 +493,18 @@ export const LoginPage = () => {
   const [tab, setTab] = useState('signin'); // 'signin' | 'signup'
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#060508] p-4">
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F7F7FA' }}>
       <div className="w-full max-w-sm">
-
-        {/* Logo */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
-            <Film size={24} className="text-amber-400" />
-          </div>
-          <h1 className="font-display text-3xl font-semibold text-zinc-100 tracking-wide">
-            MULBROS
-          </h1>
-          <p className="text-xs text-zinc-500 mt-1 tracking-[0.2em] uppercase font-mono">
-            Media OS · Studio Access
-          </p>
-        </div>
+        <LogoHeader subtitle="Media OS · Studio Access" />
 
         {/* Tab switcher */}
-        <div className="flex rounded-xl overflow-hidden border border-zinc-800 mb-6">
+        <div className="flex rounded-xl overflow-hidden border border-zinc-200 mb-6">
           <button
             onClick={() => setTab('signin')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors ${
               tab === 'signin'
-                ? 'bg-amber-500/10 text-amber-400'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'bg-amber-500/10 text-amber-500'
+                : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <LogIn size={12} />
@@ -390,8 +514,8 @@ export const LoginPage = () => {
             onClick={() => setTab('signup')}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors ${
               tab === 'signup'
-                ? 'bg-amber-500/10 text-amber-400'
-                : 'text-zinc-500 hover:text-zinc-300'
+                ? 'bg-amber-500/10 text-amber-500'
+                : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
             <UserPlus size={12} />
@@ -401,7 +525,6 @@ export const LoginPage = () => {
 
         {/* Forms */}
         {tab === 'signin' ? <SignInForm /> : <SignUpForm />}
-
       </div>
     </div>
   );
