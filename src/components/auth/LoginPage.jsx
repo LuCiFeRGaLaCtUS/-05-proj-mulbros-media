@@ -275,7 +275,7 @@ const SignUpForm = () => {
       await stytch.passwords.create({
         email,
         password,
-        // No session_duration_minutes — user must verify email first
+        session_duration_minutes: 10080,
       });
       setSent(true);
     } catch (err) {
