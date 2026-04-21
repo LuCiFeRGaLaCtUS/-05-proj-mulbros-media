@@ -23,15 +23,15 @@ const PRODUCTIONS = {
 
 // ── Full color map for all 9 vertical color tokens ────────────────────────────
 const colorMap = {
-  emerald: { activeText: 'text-emerald-300', hoverText: 'hover:text-emerald-300', dot: 'bg-emerald-400', iconBg: 'bg-emerald-500/15', iconText: 'text-emerald-400', glowStyle: '0 0 12px rgba(16,185,129,0.3)'  },
-  amber:   { activeText: 'text-amber-300',   hoverText: 'hover:text-amber-300',   dot: 'bg-amber-400',   iconBg: 'bg-amber-500/15',   iconText: 'text-amber-400',   glowStyle: '0 0 12px rgba(245,158,11,0.3)'  },
-  violet:  { activeText: 'text-violet-300',  hoverText: 'hover:text-violet-300',  dot: 'bg-violet-400',  iconBg: 'bg-violet-500/15',  iconText: 'text-violet-400',  glowStyle: '0 0 12px rgba(167,139,250,0.3)' },
-  rose:    { activeText: 'text-rose-300',    hoverText: 'hover:text-rose-300',    dot: 'bg-rose-400',    iconBg: 'bg-rose-500/15',    iconText: 'text-rose-400',    glowStyle: '0 0 12px rgba(251,113,133,0.3)' },
-  orange:  { activeText: 'text-orange-300',  hoverText: 'hover:text-orange-300',  dot: 'bg-orange-400',  iconBg: 'bg-orange-500/15',  iconText: 'text-orange-400',  glowStyle: '0 0 12px rgba(251,146,60,0.3)'  },
-  slate:   { activeText: 'text-slate-300',   hoverText: 'hover:text-slate-300',   dot: 'bg-slate-400',   iconBg: 'bg-slate-500/15',   iconText: 'text-slate-400',   glowStyle: '0 0 12px rgba(148,163,184,0.3)' },
-  pink:    { activeText: 'text-pink-300',    hoverText: 'hover:text-pink-300',    dot: 'bg-pink-400',    iconBg: 'bg-pink-500/15',    iconText: 'text-pink-400',    glowStyle: '0 0 12px rgba(244,114,182,0.3)' },
-  teal:    { activeText: 'text-teal-300',    hoverText: 'hover:text-teal-300',    dot: 'bg-teal-400',    iconBg: 'bg-teal-500/15',    iconText: 'text-teal-400',    glowStyle: '0 0 12px rgba(45,212,191,0.3)'  },
-  indigo:  { activeText: 'text-indigo-300',  hoverText: 'hover:text-indigo-300',  dot: 'bg-indigo-400',  iconBg: 'bg-indigo-500/15',  iconText: 'text-indigo-400',  glowStyle: '0 0 12px rgba(129,140,248,0.3)' },
+  emerald: { activeText: 'text-emerald-700', hoverText: 'hover:text-emerald-600', dot: 'bg-emerald-500', iconBg: 'bg-emerald-50',  iconText: 'text-emerald-600', glowStyle: 'inset 0 0 0 1px rgba(16,185,129,0.20)'  },
+  amber:   { activeText: 'text-amber-700',   hoverText: 'hover:text-amber-600',   dot: 'bg-amber-500',   iconBg: 'bg-amber-50',    iconText: 'text-amber-600',   glowStyle: 'inset 0 0 0 1px rgba(245,158,11,0.20)'  },
+  violet:  { activeText: 'text-violet-700',  hoverText: 'hover:text-violet-600',  dot: 'bg-violet-500',  iconBg: 'bg-violet-50',   iconText: 'text-violet-600',  glowStyle: 'inset 0 0 0 1px rgba(139,92,246,0.20)'  },
+  rose:    { activeText: 'text-rose-700',    hoverText: 'hover:text-rose-600',    dot: 'bg-rose-500',    iconBg: 'bg-rose-50',     iconText: 'text-rose-600',    glowStyle: 'inset 0 0 0 1px rgba(244,63,94,0.20)'   },
+  orange:  { activeText: 'text-orange-700',  hoverText: 'hover:text-orange-600',  dot: 'bg-orange-500',  iconBg: 'bg-orange-50',   iconText: 'text-orange-600',  glowStyle: 'inset 0 0 0 1px rgba(249,115,22,0.20)'  },
+  slate:   { activeText: 'text-slate-700',   hoverText: 'hover:text-slate-600',   dot: 'bg-slate-500',   iconBg: 'bg-slate-100',   iconText: 'text-slate-600',   glowStyle: 'inset 0 0 0 1px rgba(100,116,139,0.20)' },
+  pink:    { activeText: 'text-pink-700',    hoverText: 'hover:text-pink-600',    dot: 'bg-pink-500',    iconBg: 'bg-pink-50',     iconText: 'text-pink-600',    glowStyle: 'inset 0 0 0 1px rgba(236,72,153,0.20)'  },
+  teal:    { activeText: 'text-teal-700',    hoverText: 'hover:text-teal-600',    dot: 'bg-teal-500',    iconBg: 'bg-teal-50',     iconText: 'text-teal-600',    glowStyle: 'inset 0 0 0 1px rgba(20,184,166,0.20)'  },
+  indigo:  { activeText: 'text-indigo-700',  hoverText: 'hover:text-indigo-600',  dot: 'bg-indigo-500',  iconBg: 'bg-indigo-50',   iconText: 'text-indigo-600',  glowStyle: 'inset 0 0 0 1px rgba(99,102,241,0.20)'  },
 };
 
 /* ── White sidebar background ──────────────────────────────────────────────── */
@@ -122,17 +122,17 @@ export const Sidebar = ({ profile, onClose }) => {
           style={{ background: 'linear-gradient(to right, transparent, rgba(245,158,11,0.5), rgba(34,211,238,0.2), transparent)' }} />
 
         <div className="flex items-center gap-3">
-          <div className="relative flex-shrink-0">
+          <div className="relative flex-shrink-0" style={{ isolation: 'isolate' }}>
             <div className="absolute -inset-2 rounded-2xl pointer-events-none"
               style={{ background: 'radial-gradient(circle, rgba(245,158,11,0.15) 0%, transparent 70%)' }} />
-            <div className="absolute -inset-0.5 rounded-xl pointer-events-none animate-neon-pulse"
+            <div className="absolute -inset-0.5 rounded-xl pointer-events-none"
               style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.3), rgba(34,211,238,0.1))', filter: 'blur(4px)' }} />
             <div className="relative w-10 h-10 rounded-xl flex items-center justify-center font-black text-lg text-zinc-950"
               style={{
                 background: 'linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #f59e0b 100%)',
-                boxShadow: '0 0 20px rgba(245,158,11,0.4), 0 4px 12px rgba(0,0,0,0.6)',
+                boxShadow: '0 0 16px rgba(245,158,11,0.30), 0 2px 6px rgba(0,0,0,0.12)',
               }}>
-              <span className="animate-flicker">M</span>
+              <span>M</span>
               <span className="absolute top-1 left-1 w-1 h-1 rounded-full bg-zinc-950/40" />
               <span className="absolute top-1 right-1 w-1 h-1 rounded-full bg-zinc-950/40" />
               <span className="absolute bottom-1 left-1 w-1 h-1 rounded-full bg-zinc-950/40" />
@@ -141,14 +141,14 @@ export const Sidebar = ({ profile, onClose }) => {
           </div>
 
           <div>
-            <div className="text-[17px] font-black tracking-[0.22em] leading-none text-glow-brand"
-              style={{ color: '#f59e0b' }}>
+            <div className="text-[18px] font-black tracking-[0.20em] leading-none"
+              style={{ color: '#f59e0b', fontFamily: 'var(--font-sans)' }}>
               MULBROS
             </div>
             <div className="flex items-center gap-1.5 mt-1">
               <div className="w-1 h-1 rounded-full bg-cyan-400 online-dot" />
               <span className="text-[9px] font-bold tracking-[0.3em] uppercase font-mono"
-                style={{ color: 'rgba(34,211,238,0.6)', fontFamily: 'var(--font-mono)' }}>
+                style={{ color: 'rgba(0,0,0,0.40)', fontFamily: 'var(--font-mono)' }}>
                 MEDIA OS
               </span>
             </div>
@@ -156,7 +156,7 @@ export const Sidebar = ({ profile, onClose }) => {
         </div>
 
         <div className="flex items-center gap-2 mt-3">
-          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
+          <div className="flex-1 h-px" style={{ background: 'rgba(0,0,0,0.06)' }} />
           <span className="chip" style={{
             background: 'rgba(34,211,238,0.10)',
             color: 'rgba(6,182,212,0.9)',
@@ -164,7 +164,7 @@ export const Sidebar = ({ profile, onClose }) => {
           }}>
             SYS ONLINE
           </span>
-          <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,0.05)' }} />
+          <div className="flex-1 h-px" style={{ background: 'rgba(0,0,0,0.06)' }} />
         </div>
       </div>
 
@@ -212,7 +212,7 @@ export const Sidebar = ({ profile, onClose }) => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold leading-snug truncate">{v.label}</div>
-                <div className="text-[10px] mt-0.5 font-mono tracking-[0.12em]"
+                <div className="text-[10px] mt-0.5 tracking-[0.12em]"
                   style={{ color: 'rgba(0,0,0,0.30)', fontFamily: 'var(--font-mono)' }}>
                   {v.sub}
                 </div>
@@ -224,7 +224,7 @@ export const Sidebar = ({ profile, onClose }) => {
           );
         })}
 
-        {/* Productions — existing view, sub-section of Filmmaker workflow */}
+        {/* Productions — Distribution sub-vertical */}
         {(() => {
           const c        = colorMap.emerald;
           const isActive = pathname.startsWith(PRODUCTIONS.path);
@@ -234,8 +234,8 @@ export const Sidebar = ({ profile, onClose }) => {
               key="productions"
               onClick={() => go(PRODUCTIONS.path)}
               aria-current={isActive ? 'page' : undefined}
-              className={`relative w-full flex items-center gap-3 px-3 py-2 pl-6 rounded-xl text-left transition-all duration-200 group overflow-hidden ${
-                isActive ? c.activeText : `text-zinc-500 ${c.hoverText}`
+              className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group overflow-hidden ${
+                isActive ? c.activeText : `text-zinc-600 ${c.hoverText}`
               }`}
               style={isActive ? { boxShadow: c.glowStyle } : undefined}
             >
@@ -247,18 +247,21 @@ export const Sidebar = ({ profile, onClose }) => {
                 <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
                   style={{ background: 'rgba(0,0,0,0.025)' }} />
               )}
-              <div className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 transition-all ${
-                isActive ? c.iconBg : 'bg-black/[0.03] group-hover:bg-black/[0.06]'
+              <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+                isActive ? c.iconBg : 'bg-black/[0.04] group-hover:bg-black/[0.07]'
               }`}>
-                <Icon size={12} className={isActive ? c.iconText : ''} />
+                <Icon size={14} className={isActive ? c.iconText : ''} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold leading-snug truncate">{PRODUCTIONS.label}</div>
-                <div className="text-[9px] mt-0.5 font-mono tracking-[0.12em]"
-                  style={{ color: 'rgba(0,0,0,0.25)', fontFamily: 'var(--font-mono)' }}>
+                <div className="text-sm font-semibold leading-snug truncate">{PRODUCTIONS.label}</div>
+                <div className="text-[10px] mt-0.5 tracking-[0.12em]"
+                  style={{ color: 'rgba(0,0,0,0.30)', fontFamily: 'var(--font-mono)' }}>
                   {PRODUCTIONS.sub}
                 </div>
               </div>
+              {isActive && (
+                <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+              )}
             </button>
           );
         })()}

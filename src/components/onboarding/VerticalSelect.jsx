@@ -59,7 +59,7 @@ const COLOR_CONFIG = {
   },
 };
 
-export const VerticalSelect = ({ onSelect }) => {
+export const VerticalSelect = ({ onSelect, onSkip }) => {
   const [selected, setSelected] = useState(null);
 
   return (
@@ -83,14 +83,26 @@ export const VerticalSelect = ({ onSelect }) => {
           </span>
         </div>
 
-        {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
+        {/* Step indicator — 4 steps total */}
+        <div className="flex items-center justify-center gap-1.5 mb-6">
+          {/* Step 1 — active */}
           <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-amber-500/30">
             1
           </div>
-          <div className="w-14 h-0.5 bg-zinc-200 rounded-full" />
+          <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
+          {/* Step 2 */}
           <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
             2
+          </div>
+          <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
+          {/* Step 3 */}
+          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
+            3
+          </div>
+          <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
+          {/* Step 4 */}
+          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
+            4
           </div>
         </div>
 
@@ -164,18 +176,26 @@ export const VerticalSelect = ({ onSelect }) => {
         style={{ boxShadow: '0 -4px 20px rgba(0,0,0,0.06)' }}
       >
         <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <p className="text-sm text-zinc-500">
-            {selected
-              ? (
-                <span>
-                  Selected:{' '}
-                  <span className="font-semibold text-zinc-800">
-                    {VERTICALS.find(v => v.id === selected)?.label}
+          <div className="flex items-center gap-4">
+            <p className="text-sm text-zinc-500">
+              {selected
+                ? (
+                  <span>
+                    Selected:{' '}
+                    <span className="font-semibold text-zinc-800">
+                      {VERTICALS.find(v => v.id === selected)?.label}
+                    </span>
                   </span>
-                </span>
-              )
-              : 'Select your vertical to continue'}
-          </p>
+                )
+                : 'Select your vertical to continue'}
+            </p>
+            <button
+              onClick={onSkip}
+              className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors underline"
+            >
+              Skip for now
+            </button>
+          </div>
           <button
             onClick={() => selected && onSelect(selected)}
             disabled={!selected}

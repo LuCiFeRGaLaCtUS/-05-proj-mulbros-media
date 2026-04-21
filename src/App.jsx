@@ -1,6 +1,8 @@
-import React, { useState, lazy, Suspense, createContext, useContext } from 'react';
+import React, { useState, useEffect, lazy, Suspense, createContext, useContext } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
+import { Mail } from 'lucide-react';
+import { useStytch } from '@stytch/react';
 import { Layout } from './components/layout/Layout';
 import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -67,17 +69,95 @@ const ThemedToaster = () => {
   );
 };
 
+// ── Magic Link Handler — authenticates email verification links ───────────────
+// Stytch redirects here with ?stytch_token_type=login&token=xxx after user
+// clicks the verification email. We authenticate the token, which verifies the
+// email AND creates a session. useStytchSession then fires and routes normally.
+const MagicLinkHandler = ({ token }) => {
+  const stytchClient = useStytch();
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    stytchClient.magicLinks.authenticate({
+      token,
+      session_duration_minutes: 10080,
+    }).then(() => {
+      // Session active — clear the magic link token from URL so App.jsx
+      // stops matching stytch_token_type=login and routes to dashboard.
+      window.history.replaceState({}, '', '/');
+    }).catch(err => setError(err.message || 'Verification failed. The link may have expired.'));
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F7F7FA' }}>
+      <div className="text-center space-y-3">
+        {error ? (
+          <>
+            <p className="text-sm font-semibold text-zinc-900">Verification failed</p>
+            <p className="text-xs text-red-500 max-w-xs">{error}</p>
+            <a href="/" className="text-xs text-amber-600 hover:text-amber-700 transition-colors underline">
+              ← Back to sign in
+            </a>
+          </>
+        ) : (
+          <>
+            <div className="w-6 h-6 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mx-auto" />
+            <p className="text-xs text-zinc-500" style={{ fontFamily: 'var(--font-mono)' }}>
+              Verifying your email…
+            </p>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// ── Email Verification Pending ────────────────────────────────────────────────
+// Shown when a user has a session but email is not yet verified.
+const EmailVerificationPending = ({ email, onSignOut }) => (
+  <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#F7F7FA' }}>
+    <div className="w-full max-w-sm text-center space-y-4">
+      <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+        <Mail size={22} className="text-amber-400" />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-zinc-900 mb-1">Verify your email</p>
+        <p className="text-xs text-zinc-500 leading-relaxed">
+          We sent a verification link to{' '}
+          <span className="text-zinc-700 font-medium">{email}</span>.<br />
+          Click it to access your account.
+        </p>
+      </div>
+      <p className="text-[10px] text-zinc-400" style={{ fontFamily: 'var(--font-mono)' }}>
+        Check spam if you don't see it.
+      </p>
+      <button
+        onClick={onSignOut}
+        className="text-xs text-zinc-400 hover:text-amber-600 transition-colors underline"
+      >
+        Use a different email
+      </button>
+    </div>
+  </div>
+);
+
 // ── Inner app — needs router context so useNavigate works ─────────────────────
-function AppInner({ session, user, loading: authLoading, signOut, authEvent }) {
+function AppInner({ session, user, loading: authLoading, signOut }) {
   const navigate = useNavigate();
   const { profile, loading: profileLoading, updateProfile } = useProfile(user);
   const [preselectedAgent, setPreselectedAgent] = useState(null);
 
-  // Password-reset link clicked — detected synchronously from the URL hash
-  // (implicit flow) or from the onAuthStateChange event (PKCE flow).
-  // Must be checked BEFORE the loading gate so the race with getSession()
-  // cannot send the user to the dashboard first.
-  if (authEvent === 'PASSWORD_RECOVERY') return <ResetPasswordPage />;
+  // Detect Stytch URL tokens — must be checked BEFORE loading gate
+  const params          = new URLSearchParams(window.location.search);
+  const stytchTokenType = params.get('stytch_token_type');
+  const stytchToken     = params.get('token');
+
+  // Email verification magic link click
+  if (stytchTokenType === 'login' && stytchToken) {
+    return <MagicLinkHandler token={stytchToken} />;
+  }
+  // Password reset link click
+  if (stytchTokenType === 'reset_password') return <ResetPasswordPage />;
 
   // Wait for auth, then wait for profile if logged in
   const loading = authLoading || (!!session && profileLoading);
@@ -85,6 +165,11 @@ function AppInner({ session, user, loading: authLoading, signOut, authEvent }) {
 
   // Not authenticated
   if (!session) return <LoginPage />;
+
+  // Session exists but profile is null — Supabase INSERT may have failed (RLS) or is
+  // still in-flight. Hold at a spinner rather than falling through to the main app
+  // without a profile, which would crash OnboardingFlow's useAppContext() call.
+  if (!profile) return <FullScreenLoader />;
 
   // Authenticated but onboarding not complete → lock to /onboarding
   // OnboardingFlow calls useAppContext() so it needs the Provider even here.

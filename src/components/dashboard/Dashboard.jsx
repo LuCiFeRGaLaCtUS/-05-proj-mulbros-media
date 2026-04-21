@@ -9,8 +9,12 @@ import {
   Award, Radio, Mic, Play, Zap, Clock, CheckCircle2,
   ExternalLink, Sparkles,
   Wind, Droplets, Eye, Thermometer, MapPin, RefreshCw, Sunrise, Sunset,
+  Music2, Piano, Drama, ScrollText, Camera, Palette, BookOpen, Building2,
+  Layers, ChevronRight, Sparkles as SparklesIcon,
 } from 'lucide-react';
 import { AgentStatusGrid } from './AgentStatusGrid';
+import { useAppContext } from '../../App';
+import { VERTICALS } from '../../config/verticals';
 
 const C = {
   gold:    '#f59e0b',
@@ -64,11 +68,11 @@ const useCountUp = (target, duration = 1400, delay = 0) => {
 // ── Section Label ─────────────────────────────────────────────────────────────
 const SectionLabel = ({ label, sub }) => (
   <div className="flex items-center gap-3 pt-1">
-    <span className="text-[10px] font-black tracking-[0.28em] text-zinc-500 uppercase flex-shrink-0"
-      style={{ fontFamily: "'DM Sans', sans-serif" }}>
+    <span className="text-[11px] font-extrabold tracking-[0.22em] text-zinc-400 uppercase flex-shrink-0"
+      style={{ fontFamily: 'var(--font-sans)' }}>
       {label}
     </span>
-    {sub && <span className="text-[10px] text-zinc-400 flex-shrink-0">· {sub}</span>}
+    {sub && <span className="text-[11px] text-zinc-400 flex-shrink-0">· {sub}</span>}
     <div className="flex-1 h-px bg-zinc-200" />
   </div>
 );
@@ -76,7 +80,7 @@ const SectionLabel = ({ label, sub }) => (
 // ══════════════════════════════════════════════════════════════════════════════
 // WELCOME HERO
 // ══════════════════════════════════════════════════════════════════════════════
-const WelcomeHero = ({ user }) => {
+const WelcomeHero = ({ user, profile }) => {
   const [liveNow, setLiveNow] = useState(new Date());
 
   useEffect(() => {
@@ -95,9 +99,11 @@ const WelcomeHero = ({ user }) => {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   });
   const timeStr = liveNow.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-  const fullName  = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there';
-  const rawFirst  = fullName.split(' ')[0];
-  const firstName = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1);
+  // Stytch user: name lives in user.name.first_name, email in user.emails[0].email
+  const stytchFirstName = user?.name?.first_name?.trim();
+  const emailPrefix     = (user?.emails?.[0]?.email || '').split('@')[0].split('.')[0];
+  const rawFirst        = stytchFirstName || emailPrefix || 'there';
+  const firstName       = rawFirst.charAt(0).toUpperCase() + rawFirst.slice(1).toLowerCase();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
@@ -108,7 +114,7 @@ const WelcomeHero = ({ user }) => {
           background: '#FFFFFF',
           border: '1px solid rgba(245,158,11,0.15)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
-          minHeight: 140,
+          minHeight: 220,
         }}>
 
         {/* Ambient glows */}
@@ -124,7 +130,7 @@ const WelcomeHero = ({ user }) => {
         {/* Dot grid overlay */}
         <div className="absolute inset-0 bg-dot-grid opacity-50 pointer-events-none" />
 
-        <div className="relative z-10 p-5 flex flex-col justify-between h-full" style={{ minHeight: 140 }}>
+        <div className="relative z-10 p-6 flex flex-col justify-between h-full" style={{ minHeight: 220 }}>
 
           {/* Top row: greeting text + live clock */}
           <div className="flex items-start justify-between gap-4">
@@ -133,29 +139,32 @@ const WelcomeHero = ({ user }) => {
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-1.5 h-1.5 rounded-full online-dot"
                   style={{ color: '#22d3ee', background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)' }} />
-                <span className="text-[10px] font-black uppercase tracking-[0.32em]"
-                  style={{ color: 'rgba(34,211,238,0.7)' }}>
+                <span className="text-[11px] font-bold uppercase tracking-[0.24em]"
+                  style={{ color: 'rgba(34,211,238,0.75)', fontFamily: 'var(--font-sans)' }}>
                   {greeting()} · Studio Active
                 </span>
               </div>
 
               {/* Main headline */}
-              <h1 className="font-display font-light italic leading-[1.1] mb-0.5"
+              <h1 className="font-display leading-[1.15] mb-0"
                 style={{
-                  color: 'rgba(24,24,27,0.65)',
-                  fontSize: '1.85rem',
-                  letterSpacing: '0.015em',
+                  color: 'rgba(12,10,9,0.70)',
+                  fontSize: '2.6rem',
+                  fontWeight: 400,
+                  fontStyle: 'italic',
+                  letterSpacing: '0.005em',
                 }}>
                 Welcome back,
               </h1>
-              <h1 className="font-display font-semibold leading-[1.05]"
+              <h1 className="font-display leading-[1.0]"
                 style={{
-                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 40%, #22d3ee 100%)',
+                  background: 'linear-gradient(105deg, #d97706 0%, #f59e0b 40%, #fbbf24 70%, #22d3ee 100%)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
-                  fontSize: '2.6rem',
-                  letterSpacing: '0.02em',
+                  fontSize: '4.8rem',
+                  fontWeight: 800,
+                  letterSpacing: '-0.03em',
                 }}>
                 {firstName}.
               </h1>
@@ -180,12 +189,18 @@ const WelcomeHero = ({ user }) => {
 
           {/* Bottom: status pills */}
           <div className="flex items-center gap-2 mt-3 flex-wrap">
-            {[
-              { label: 'Studio Online',    color: '#22d3ee' },
-              { label: '9 Agents Active',  color: '#34d399' },
-              { label: '$214K Pipeline',   color: '#f59e0b' },
-              { label: '3 Verticals Live', color: '#a78bfa' },
-            ].map(({ label, color }) => (
+            {(() => {
+              const vertInfo = profile?.vertical
+                ? VERTICALS.find(v => v.id === profile.vertical)
+                : null;
+              return [
+                { label: 'Studio Online',                                    color: '#22d3ee' },
+                { label: '9 Agents Active',                                  color: '#34d399' },
+                { label: '$214K Pipeline',                                   color: '#f59e0b' },
+                { label: vertInfo ? `${vertInfo.label} · Active`
+                                  : '3 Verticals Live',                      color: vertInfo?.neon || '#a78bfa' },
+              ];
+            })().map(({ label, color }) => (
               <div key={label} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg"
                 style={{
                   background: `${color}0d`,
@@ -193,8 +208,8 @@ const WelcomeHero = ({ user }) => {
                 }}>
                 <div className="w-1 h-1 rounded-full flex-shrink-0"
                   style={{ background: color, boxShadow: `0 0 4px ${color}` }} />
-                <span className="text-[11px] font-semibold tracking-wide"
-                  style={{ color: `${color}dd` }}>
+                <span className="text-[12px] font-semibold tracking-wide"
+                  style={{ color: `${color}ee`, fontFamily: 'var(--font-sans)' }}>
                   {label}
                 </span>
               </div>
@@ -354,7 +369,7 @@ const BgTimeline = () => (
 // ══════════════════════════════════════════════════════════════════════════════
 // ROW 1 — Interactive Stat Cards with count-up animation
 // ══════════════════════════════════════════════════════════════════════════════
-const StatCardAnimated = ({ title, value, numericValue, formatter, change, changeUp, sub, Icon, iconBg, iconColor, accentColor, Bg, onClick, linkLabel, delay = 0 }) => {
+const StatCardAnimated = ({ title, value, numericValue, formatter, change, changeUp, sub, Icon, iconBg, iconColor, accentColor, Bg, onClick, linkLabel, delay = 0, cardBg }) => {
   const counted = useCountUp(numericValue, 1400, delay);
   const display = formatter ? formatter(counted) : counted.toLocaleString();
 
@@ -363,7 +378,7 @@ const StatCardAnimated = ({ title, value, numericValue, formatter, change, chang
       onClick={onClick}
       className="tile-pop relative w-full text-left rounded-2xl p-5 overflow-hidden group cursor-pointer"
       style={{
-        background: '#FFFFFF',
+        background: cardBg || '#FFFFFF',
         border: '1px solid rgba(0,0,0,0.07)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)',
         '--accent': accentColor,
@@ -419,14 +434,14 @@ const WelcomeMark = ({ onGoToAgents }) => (
       <div>
         <div className="flex items-center gap-2 mb-5">
           <Film size={13} className="text-amber-500" />
-          <span className="text-[10px] font-black text-amber-600 uppercase tracking-[0.22em]"
-            style={{ fontFamily: "'DM Sans', sans-serif" }}>Studio Command Center</span>
+          <span className="text-[11px] font-bold text-amber-600 uppercase tracking-[0.20em]"
+            style={{ fontFamily: 'var(--font-sans)' }}>Studio Command Center</span>
         </div>
-        <p className="text-zinc-500 text-sm mb-1 font-medium">Welcome back,</p>
-        <h2 className="font-display font-semibold leading-[0.95] mb-3"
+        <p className="text-zinc-700 text-base mb-0.5 font-medium" style={{ letterSpacing: '-0.01em' }}>Welcome back,</p>
+        <h2 className="font-display font-extrabold leading-[0.95] mb-3"
           style={{
-            fontSize: '3rem',
-            letterSpacing: '0.01em',
+            fontSize: '3.2rem',
+            letterSpacing: '-0.03em',
             background: 'linear-gradient(135deg, #18181b 0%, #f59e0b 50%, #3b82f6 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -434,7 +449,7 @@ const WelcomeMark = ({ onGoToAgents }) => (
           }}>
           MulBros Media
         </h2>
-        <p className="text-zinc-500 text-sm leading-relaxed max-w-xs">
+        <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">
           Your AI-powered Hollywood OS is live.<br />
           <span className="text-amber-600 font-semibold">9 agents</span> active ·{' '}
           <span className="text-blue-600 font-semibold">$214K</span> pipeline ·{' '}
@@ -449,13 +464,13 @@ const WelcomeMark = ({ onGoToAgents }) => (
           { label: 'Music & Comp.', color: 'bg-amber-50 text-amber-700 border-amber-200' },
         ].map(({ label, color }) => (
           <span key={label} className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${color}`}
-            style={{ fontFamily: "'DM Sans', sans-serif" }}>{label}</span>
+            style={{ fontFamily: 'var(--font-sans)' }}>{label}</span>
         ))}
       </div>
 
       <button onClick={onGoToAgents}
         className="self-start inline-flex items-center gap-2 mt-5 text-sm font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-xl px-5 py-2.5 transition-all group/btn active:scale-95 shadow-sm shadow-amber-500/20"
-        style={{ fontFamily: "'DM Sans', sans-serif" }}>
+        style={{ fontFamily: 'var(--font-sans)' }}>
         <Play size={13} className="group-hover/btn:scale-110 transition-transform" />
         Open Agent Hub
         <ArrowRight size={13} className="group-hover/btn:translate-x-0.5 transition-transform" />
@@ -471,12 +486,12 @@ const AudienceScore = ({ onClick }) => {
   const r = 52, circ = 2 * Math.PI * r, dash = circ * 0.95;
   return (
     <button onClick={onClick}
-      className="tile-pop relative w-full text-left bg-white rounded-2xl p-5 h-full flex flex-col overflow-hidden cursor-pointer group"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      className="tile-pop relative w-full text-left rounded-2xl p-5 h-full flex flex-col overflow-hidden cursor-pointer group"
+      style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fffdf5 45%, #ffffff 75%)', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <BgAudienceScore />
       <div className="relative z-10 mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>Audience Score</h3>
+          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>Audience Score</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Across all releases</p>
         </div>
         <ExternalLink size={12} className="text-zinc-400 group-hover:text-amber-500 transition-colors mt-0.5" />
@@ -496,7 +511,7 @@ const AudienceScore = ({ onClick }) => {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-1">
             <Star size={15} className="text-amber-500" fill="#f59e0b" />
-            <span className="text-2xl font-black text-zinc-900 leading-none" style={{ fontFamily: "'DM Sans', sans-serif" }}>95%</span>
+            <span className="text-2xl font-black text-zinc-900 leading-none" style={{ fontFamily: 'var(--font-sans)' }}>95%</span>
             <span className="text-[10px] text-zinc-500">rating</span>
           </div>
         </div>
@@ -517,12 +532,12 @@ const DealFlow = ({ onClick }) => {
   const r = 36, circ = 2 * Math.PI * r, dash = circ * 0.70;
   return (
     <button onClick={onClick}
-      className="tile-pop relative w-full text-left bg-white rounded-2xl p-5 h-full flex flex-col overflow-hidden cursor-pointer group"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      className="tile-pop relative w-full text-left rounded-2xl p-5 h-full flex flex-col overflow-hidden cursor-pointer group"
+      style={{ background: 'linear-gradient(135deg, #ecfdf5 0%, #f4fdf9 45%, #ffffff 75%)', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <BgDealFlow />
       <div className="relative z-10 mb-4 flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>Deal Flow</h3>
+          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>Deal Flow</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Luke composer pipeline</p>
         </div>
         <ExternalLink size={12} className="text-zinc-400 group-hover:text-emerald-500 transition-colors mt-0.5" />
@@ -531,7 +546,7 @@ const DealFlow = ({ onClick }) => {
         {[{ label: 'Active Leads', value: '14' }, { label: 'Confirmed $', value: '$30K' }].map(({ label, value }) => (
           <div key={label} className="bg-zinc-50 rounded-xl p-3 border border-zinc-200 hover:border-emerald-300 transition-colors">
             <p className="text-[10px] text-zinc-500 mb-1">{label}</p>
-            <p className="text-lg font-black text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>{value}</p>
+            <p className="text-lg font-black text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>{value}</p>
           </div>
         ))}
       </div>
@@ -543,7 +558,7 @@ const DealFlow = ({ onClick }) => {
               strokeDasharray={`${dash} ${circ}`} strokeLinecap="round" />
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-lg font-black text-zinc-900 leading-none" style={{ fontFamily: "'DM Sans', sans-serif" }}>9.3</span>
+            <span className="text-lg font-black text-zinc-900 leading-none" style={{ fontFamily: 'var(--font-sans)' }}>9.3</span>
             <span className="text-[9px] text-zinc-500 mt-0.5">score</span>
           </div>
         </div>
@@ -575,12 +590,12 @@ const RevenueChart = ({ onClick }) => {
   const toggle = (key) => setActive(p => p.includes(key) ? (p.length > 1 ? p.filter(k => k !== key) : p) : [...p, key]);
 
   return (
-    <div className="tile-pop relative bg-white rounded-2xl overflow-hidden group"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+    <div className="tile-pop relative rounded-2xl overflow-hidden group"
+      style={{ background: 'linear-gradient(135deg, #eff6ff 0%, #f8faff 40%, #ffffff 70%)', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <BgRevenueChart />
       <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-100">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>Revenue Pipeline</h3>
+          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>Revenue Pipeline</h3>
           <p className="text-xs text-zinc-500 mt-0.5">6-month forecast · click legend to toggle</p>
         </div>
         <div className="flex items-center gap-4">
@@ -656,12 +671,12 @@ const CustomBar = ({ x, y, width, height, index }) => {
 const PlatformChart = ({ onClick }) => {
   return (
     <button onClick={onClick}
-      className="tile-pop relative w-full text-left bg-white rounded-2xl overflow-hidden cursor-pointer group"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+      className="tile-pop relative w-full text-left rounded-2xl overflow-hidden cursor-pointer group"
+      style={{ background: 'linear-gradient(135deg, #fffbeb 0%, #fffdf5 40%, #ffffff 70%)', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <BgPlatformChart />
       <div className="relative z-10 flex items-center justify-between px-6 pt-5 pb-4 border-b border-zinc-100">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>Talise — Platform Reach</h3>
+          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>Talise — Platform Reach</h3>
           <p className="text-xs text-zinc-500 mt-0.5">Monthly audience by platform</p>
         </div>
         <ExternalLink size={12} className="text-zinc-400 group-hover:text-amber-500 transition-colors" />
@@ -694,10 +709,10 @@ const PlatformChart = ({ onClick }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 // ROW 4 — Progress Metric Cards
 // ══════════════════════════════════════════════════════════════════════════════
-const ProgressCard = ({ Icon, iconBg, iconColor, title, value, pct, color, sub, Bg, onClick, hoverRing }) => (
+const ProgressCard = ({ Icon, iconBg, iconColor, title, value, pct, color, sub, Bg, onClick, hoverRing, cardBg }) => (
   <button onClick={onClick}
-    className={`tile-pop relative w-full text-left bg-white rounded-2xl ${hoverRing} p-5 overflow-hidden cursor-pointer group`}
-    style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+    className={`tile-pop relative w-full text-left rounded-2xl ${hoverRing} p-5 overflow-hidden cursor-pointer group`}
+    style={{ background: cardBg || '#FFFFFF', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
     <Bg />
     <div className="relative z-10 flex items-center gap-3 mb-4">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${iconBg} group-hover:scale-110 transition-transform duration-300`}>
@@ -706,7 +721,7 @@ const ProgressCard = ({ Icon, iconBg, iconColor, title, value, pct, color, sub, 
       <div className="flex-1 min-w-0">
         <p className="text-[11px] text-zinc-500 uppercase tracking-wider">{title}</p>
         <p className="text-lg font-black text-zinc-900 leading-tight"
-          style={{ fontFamily: "'DM Sans', sans-serif" }}>{value}</p>
+          style={{ fontFamily: 'var(--font-sans)' }}>{value}</p>
       </div>
       <ExternalLink size={11} className="text-zinc-300 group-hover:text-zinc-500 transition-colors flex-shrink-0" />
     </div>
@@ -740,12 +755,12 @@ const ProjectsTable = ({ onRowClick }) => {
     'Negotiating': 'bg-blue-50 text-blue-700 border-blue-200',
   };
   return (
-    <div className="tile-pop relative bg-white rounded-2xl overflow-hidden"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+    <div className="tile-pop relative rounded-2xl overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #fafaf8 0%, #ffffff 50%)', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <BgProjectsTable />
       <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-100">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>Active Projects</h3>
+          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>Active Projects</h3>
           <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-1.5">
             <CheckCircle2 size={11} className="text-emerald-500" />
             3 projects delivered this quarter
@@ -801,12 +816,12 @@ const ActivityTimeline = ({ onItemClick }) => {
     { Icon: Star,   color: C.emerald, label: 'Community milestone — 2,847 fans reached',    time: 'Apr 11, 10:30 AM',   page: 'music'       },
   ];
   return (
-    <div className="tile-pop relative bg-white rounded-2xl overflow-hidden"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+    <div className="tile-pop relative rounded-2xl overflow-hidden"
+      style={{ background: 'linear-gradient(180deg, #fafaf8 0%, #ffffff 50%)', border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
       <BgTimeline />
       <div className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-zinc-100">
         <div>
-          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: "'DM Sans', sans-serif" }}>Studio Activity</h3>
+          <h3 className="text-sm font-bold text-zinc-900" style={{ fontFamily: 'var(--font-sans)' }}>Studio Activity</h3>
           <p className="text-xs mt-0.5 flex items-center gap-1.5">
             <TrendingUp size={11} className="text-emerald-500" />
             <span className="text-emerald-600 font-bold">+28%</span>
@@ -1042,16 +1057,184 @@ const WeatherTile = () => {
 };
 
 // ══════════════════════════════════════════════════════════════════════════════
+// VERTICAL ICON MAP
+// ══════════════════════════════════════════════════════════════════════════════
+const V_ICON = {
+  filmmaker:    Clapperboard,
+  musician:     Music2,
+  composer:     Piano,
+  actor:        Drama,
+  screenwriter: ScrollText,
+  crew:         Camera,
+  artist:       Palette,
+  writer:       BookOpen,
+  artsorg:      Building2,
+};
+
+const VERTICAL_PATH = {
+  filmmaker:    '/vertical/filmmaker',
+  musician:     '/vertical/musician',
+  composer:     '/vertical/composer',
+  actor:        '/vertical/actor',
+  screenwriter: '/vertical/screenwriter',
+  crew:         '/vertical/crew',
+  artist:       '/vertical/artist',
+  writer:       '/vertical/writer',
+  artsorg:      '/vertical/artsorg',
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
+// VERTICAL PROFILE CARD — shown after onboarding, personalized to the user
+// ══════════════════════════════════════════════════════════════════════════════
+const VerticalProfileCard = () => {
+  const { profile, navigate } = useAppContext();
+  const [dismissed, setDismissed] = useState(false);
+
+  if (dismissed) return null;
+  if (!profile?.vertical) return null;
+
+  const vertInfo   = VERTICALS.find(v => v.id === profile.vertical);
+  if (!vertInfo) return null;
+
+  const Icon       = V_ICON[profile.vertical] || Layers;
+  const neon       = vertInfo.neon;
+  const answers    = profile.onboarding_data?.answers || {};
+  const answerList = Object.values(answers).filter(Boolean).slice(0, 4);
+  const isSkipped  = profile.onboarding_data?.skipped_questions;
+  const path       = VERTICAL_PATH[profile.vertical] || '/dashboard';
+
+  return (
+    <div
+      className="relative rounded-2xl overflow-hidden animate-hud-in"
+      style={{
+        background: `linear-gradient(135deg, ${neon}08 0%, #FFFFFF 60%)`,
+        border: `1px solid ${neon}28`,
+        boxShadow: `0 0 0 1px ${neon}10, 0 4px 20px rgba(0,0,0,0.05)`,
+      }}
+    >
+      {/* Top accent line */}
+      <div
+        className="absolute top-0 left-0 right-0 h-px pointer-events-none"
+        style={{ background: `linear-gradient(to right, transparent, ${neon}60, transparent)` }}
+      />
+
+      {/* Dismiss button */}
+      <button
+        onClick={() => setDismissed(true)}
+        className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 transition-all z-10 text-xs font-bold"
+        aria-label="Dismiss"
+      >
+        ✕
+      </button>
+
+      <div className="relative z-10 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+
+        {/* ── Left: Vertical identity ─────────────────────────────────── */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+          {/* Icon */}
+          <div
+            className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+            style={{
+              background: `${neon}14`,
+              border: `1px solid ${neon}30`,
+              boxShadow: `0 0 16px ${neon}15`,
+            }}
+          >
+            <Icon size={26} style={{ color: neon }} />
+          </div>
+
+          {/* Label */}
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span
+                className="text-[9px] font-black uppercase tracking-[0.22em]"
+                style={{ color: neon, fontFamily: 'var(--font-mono)' }}
+              >
+                Your Vertical
+              </span>
+              <span
+                className="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full"
+                style={{
+                  background: `${neon}12`,
+                  border: `1px solid ${neon}28`,
+                  color: neon,
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                <span className="w-1 h-1 rounded-full" style={{ background: neon }} />
+                Profile Active
+              </span>
+            </div>
+            <h3 className="text-lg font-bold text-zinc-900 leading-tight">{vertInfo.label}</h3>
+            <p className="text-xs text-zinc-500 mt-0.5">{vertInfo.desc}</p>
+          </div>
+        </div>
+
+        {/* ── Middle: Answer chips ────────────────────────────────────── */}
+        <div className="flex-1 min-w-0">
+          {isSkipped ? (
+            <p className="text-xs text-zinc-400 italic">
+              Profile questions skipped — update anytime in Settings.
+            </p>
+          ) : answerList.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {answerList.map((ans, i) => (
+                <span
+                  key={i}
+                  className="inline-flex text-xs font-medium px-3 py-1.5 rounded-xl border"
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid rgba(0,0,0,0.08)',
+                    color: '#52525b',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                  }}
+                >
+                  <CheckCircle2 size={11} style={{ color: neon, marginRight: 5, flexShrink: 0, marginTop: 1 }} />
+                  {ans}
+                </span>
+              ))}
+            </div>
+          ) : null}
+        </div>
+
+        {/* ── Right: CTA ─────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-2 flex-shrink-0 sm:items-end w-full sm:w-auto">
+          <button
+            onClick={() => navigate(path)}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95 shadow-sm"
+            style={{ background: neon, boxShadow: `0 4px 12px ${neon}30` }}
+          >
+            Open Workspace
+            <ChevronRight size={15} />
+          </button>
+          <button
+            onClick={() => navigate('/agents')}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-800 transition-colors"
+          >
+            <SparklesIcon size={11} />
+            Talk to an agent
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ══════════════════════════════════════════════════════════════════════════════
 // MAIN EXPORT
 // ══════════════════════════════════════════════════════════════════════════════
 export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
+  const { profile } = useAppContext();
   const nav = (page) => setActivePage?.(page);
 
   return (
     <div className="space-y-5">
 
       {/* Hero */}
-      <WelcomeHero user={user} />
+      <WelcomeHero user={user} profile={profile} />
+
+      {/* Vertical Profile Card — personalized after onboarding */}
+      <VerticalProfileCard />
 
       {/* Row 1 — 4 interactive themed stat cards */}
       <SectionLabel label="Metrics" sub="live indicators" />
@@ -1059,25 +1242,25 @@ export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
         <StatCardAnimated title="Box Office Revenue" numericValue={30000} formatter={v => `$${v.toLocaleString()}`}
           change="+12.4%" changeUp sub="confirmed"
           Icon={DollarSign} iconBg="bg-blue-100" iconColor="text-blue-600"
-          accentColor={C.blue} Bg={BgRevenue}
+          accentColor={C.blue} Bg={BgRevenue} cardBg="linear-gradient(135deg, #eff6ff 0%, #f4f8ff 45%, #ffffff 75%)"
           onClick={() => nav('financing')} linkLabel="View Film Financing →" delay={0} />
 
         <StatCardAnimated title="Monthly Streams" numericValue={85230} formatter={v => v.toLocaleString()}
           change="+8.2%" changeUp sub="Talise"
           Icon={Music} iconBg="bg-amber-100" iconColor="text-amber-600"
-          accentColor={C.gold} Bg={BgStreams}
+          accentColor={C.gold} Bg={BgStreams} cardBg="linear-gradient(135deg, #fffbeb 0%, #fffdf4 45%, #ffffff 75%)"
           onClick={() => nav('music')} linkLabel="View Music & Composition →" delay={80} />
 
         <StatCardAnimated title="Active Deals" numericValue={14} formatter={v => String(v)}
           change="+3" changeUp sub="pipeline"
           Icon={Clapperboard} iconBg="bg-emerald-100" iconColor="text-emerald-600"
-          accentColor={C.emerald} Bg={BgDeals}
+          accentColor={C.emerald} Bg={BgDeals} cardBg="linear-gradient(135deg, #ecfdf5 0%, #f4fdf9 45%, #ffffff 75%)"
           onClick={() => nav('financing')} linkLabel="View Deal Pipeline →" delay={160} />
 
         <StatCardAnimated title="Fan Community" numericValue={2847} formatter={v => v.toLocaleString()}
           change="-2.1%" changeUp={false} sub="members"
           Icon={Users} iconBg="bg-purple-100" iconColor="text-purple-600"
-          accentColor={C.purple} Bg={BgCommunity}
+          accentColor={C.purple} Bg={BgCommunity} cardBg="linear-gradient(135deg, #f5f3ff 0%, #f9f7ff 45%, #ffffff 75%)"
           onClick={() => nav('music')} linkLabel="View Community →" delay={240} />
       </div>
 
@@ -1101,19 +1284,23 @@ export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <ProgressCard Icon={Film}       iconBg="bg-emerald-100" iconColor="text-emerald-600"
           title="Last County Streams" value="142,847" pct={71} color={C.emerald} sub="Target: 200K"
-          Bg={BgFilmFrame} hoverRing="hover:border-emerald-300" onClick={() => nav('productions')} />
+          Bg={BgFilmFrame} hoverRing="hover:border-emerald-300" onClick={() => nav('productions')}
+          cardBg="linear-gradient(135deg, #ecfdf5 0%, #f4fdf9 45%, #ffffff 75%)" />
 
         <ProgressCard Icon={Music}      iconBg="bg-amber-100"   iconColor="text-amber-600"
           title="Talise Growth"      value="85,230"  pct={85} color={C.gold}    sub="Target: 100K"
-          Bg={BgMusicStaff} hoverRing="hover:border-amber-300" onClick={() => nav('music')} />
+          Bg={BgMusicStaff} hoverRing="hover:border-amber-300" onClick={() => nav('music')}
+          cardBg="linear-gradient(135deg, #fffbeb 0%, #fffdf4 45%, #ffffff 75%)" />
 
         <ProgressCard Icon={DollarSign} iconBg="bg-blue-100"    iconColor="text-blue-600"
           title="Pipeline Value"     value="$65K"    pct={65} color={C.blue}    sub="Target: $100K"
-          Bg={BgPipeline} hoverRing="hover:border-blue-300" onClick={() => nav('financing')} />
+          Bg={BgPipeline} hoverRing="hover:border-blue-300" onClick={() => nav('financing')}
+          cardBg="linear-gradient(135deg, #eff6ff 0%, #f4f8ff 45%, #ffffff 75%)" />
 
         <ProgressCard Icon={Users}      iconBg="bg-purple-100"  iconColor="text-purple-600"
           title="Email Subscribers"  value="847"     pct={85} color={C.purple}  sub="Target: 1,000"
-          Bg={BgEmail} hoverRing="hover:border-purple-300" onClick={() => nav('music')} />
+          Bg={BgEmail} hoverRing="hover:border-purple-300" onClick={() => nav('music')}
+          cardBg="linear-gradient(135deg, #f5f3ff 0%, #f9f7ff 45%, #ffffff 75%)" />
       </div>
 
       {/* Row 5 */}

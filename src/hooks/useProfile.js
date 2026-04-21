@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+// user is a Stytch user object — identifier is user.user_id
+// Profiles are stored in Supabase, looked up by stytch_user_id column.
 export const useProfile = (user) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -15,20 +17,39 @@ export const useProfile = (user) => {
     supabase
       .from('profiles')
       .select('*')
-      .eq('id', user.id)
+      .eq('stytch_user_id', user.user_id)
       .single()
-      .then(({ data, error }) => {
-        if (!error && data) setProfile(data);
-        setLoading(false);
+      .then(async ({ data, error }) => {
+        if (data) {
+          setProfile(data);
+          setLoading(false);
+        } else {
+          // First login — profile doesn't exist yet, create it automatically
+          const email = user.emails?.[0]?.email ?? null;
+          const { data: newProfile, error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              stytch_user_id: user.user_id,
+              email,
+              onboarding_complete: false,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .select()
+            .single();
+          if (newProfile) setProfile(newProfile);
+          if (insertError) console.error('useProfile: failed to create profile', insertError);
+          setLoading(false);
+        }
       });
-  }, [user?.id]);
+  }, [user?.user_id]);
 
   const updateProfile = async (updates) => {
     if (!user) return { data: null, error: new Error('No user') };
     const { data, error } = await supabase
       .from('profiles')
       .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq('id', user.id)
+      .eq('stytch_user_id', user.user_id)
       .select()
       .single();
     if (!error && data) setProfile(data);

@@ -57,8 +57,12 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
   const location  = useLocation();
   const pageMeta  = getPageMeta(location.pathname);
 
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
-  const initials    = displayName.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  // Stytch user: name lives in user.name.first_name, email in user.emails[0].email
+  const stytchFirstName = user?.name?.first_name?.trim();
+  const emailPrefix     = (user?.emails?.[0]?.email || '').split('@')[0].split('.')[0];
+  const rawName         = stytchFirstName || emailPrefix || 'User';
+  const displayName     = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+  const initials        = displayName.slice(0, 2).toUpperCase();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen,  setSearchOpen]  = useState(false);
@@ -167,6 +171,8 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
             style={{ color: 'rgba(245,158,11,0.6)' }} />
           <input
             type="text"
+            aria-label="Search agents and pages"
+            role="searchbox"
             value={searchQuery}
             onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
             onFocus={(e) => {

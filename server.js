@@ -4,6 +4,7 @@ import { dirname, join } from 'path';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import basicAuth from 'express-basic-auth';
+import { Resend } from 'resend';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -418,6 +419,50 @@ app.post('/api/apify-reddit', apifyLimiter, async (req, res) => {
     }
   } finally {
     clearTimeout(timeout);
+  }
+});
+
+// ── Resend email proxy ────────────────────────────────────────────────────────
+// Server-side only — API key never reaches the browser bundle.
+// Used for transactional emails (welcome, notifications, etc.)
+const emailLimiter = rateLimit({
+  windowMs:        60_000,
+  max:             10,
+  standardHeaders: true,
+  legacyHeaders:   false,
+  message: { error: { message: 'Too many email requests — please wait a minute.' } },
+});
+
+app.post('/api/email', emailLimiter, async (req, res) => {
+  const resendKey = process.env.Resend_API;
+  if (!resendKey) {
+    return res.status(503).json({ error: 'Email service not configured (Resend_API missing).' });
+  }
+
+  const { to, subject, html, text } = req.body || {};
+  if (!to || !subject || (!html && !text)) {
+    return res.status(400).json({ error: 'to, subject, and html (or text) are required.' });
+  }
+
+  try {
+    const resend = new Resend(resendKey);
+    const { data, error } = await resend.emails.send({
+      from:    'MulBros Media OS <onboarding@resend.dev>',
+      to,
+      subject,
+      ...(html ? { html } : {}),
+      ...(text ? { text } : {}),
+    });
+
+    if (error) {
+      console.error('Resend error:', error);
+      return res.status(502).json({ error: error.message });
+    }
+
+    res.json({ success: true, id: data?.id });
+  } catch (err) {
+    console.error('Email proxy error:', err.message);
+    res.status(500).json({ error: 'Failed to send email. Please try again.' });
   }
 });
 

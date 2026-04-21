@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useStytch } from '@stytch/react';
 import { Loader2, Film, Mail, Lock, UserPlus, LogIn, Eye, EyeOff, CheckCircle2, KeyRound } from 'lucide-react';
 
-// ── Canonical app URL for Supabase redirects ──────────────────────────────────
-// Set VITE_APP_URL in your Render environment variables to the production URL
-// (e.g. https://mulbros-media.onrender.com). Falls back to the current origin
-// so localhost still works in dev.
+// Canonical app URL for Stytch redirect URLs
 const appUrl = () => import.meta.env.VITE_APP_URL || window.location.origin;
 
 // ── Password strength helper ──────────────────────────────────────────────────
@@ -61,8 +58,24 @@ const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoCo
   </div>
 );
 
+// ── Logo header — shared between LoginPage and ResetPasswordPage ──────────────
+const LogoHeader = ({ subtitle }) => (
+  <div className="text-center mb-8">
+    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
+      <Film size={24} className="text-amber-400" />
+    </div>
+    <h1 className="font-display text-3xl font-black text-zinc-900 tracking-[0.18em]">
+      MULBROS
+    </h1>
+    <p className="text-xs text-zinc-500 mt-1 tracking-[0.2em] uppercase font-mono">
+      {subtitle}
+    </p>
+  </div>
+);
+
 // ── Forgot Password flow ──────────────────────────────────────────────────────
 const ForgotPasswordForm = ({ onBack }) => {
+  const stytch = useStytch();
   const [email,   setEmail]   = useState('');
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
@@ -72,13 +85,15 @@ const ForgotPasswordForm = ({ onBack }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: appUrl(),
-    });
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      await stytch.passwords.resetByEmailStart({
+        email,
+        reset_password_redirect_url: appUrl(),
+        reset_password_expiration_minutes: 30,
+      });
       setSent(true);
+    } catch (err) {
+      setError(err.message || 'Failed to send reset email.');
     }
     setLoading(false);
   };
@@ -149,6 +164,7 @@ const ForgotPasswordForm = ({ onBack }) => {
 
 // ── Sign In form ──────────────────────────────────────────────────────────────
 const SignInForm = () => {
+  const stytch = useStytch();
   const [email,      setEmail]      = useState('');
   const [password,   setPassword]   = useState('');
   const [showPw,     setShowPw]     = useState(false);
@@ -160,8 +176,16 @@ const SignInForm = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setError(error.message);
+    try {
+      await stytch.passwords.authenticate({
+        email,
+        password,
+        session_duration_minutes: 10080, // 7 days
+      });
+      // Session now active — useStytchSession fires, App reroutes to dashboard
+    } catch (err) {
+      setError(err.message || 'Invalid email or password.');
+    }
     setLoading(false);
   };
 
@@ -229,6 +253,7 @@ const SignInForm = () => {
 
 // ── Sign Up form ──────────────────────────────────────────────────────────────
 const SignUpForm = () => {
+  const stytch = useStytch();
   const [email,    setEmail]    = useState('');
   const [password, setPassword] = useState('');
   const [confirm,  setConfirm]  = useState('');
@@ -246,19 +271,15 @@ const SignUpForm = () => {
     if (password !== confirm) { setError('Passwords do not match.'); return; }
 
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        // Uses VITE_APP_URL in production so verification emails link to the
-        // deployed Render URL, not localhost.
-        emailRedirectTo: appUrl(),
-      },
-    });
-    if (error) {
-      setError(error.message);
-    } else {
+    try {
+      await stytch.passwords.create({
+        email,
+        password,
+        // No session_duration_minutes — user must verify email first
+      });
       setSent(true);
+    } catch (err) {
+      setError(err.message || 'Failed to create account.');
     }
     setLoading(false);
   };
@@ -273,16 +294,10 @@ const SignUpForm = () => {
           <p className="text-sm font-semibold text-zinc-900 mb-1">Check your inbox</p>
           <p className="text-xs text-zinc-500 leading-relaxed">
             We sent a verification link to{' '}
-            <span className="text-zinc-700 font-medium">{email}</span>.
-            <br />Click it to activate your account, then sign in.
+            <span className="text-zinc-700 font-medium">{email}</span>.<br />
+            Click it to activate your account.
           </p>
         </div>
-        <button
-          onClick={() => { setSent(false); setEmail(''); setPassword(''); setConfirm(''); }}
-          className="text-xs text-amber-600 hover:text-amber-700 transition-colors"
-        >
-          Use a different email
-        </button>
       </div>
     );
   }
@@ -350,25 +365,11 @@ const SignUpForm = () => {
   );
 };
 
-// ── Logo header — shared between LoginPage and ResetPasswordPage ──────────────
-const LogoHeader = ({ subtitle }) => (
-  <div className="text-center mb-8">
-    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
-      <Film size={24} className="text-amber-400" />
-    </div>
-    <h1 className="font-display text-3xl font-semibold text-zinc-900 tracking-wide">
-      MULBROS
-    </h1>
-    <p className="text-xs text-zinc-500 mt-1 tracking-[0.2em] uppercase font-mono">
-      {subtitle}
-    </p>
-  </div>
-);
-
 // ── Reset Password Page ───────────────────────────────────────────────────────
-// Rendered by App.jsx when Supabase fires the PASSWORD_RECOVERY auth event.
-// At this point the user has a valid (temporary) session — we can call updateUser.
+// Rendered by App.jsx when URL contains stytch_token_type=reset_password.
+// Stytch has already validated the link — we just call resetByEmail with the token.
 export const ResetPasswordPage = () => {
+  const stytch = useStytch();
   const [password,  setPassword]  = useState('');
   const [confirm,   setConfirm]   = useState('');
   const [showPw,    setShowPw]    = useState(false);
@@ -376,6 +377,8 @@ export const ResetPasswordPage = () => {
   const [loading,   setLoading]   = useState(false);
   const [error,     setError]     = useState('');
   const [done,      setDone]      = useState(false);
+
+  const token = new URLSearchParams(window.location.search).get('token');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -385,20 +388,21 @@ export const ResetPasswordPage = () => {
     if (password !== confirm) { setError('Passwords do not match.'); return; }
 
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
-    if (error) {
-      setError(error.message);
-      setLoading(false);
-    } else {
+    try {
+      await stytch.passwords.resetByEmail({
+        token,
+        password,
+        session_duration_minutes: 10080,
+      });
       setDone(true);
-      // Give the user a moment to read the success state, then let
-      // onAuthStateChange (USER_UPDATED event) clear the PASSWORD_RECOVERY
-      // flag in App.jsx and redirect to the dashboard automatically.
+      // Session is now active. Clear the reset token from the URL so App.jsx
+      // stops matching stytch_token_type=reset_password and routes to dashboard.
       setTimeout(() => {
-        // Sign out to force a clean re-login so the user sees the normal flow.
-        // Remove this if you prefer to auto-sign-in after reset.
-        supabase.auth.signOut();
-      }, 2500);
+        window.history.replaceState({}, '', '/');
+      }, 1500);
+    } catch (err) {
+      setError(err.message || 'Reset failed. The link may have expired.');
+      setLoading(false);
     }
   };
 
@@ -408,22 +412,15 @@ export const ResetPasswordPage = () => {
         <LogoHeader subtitle="Media OS · Set New Password" />
 
         {done ? (
-          /* ── Success state ── */
           <div className="text-center space-y-4 py-4">
             <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto">
               <CheckCircle2 size={22} className="text-emerald-500" />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-zinc-900 mb-1">Password updated!</p>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                Your password has been changed successfully.<br />
-                Redirecting you to sign in…
-              </p>
-            </div>
+            <p className="text-sm font-semibold text-zinc-900">Password updated!</p>
+            <p className="text-xs text-zinc-500">Taking you to your dashboard…</p>
             <div className="w-5 h-5 rounded-full border-2 border-amber-500 border-t-transparent animate-spin mx-auto" />
           </div>
         ) : (
-          /* ── Reset form ── */
           <div className="space-y-4">
             <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl">
               <KeyRound size={16} className="text-amber-600 flex-shrink-0" />

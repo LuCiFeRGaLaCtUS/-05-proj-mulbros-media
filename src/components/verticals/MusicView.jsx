@@ -466,31 +466,31 @@ export const MusicView = ({ onAgentClick, user }) => {
       </div>
 
       {/* ── AI Engine banner ──────────────────────────────────────────────── */}
-      <div className="tile-pop relative overflow-hidden bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 border border-amber-400/30 rounded-2xl p-4 flex items-center gap-4">
-        <div className="absolute -top-4 right-8 w-24 h-24 bg-amber-400/20 blur-xl rounded-full pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(255,255,255,0.08),transparent_70%)] pointer-events-none" />
-        <div className="absolute bottom-1 left-0 right-0 flex flex-col gap-1 px-4 pointer-events-none opacity-10">
-          {[0, 1, 2].map(i => <div key={i} className="h-px bg-white" />)}
+      <div className="tile-pop relative overflow-hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4">
+        <div className="absolute -top-4 right-8 w-24 h-24 bg-amber-200/60 blur-xl rounded-full pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(245,158,11,0.06),transparent_70%)] pointer-events-none" />
+        <div className="absolute bottom-1 left-0 right-0 flex flex-col gap-1 px-4 pointer-events-none opacity-30">
+          {[0, 1, 2].map(i => <div key={i} className="h-px bg-amber-300" />)}
         </div>
-        <div className="relative z-10 w-10 h-10 rounded-xl bg-white/20 border border-white/30 flex items-center justify-center flex-shrink-0">
-          <Bot size={18} className="text-white" />
+        <div className="relative z-10 w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center flex-shrink-0">
+          <Bot size={18} className="text-amber-600" />
         </div>
         <div className="relative z-10 flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-white">AI Music & Composition Engine — Online</span>
-            <span className="flex items-center gap-1 text-xs bg-white/20 text-white border border-white/30 px-1.5 py-0.5 rounded-full font-medium">
+            <span className="text-sm font-semibold text-zinc-900">AI Music & Composition Engine — Online</span>
+            <span className="flex items-center gap-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 px-1.5 py-0.5 rounded-full font-medium">
               <Sparkles size={9} /> AI
             </span>
           </div>
-          <p className="text-xs text-white/80 leading-snug">
+          <p className="text-xs text-zinc-600 leading-snug">
             Connects filmmakers with composers and scoring talent. Manages sync licensing opportunities, scoring workflows, and music deliverables end-to-end.
             Luke → AI-matched to indie films in pre-production via IMDb Pro and Film Freeway.
             Talise → sync pitches to supervisors, brand partnerships, and editorial playlist placements.
           </p>
         </div>
         <div className="relative z-10 flex-shrink-0 text-right">
-          <div className="text-xs text-white/70">Active deals</div>
-          <div className="text-lg font-bold font-mono text-white">$127.5K</div>
+          <div className="text-xs text-zinc-500">Active deals</div>
+          <div className="text-lg font-bold font-mono text-zinc-900">$127.5K</div>
         </div>
       </div>
 

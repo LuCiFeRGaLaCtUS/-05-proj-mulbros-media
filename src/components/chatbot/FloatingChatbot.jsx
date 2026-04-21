@@ -66,8 +66,8 @@ const TriggerButton = ({ onClick, isOpen }) => (
     </span>
 
     {/* "AI" badge */}
-    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-zinc-900 border border-amber-500/60 flex items-center justify-center pointer-events-none">
-      <span className="text-[8px] font-black text-amber-400 leading-none">AI</span>
+    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white border border-amber-400 flex items-center justify-center pointer-events-none shadow-sm">
+      <span className="text-[8px] font-black text-amber-600 leading-none">AI</span>
     </span>
   </button>
 );
@@ -225,7 +225,7 @@ export const FloatingChatbot = ({ appState }) => {
               )}
               <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-gradient-to-br from-amber-500 to-yellow-400 text-zinc-950 font-medium rounded-br-sm shadow-md shadow-amber-500/20'
+                  ? 'bg-amber-500 text-white font-medium rounded-br-sm shadow-sm shadow-amber-500/20'
                   : 'bg-zinc-50 border border-zinc-200 text-zinc-800 rounded-bl-sm shadow-sm'
               }`}>
                 {msg.content}
