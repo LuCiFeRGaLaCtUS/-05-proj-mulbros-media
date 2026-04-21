@@ -87,9 +87,11 @@ function AppInner({ session, user, loading: authLoading, signOut, authEvent }) {
   if (!session) return <LoginPage />;
 
   // Authenticated but onboarding not complete → lock to /onboarding
+  // OnboardingFlow calls useAppContext() so it needs the Provider even here.
   if (profile && !profile.onboarding_complete) {
     return (
-      <>
+      <AppContext.Provider value={{ profile, updateProfile, user, navigate,
+                                    preselectedAgent, setPreselectedAgent }}>
         <Suspense fallback={<FullScreenLoader />}>
           <Routes>
             <Route path="/onboarding" element={<OnboardingFlow />} />
@@ -97,7 +99,7 @@ function AppInner({ session, user, loading: authLoading, signOut, authEvent }) {
           </Routes>
         </Suspense>
         <ThemedToaster />
-      </>
+      </AppContext.Provider>
     );
   }
 
