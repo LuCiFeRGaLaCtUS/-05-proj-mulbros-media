@@ -48,7 +48,7 @@ const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoCo
       required
       autoComplete={autoComplete}
       disabled={disabled}
-      className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-10 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-60"
+      className="w-full bg-white border border-zinc-200 rounded-xl pl-10 pr-10 py-3 text-base text-zinc-900 placeholder-zinc-400 focus:outline-none focus:border-amber-500/50 transition-colors disabled:opacity-60"
     />
     {rightSlot && (
       <div className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -64,10 +64,10 @@ const LogoHeader = ({ subtitle }) => (
     <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
       <Film size={24} className="text-amber-400" />
     </div>
-    <h1 className="font-display text-3xl font-black text-zinc-900 tracking-[0.18em]">
+    <h1 className="font-display text-5xl font-black text-zinc-900 tracking-[0.18em]">
       MULBROS
     </h1>
-    <p className="text-xs text-zinc-500 mt-1 tracking-[0.2em] uppercase font-mono">
+    <p className="text-sm text-zinc-500 mt-1 tracking-[0.2em] uppercase font-mono">
       {subtitle}
     </p>
   </div>
@@ -226,7 +226,7 @@ const SignInForm = () => {
           <button
             type="button"
             onClick={() => { setForgotMode(true); setError(''); }}
-            className="text-xs text-zinc-500 hover:text-amber-500 transition-colors pr-1"
+            className="text-sm text-zinc-500 hover:text-amber-500 transition-colors pr-1"
           >
             Forgot password?
           </button>
@@ -242,9 +242,9 @@ const SignInForm = () => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 mt-1 rounded-xl text-sm font-semibold text-zinc-900 bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-3 mt-1 rounded-xl text-base font-semibold text-zinc-900 bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {loading ? <Loader2 size={15} className="animate-spin" /> : <LogIn size={15} />}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : <LogIn size={16} />}
         {loading ? 'Signing in…' : 'Sign in'}
       </button>
     </form>
@@ -352,9 +352,9 @@ const SignUpForm = () => {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 mt-1 rounded-xl text-sm font-semibold text-zinc-900 bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        className="w-full py-3 mt-1 rounded-xl text-base font-semibold text-zinc-900 bg-amber-500 hover:bg-amber-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
       >
-        {loading ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}
+        {loading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
         {loading ? 'Creating account…' : 'Create account'}
       </button>
 
@@ -498,24 +498,24 @@ export const LoginPage = () => {
         <div className="flex rounded-xl overflow-hidden border border-zinc-200 mb-6">
           <button
             onClick={() => setTab('signin')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors ${
               tab === 'signin'
                 ? 'bg-amber-500/10 text-amber-500'
                 : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
-            <LogIn size={12} />
+            <LogIn size={14} />
             Sign In
           </button>
           <button
             onClick={() => setTab('signup')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold transition-colors ${
               tab === 'signup'
                 ? 'bg-amber-500/10 text-amber-500'
                 : 'text-zinc-500 hover:text-zinc-700'
             }`}
           >
-            <UserPlus size={12} />
+            <UserPlus size={14} />
             Create Account
           </button>
         </div>
