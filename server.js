@@ -28,7 +28,9 @@ app.use(helmet({
         'https://api.openai.com',
         'https://api.anthropic.com',
         'https://*.supabase.co',
-        'wss://*.supabase.co',   // realtime subscriptions
+        'wss://*.supabase.co',
+        'https://api.stytch.com',
+        'https://test.stytch.com',
       ],
       imgSrc:      ["'self'", 'data:'],
     },
