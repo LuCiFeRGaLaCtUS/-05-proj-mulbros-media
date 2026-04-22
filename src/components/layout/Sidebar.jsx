@@ -54,7 +54,7 @@ const SidebarBg = () => (
 const HudDivider = ({ label }) => (
   <div className="flex items-center gap-2 px-3 pt-5 pb-2">
     <div className="w-1 h-3 rounded-sm" style={{ background: 'rgba(245,158,11,0.6)' }} />
-    <span className="text-[9px] font-black uppercase tracking-[0.3em]" style={{ color: 'rgba(245,158,11,0.5)' }}>
+    <span className="text-[11px] font-black uppercase tracking-[0.3em]" style={{ color: '#b45309' }}>
       {label}
     </span>
     <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(245,158,11,0.2), transparent)' }} />
@@ -147,8 +147,8 @@ export const Sidebar = ({ profile, onClose }) => {
             </div>
             <div className="flex items-center gap-1.5 mt-1">
               <div className="w-1 h-1 rounded-full bg-cyan-400 online-dot" />
-              <span className="text-[9px] font-bold tracking-[0.3em] uppercase font-mono"
-                style={{ color: 'rgba(0,0,0,0.40)', fontFamily: 'var(--font-mono)' }}>
+              <span className="text-[11px] font-bold tracking-[0.3em] uppercase font-mono"
+                style={{ color: 'rgba(0,0,0,0.70)', fontFamily: 'var(--font-mono)' }}>
                 MEDIA OS
               </span>
             </div>
@@ -212,8 +212,8 @@ export const Sidebar = ({ profile, onClose }) => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold leading-snug truncate">{v.label}</div>
-                <div className="text-[10px] mt-0.5 tracking-[0.12em]"
-                  style={{ color: 'rgba(0,0,0,0.30)', fontFamily: 'var(--font-mono)' }}>
+                <div className="text-[11px] mt-0.5 tracking-[0.12em]"
+                  style={{ color: 'rgba(0,0,0,0.62)', fontFamily: 'var(--font-mono)' }}>
                   {v.sub}
                 </div>
               </div>
@@ -254,8 +254,8 @@ export const Sidebar = ({ profile, onClose }) => {
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-sm font-semibold leading-snug truncate">{PRODUCTIONS.label}</div>
-                <div className="text-[10px] mt-0.5 tracking-[0.12em]"
-                  style={{ color: 'rgba(0,0,0,0.30)', fontFamily: 'var(--font-mono)' }}>
+                <div className="text-[11px] mt-0.5 tracking-[0.12em]"
+                  style={{ color: 'rgba(0,0,0,0.62)', fontFamily: 'var(--font-mono)' }}>
                   {PRODUCTIONS.sub}
                 </div>
               </div>
@@ -313,7 +313,7 @@ export const Sidebar = ({ profile, onClose }) => {
             </span>
           </div>
           <div className="flex items-center gap-1 chip"
-            style={{ background: 'rgba(245,158,11,0.08)', color: 'rgba(245,158,11,0.7)', border: '1px solid rgba(245,158,11,0.15)' }}>
+            style={{ background: 'rgba(245,158,11,0.08)', color: '#b45309', border: '1px solid rgba(245,158,11,0.15)' }}>
             <Activity size={8} />
             <span>Live</span>
           </div>
@@ -328,7 +328,7 @@ export const Sidebar = ({ profile, onClose }) => {
               }} />
           ))}
           {agents.length > 8 && (
-            <span className="text-[9px] font-bold" style={{ color: 'rgba(255,255,255,0.2)' }}>
+            <span className="text-xs font-bold" style={{ color: 'rgba(0,0,0,0.60)' }}>
               +{agents.length - 8}
             </span>
           )}
@@ -340,8 +340,8 @@ export const Sidebar = ({ profile, onClose }) => {
               <div key={i} className="w-0.5 bg-amber-500 rounded-full" style={{ height: h }} />
             ))}
           </div>
-          <span className="text-[9px] font-bold tracking-[0.2em] uppercase"
-            style={{ color: 'rgba(0,0,0,0.25)' }}>
+          <span className="text-[11px] font-bold tracking-[0.2em] uppercase"
+            style={{ color: 'rgba(0,0,0,0.60)' }}>
             Powered by FSZT Partners
           </span>
         </div>

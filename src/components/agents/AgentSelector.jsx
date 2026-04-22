@@ -8,12 +8,12 @@ const initials = (name) =>
 
 const GroupLabel = ({ name }) => (
   <div className="flex items-center gap-2 px-1 mb-2">
-    <div className="w-1 h-2.5 rounded-sm" style={{ background: 'rgba(34,211,238,0.5)' }} />
-    <span className="text-[9px] font-black uppercase tracking-[0.28em]"
-      style={{ color: 'rgba(34,211,238,0.45)' }}>
+    <div className="w-1 h-2.5 rounded-sm" style={{ background: '#0e7490' }} />
+    <span className="text-[11px] font-black uppercase tracking-[0.28em]"
+      style={{ color: '#0e7490' }}>
       {name}
     </span>
-    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(34,211,238,0.15), transparent)' }} />
+    <div className="flex-1 h-px" style={{ background: 'linear-gradient(to right, rgba(34,211,238,0.35), transparent)' }} />
   </div>
 );
 
@@ -36,10 +36,10 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
             <Cpu size={14} style={{ color: '#22d3ee' }} />
           </div>
           <div>
-            <h3 className="text-sm font-bold" style={{ color: 'rgba(34,211,238,0.8)' }}>
+            <h3 className="text-sm font-bold" style={{ color: '#0e7490' }}>
               Neural Agents
             </h3>
-            <p className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.35)' }}>
+            <p className="text-xs font-mono" style={{ color: 'rgba(0,0,0,0.66)' }}>
               SELECT AGENT
             </p>
           </div>
@@ -87,13 +87,13 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
                         <div className="relative w-8 h-8 rounded-lg flex-shrink-0 flex items-center justify-center text-xs font-bold transition-all"
                           style={isSelected ? {
                             background: vc.dim,
-                            border: `1px solid ${vc.neon}40`,
-                            color: vc.neon,
+                            border: `1px solid ${vc.neon}55`,
+                            color: vc.ink,
                             boxShadow: `0 0 10px ${vc.neon}20`,
                           } : {
                             background: 'rgba(0,0,0,0.04)',
                             border: '1px solid rgba(0,0,0,0.09)',
-                            color: 'rgba(0,0,0,0.4)',
+                            color: 'rgba(0,0,0,0.72)',
                           }}>
                           {initials(agent.name)}
                           {/* Online dot overlay */}
@@ -106,15 +106,15 @@ export const AgentSelector = ({ selectedAgent, onSelectAgent }) => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-sm font-semibold truncate"
-                              style={{ color: isSelected ? '#18181b' : 'rgba(0,0,0,0.55)' }}>
+                              style={{ color: isSelected ? '#18181b' : 'rgba(0,0,0,0.80)' }}>
                               {agent.name}
                             </span>
                             {isSelected && (
-                              <ChevronRight size={12} style={{ color: vc.neon, flexShrink: 0 }} />
+                              <ChevronRight size={12} style={{ color: vc.ink, flexShrink: 0 }} />
                             )}
                           </div>
                           <p className="text-xs mt-0.5 leading-snug line-clamp-1"
-                            style={{ color: 'rgba(0,0,0,0.4)' }}>
+                            style={{ color: 'rgba(0,0,0,0.66)' }}>
                             {agent.description}
                           </p>
                         </div>

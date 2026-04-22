@@ -20,7 +20,7 @@ const StepDot = ({ number, status }) => {
     );
   }
   return (
-    <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
+    <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">
       {number}
     </div>
   );
@@ -181,7 +181,7 @@ export const ProfileQuestions = ({
         {/* Progress hint */}
         {answeredCount > 0 && answeredCount < questions.length && (
           <p
-            className="text-center text-xs text-zinc-400 mt-5"
+            className="text-center text-xs text-zinc-600 mt-5"
             style={{ fontFamily: 'var(--font-mono)' }}
           >
             {answeredCount} of {questions.length} answered — answer all to continue
@@ -209,12 +209,12 @@ export const ProfileQuestions = ({
           <div className="flex items-center gap-4">
             <button
               onClick={onSkip}
-              className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors underline hidden sm:block"
+              className="text-xs text-zinc-600 hover:text-zinc-600 transition-colors underline hidden sm:block"
             >
               Skip for now
             </button>
             <span
-              className="text-xs text-zinc-400 hidden sm:block"
+              className="text-xs text-zinc-600 hidden sm:block"
               style={{ fontFamily: 'var(--font-mono)' }}
             >
               {answeredCount}/{questions.length} answered
@@ -226,7 +226,7 @@ export const ProfileQuestions = ({
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
                 canProceed
                   ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
-                  : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                  : 'bg-zinc-200 text-zinc-600 cursor-not-allowed'
               }`}
             >
               {isLastPage ? (

@@ -25,7 +25,7 @@ export const colors = {
   },
   text: {
     primary: 'text-zinc-100',
-    secondary: 'text-zinc-400',
+    secondary: 'text-zinc-600',
     muted: 'text-zinc-500'
   },
   vertical: {

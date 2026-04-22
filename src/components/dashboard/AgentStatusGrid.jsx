@@ -38,9 +38,9 @@ export const AgentStatusGrid = ({ onAgentClick }) => {
 
       {/* Table header */}
       <div className="grid grid-cols-12 gap-3 px-5 py-2.5 bg-zinc-50 border-b border-zinc-100">
-        <div className="col-span-5 text-xs font-semibold uppercase tracking-wider text-zinc-400">Agent</div>
-        <div className="col-span-2 text-xs font-semibold uppercase tracking-wider text-zinc-400">Vertical</div>
-        <div className="col-span-4 text-xs font-semibold uppercase tracking-wider text-zinc-400">Focus</div>
+        <div className="col-span-5 text-xs font-semibold uppercase tracking-wider text-zinc-600">Agent</div>
+        <div className="col-span-2 text-xs font-semibold uppercase tracking-wider text-zinc-600">Vertical</div>
+        <div className="col-span-4 text-xs font-semibold uppercase tracking-wider text-zinc-600">Focus</div>
         <div className="col-span-1" />
       </div>
 
@@ -76,7 +76,7 @@ export const AgentStatusGrid = ({ onAgentClick }) => {
             <div className="col-span-1 flex items-center justify-end">
               <ArrowRight
                 size={14}
-                className="text-zinc-300 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all"
+                className="text-zinc-500 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-all"
               />
             </div>
           </button>

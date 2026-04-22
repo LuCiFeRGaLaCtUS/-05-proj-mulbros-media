@@ -1,6 +1,10 @@
 // All AI calls go through /api/ai — proxied by Vite (dev) or Express (production).
 // Key injected server-side from env var; localStorage override supported.
 
+import { fetchWithTimeout, postJson, HttpError, TimeoutError } from './http';
+import { getStytchAuthHeaders } from '../lib/stytch';
+import { STORAGE_KEYS, API_TIMEOUTS_MS } from '../constants';
+
 const AI_PROXY = '/api/ai';
 
 // gpt-4o     — fallback primary (OpenAI)
@@ -14,28 +18,35 @@ export const MODELS = {
 /** Return the localStorage API key appropriate for the given model */
 export const getApiKey = (model = '') =>
   model.startsWith('claude-')
-    ? localStorage.getItem('mulbros_anthropic_key') || ''
-    : localStorage.getItem('mulbros_openai_key')    || '';
+    ? localStorage.getItem(STORAGE_KEYS.anthropicKey) || ''
+    : localStorage.getItem(STORAGE_KEYS.openAiKey)    || '';
 
 const callProxy = async (model, systemPrompt, messages, apiKey) => {
   const key = apiKey !== undefined ? apiKey : getApiKey(model);
 
-  const response = await fetch(AI_PROXY, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(key ? { Authorization: `Bearer ${key}` } : {}),
+  const response = await fetchWithTimeout(
+    AI_PROXY,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(key ? { Authorization: `Bearer ${key}` } : {}),
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 2048,
+        messages: [{ role: 'system', content: systemPrompt }, ...messages],
+      }),
     },
-    body: JSON.stringify({
-      model,
-      max_tokens: 2048,
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
-    }),
-  });
+    API_TIMEOUTS_MS.ai,
+  );
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `API error ${response.status}`);
+    throw new HttpError(err.error?.message || `API error ${response.status}`, {
+      status: response.status,
+      body:   err,
+    });
   }
 
   const data = await response.json();
@@ -64,34 +75,22 @@ export const testAIKey = async (key) => {
  * Search Reddit via Firecrawl (Google-indexed) — primary search path.
  * Returns the same { posts, query, count, source } shape as all other search routes.
  */
-export const callFirecrawlSearch = async (query, subreddits, _timeframe = 'year') => {
-  const response = await fetch('/api/firecrawl-search', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ query, subreddits, limit: 12 }),
-  });
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Firecrawl search error ${response.status}`);
-  }
-  return response.json(); // { posts, query, count, source: 'firecrawl' }
-};
+export const callFirecrawlSearch = (query, subreddits, _timeframe = 'year') =>
+  postJson(
+    '/api/firecrawl-search',
+    { query, subreddits, limit: 12 },
+    { timeoutMs: API_TIMEOUTS_MS.search, headers: getStytchAuthHeaders() },
+  );
 
 /**
  * Search Reddit via Apify actor (headless browser, 30–60s) — secondary/deep scrape.
  */
-export const callApifyReddit = async (query, subreddits) => {
-  const response = await fetch('/api/apify-reddit', {
-    method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ query, subreddits, limit: 10 }),
-  });
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `Apify error ${response.status}`);
-  }
-  return response.json(); // { posts, query, count, source: 'apify' }
-};
+export const callApifyReddit = (query, subreddits) =>
+  postJson(
+    '/api/apify-reddit',
+    { query, subreddits, limit: 10 },
+    { timeoutMs: 75_000, headers: getStytchAuthHeaders() },
+  );
 
 // Keep callRedditSearch as alias → now points to Firecrawl
 export const callRedditSearch = callFirecrawlSearch;
@@ -124,3 +123,6 @@ export const testAnthropicKey = async (key) => {
     return { success: false, message: error.message };
   }
 };
+
+// Re-export error types so callers can do typed catches without importing http directly.
+export { HttpError, TimeoutError };

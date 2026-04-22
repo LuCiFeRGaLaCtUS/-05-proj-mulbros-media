@@ -33,11 +33,11 @@ export const FanSegments = () => {
                 <span className="text-sm font-medium text-zinc-200">{segment.name}</span>
               </div>
               <div className="flex items-center gap-6">
-                <span className="text-sm text-zinc-400 font-mono">{segment.size.toLocaleString()}</span>
+                <span className="text-sm text-zinc-600 font-mono">{segment.size.toLocaleString()}</span>
                 <span className={`px-2 py-0.5 rounded-full text-xs ${
                   segment.engagement === 'Very High' ? 'bg-emerald-500/15 text-emerald-400' :
                   segment.engagement === 'High' ? 'bg-blue-500/15 text-blue-400' :
-                  'bg-zinc-700 text-zinc-400'
+                  'bg-zinc-700 text-zinc-600'
                 }`}>
                   {segment.engagement}
                 </span>

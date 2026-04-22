@@ -68,7 +68,7 @@ const KeyRow = ({ label, sub, storeName, placeholder, onTest, testLabel = 'Test'
           <button
             onClick={() => setShow(v => !v)}
             aria-label={show ? 'Hide key' : 'Show key'}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors flex-shrink-0"
+            className="text-zinc-500 hover:text-zinc-500 transition-colors flex-shrink-0"
           >
             {show ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -90,7 +90,7 @@ const KeyRow = ({ label, sub, storeName, placeholder, onTest, testLabel = 'Test'
             <button
               onClick={handleTest}
               disabled={testing}
-              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded px-3 py-1.5 transition-all flex items-center gap-1.5 disabled:opacity-50"
+              className="text-xs bg-zinc-800 hover:bg-zinc-700 text-zinc-500 rounded px-3 py-1.5 transition-all flex items-center gap-1.5 disabled:opacity-50"
             >
               {testing
                 ? <Loader2 className="animate-spin" size={11} />
@@ -157,7 +157,7 @@ const OtherRow = ({ name }) => {
           <button
             onClick={() => setShow(v => !v)}
             aria-label={show ? `Hide ${name} key` : `Show ${name} key`}
-            className="text-zinc-500 hover:text-zinc-300 transition-colors flex-shrink-0"
+            className="text-zinc-500 hover:text-zinc-500 transition-colors flex-shrink-0"
           >
             {show ? <EyeOff size={15} /> : <Eye size={15} />}
           </button>
@@ -196,10 +196,10 @@ export const APIKeyManager = () => (
     <table className="w-full">
       <thead>
         <tr className="border-b border-zinc-800">
-          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-400 w-40">Service</th>
-          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-400">API Key</th>
-          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-400 w-36">Status</th>
-          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-400 w-40">Actions</th>
+          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-600 w-40">Service</th>
+          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-600">API Key</th>
+          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-600 w-36">Status</th>
+          <th className="text-left py-3 px-4 text-sm font-medium text-zinc-600 w-40">Actions</th>
         </tr>
       </thead>
       <tbody>

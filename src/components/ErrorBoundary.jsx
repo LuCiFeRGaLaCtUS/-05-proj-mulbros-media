@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component {
           </div>
           <div className="max-w-sm">
             <h2 className="text-lg font-bold text-zinc-100 mb-2">Something went wrong</h2>
-            <p className="text-sm text-zinc-400 mb-1">
+            <p className="text-sm text-zinc-600 mb-1">
               {this.state.error?.message || 'An unexpected error occurred in this view.'}
             </p>
             <p className="text-xs text-zinc-500">
@@ -40,7 +40,7 @@ export class ErrorBoundary extends React.Component {
           </button>
           <button
             onClick={() => window.location.reload()}
-            className="text-xs text-zinc-500 hover:text-zinc-400 transition-colors"
+            className="text-xs text-zinc-500 hover:text-zinc-600 transition-colors"
           >
             Reload page
           </button>

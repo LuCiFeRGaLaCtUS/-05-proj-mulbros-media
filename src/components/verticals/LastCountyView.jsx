@@ -73,13 +73,13 @@ export const LastCountyView = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-lg font-bold text-zinc-100 mb-1">Last County</div>
-            <div className="text-sm text-zinc-400 mb-3">
+            <div className="text-sm text-zinc-600 mb-3">
               Premiered at Blood in the Snow Film Festival · Praised by Film Threat as "a triumph of genre-blending brilliance" ·
               Scored by Luke Mulholland · Directed by Barret Mulholland
             </div>
             <div className="flex flex-wrap gap-2">
               {['Hulu', 'Prime Video', 'YouTube', 'Blood in the Snow', 'Film Threat'].map(tag => (
-                <span key={tag} className="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full border border-zinc-700/50">{tag}</span>
+                <span key={tag} className="text-xs bg-zinc-800 text-zinc-600 px-2 py-0.5 rounded-full border border-zinc-700/50">{tag}</span>
               ))}
             </div>
           </div>
@@ -93,7 +93,7 @@ export const LastCountyView = () => {
             <EmeraldBg />
             <div className="relative z-10">
               <div className="text-3xl font-bold font-mono text-zinc-100 mb-1">{k.value}</div>
-              <div className="text-sm font-medium text-zinc-300 mb-0.5">{k.label}</div>
+              <div className="text-sm font-medium text-zinc-500 mb-0.5">{k.label}</div>
               <div className="text-xs text-zinc-500">{k.sub}</div>
             </div>
           </div>
@@ -110,7 +110,7 @@ export const LastCountyView = () => {
               className={`py-3 px-1 text-sm font-medium transition-all border-b-2 ${
                 activeTab === tab
                   ? 'text-emerald-400 border-emerald-400'
-                  : 'text-zinc-400 border-transparent hover:text-zinc-100'
+                  : 'text-zinc-600 border-transparent hover:text-zinc-100'
               }`}
             >
               {tab}
@@ -128,7 +128,7 @@ export const LastCountyView = () => {
                 <EmeraldBg />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-semibold text-zinc-300">{s.platform}</span>
+                    <span className="text-sm font-semibold text-zinc-500">{s.platform}</span>
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${colorMap[s.color]}`}>{s.change}</span>
                   </div>
                   <div className="text-2xl font-bold font-mono text-zinc-100">{s.value}</div>
@@ -145,7 +145,7 @@ export const LastCountyView = () => {
                 <div className="w-1 h-4 bg-emerald-500 rounded-full" />
                 <div className="text-sm font-semibold text-emerald-400">Distribution Strategy</div>
               </div>
-              <ul className="space-y-2 text-sm text-zinc-400">
+              <ul className="space-y-2 text-sm text-zinc-600">
                 <li className="flex gap-2"><span className="text-emerald-400 flex-shrink-0">→</span> TikTok horror-season campaign targeting r/horror and indie-film communities</li>
                 <li className="flex gap-2"><span className="text-emerald-400 flex-shrink-0">→</span> 12 horror micro-influencers (avg 45K followers) with custom DM scripts</li>
                 <li className="flex gap-2"><span className="text-emerald-400 flex-shrink-0">→</span> Instagram behind-the-scenes content driving Hulu CTA</li>
@@ -178,7 +178,7 @@ export const LastCountyView = () => {
                 </div>
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {c.channels.map(ch => (
-                    <span key={ch} className="text-xs bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded border border-zinc-700/50">{ch}</span>
+                    <span key={ch} className="text-xs bg-zinc-800 text-zinc-600 px-2 py-0.5 rounded border border-zinc-700/50">{ch}</span>
                   ))}
                 </div>
                 <div className="w-full bg-zinc-800 rounded-full h-1.5 mb-3">
@@ -211,7 +211,7 @@ export const LastCountyView = () => {
                 <div key={i} className="flex gap-3 px-5 py-3 hover:bg-zinc-800/20 transition-colors">
                   <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-zinc-300 leading-snug">{a.action}</p>
+                    <p className="text-sm text-zinc-500 leading-snug">{a.action}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-zinc-500">{a.agent}</span>
                       <span className="text-zinc-600">·</span>

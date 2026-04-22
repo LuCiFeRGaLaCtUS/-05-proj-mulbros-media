@@ -65,7 +65,7 @@ export const Settings = ({ user }) => {
                 type="text"
                 value={settings[key]}
                 onChange={(e) => { setSettings({ ...settings, [key]: e.target.value }); setIsDirty(true); }}
-                className="w-full bg-white text-zinc-900 rounded-lg px-4 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50 text-sm placeholder:text-zinc-400"
+                className="w-full bg-white text-zinc-900 rounded-lg px-4 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50 text-sm placeholder:text-zinc-600"
               />
             </div>
           ))}
@@ -116,7 +116,7 @@ export const Settings = ({ user }) => {
         <button
           onClick={handleSave}
           className={`font-semibold rounded-lg px-6 py-3 transition-all text-sm ${
-            isDirty ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-zinc-100 text-zinc-400 border border-zinc-200 cursor-not-allowed'
+            isDirty ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-zinc-100 text-zinc-600 border border-zinc-200 cursor-not-allowed'
           }`}
         >
           Save Changes

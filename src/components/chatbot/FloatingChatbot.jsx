@@ -67,7 +67,7 @@ const TriggerButton = ({ onClick, isOpen }) => (
 
     {/* "AI" badge */}
     <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white border border-amber-400 flex items-center justify-center pointer-events-none shadow-sm">
-      <span className="text-[8px] font-black text-amber-600 leading-none">AI</span>
+      <span className="text-[11px] font-black text-amber-600 leading-none">AI</span>
     </span>
   </button>
 );
@@ -194,9 +194,9 @@ export const FloatingChatbot = ({ appState }) => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-black text-zinc-900">Studio AI</span>
-                  <span className="text-[9px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full uppercase tracking-wider">Live</span>
+                  <span className="text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full uppercase tracking-wider">Live</span>
                 </div>
-                <p className="text-[10px] text-zinc-400 mt-0.5 flex items-center gap-1">
+                <p className="text-xs text-zinc-600 mt-0.5 flex items-center gap-1">
                   <Film size={9} className="text-amber-400/70" />
                   MulBros Media OS · gpt-4o-mini
                 </p>
@@ -217,7 +217,7 @@ export const FloatingChatbot = ({ appState }) => {
           aria-label="Chat messages"
         >
           {messages.map((msg, i) => (
-            <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
+            <div key={msg._id ?? `${msg.role}-${i}-${msg.content.slice(0, 16)}`} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'} gap-2`}>
               {msg.role === 'assistant' && (
                 <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-500 to-yellow-400 flex items-center justify-center flex-shrink-0 mt-0.5 shadow">
                   <Clapperboard size={11} className="text-zinc-950" />
@@ -258,7 +258,7 @@ export const FloatingChatbot = ({ appState }) => {
           <div className="flex gap-1.5 flex-wrap">
             {QUICK_ACTIONS.map(({ label, icon: Icon, prompt }) => (
               <button key={label} onClick={() => handleQuickAction(prompt)} disabled={isLoading}
-                className="flex items-center gap-1 text-[11px] font-medium px-2.5 py-1.5
+                className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5
                   bg-zinc-100 hover:bg-zinc-50 disabled:opacity-40
                   border border-zinc-200 hover:border-amber-500/30
                   rounded-lg text-zinc-700 hover:text-zinc-800
@@ -280,7 +280,7 @@ export const FloatingChatbot = ({ appState }) => {
                 placeholder="What's on your call sheet…"
                 disabled={isLoading}
                 className="w-full bg-white text-zinc-900 rounded-xl px-3.5 py-2.5 text-sm
-                  placeholder:text-zinc-400 border border-zinc-200
+                  placeholder:text-zinc-600 border border-zinc-200
                   focus:outline-none focus:border-amber-500/50 focus:bg-white
                   transition-all disabled:opacity-50"
               />
@@ -294,14 +294,14 @@ export const FloatingChatbot = ({ appState }) => {
                 shadow-md shadow-amber-500/20 hover:shadow-amber-500/40
                 disabled:shadow-none">
               {isLoading
-                ? <Loader2 size={16} className="animate-spin text-zinc-400" />
+                ? <Loader2 size={16} className="animate-spin text-zinc-600" />
                 : <Send size={15} className="text-zinc-950 disabled:text-zinc-500" />}
             </button>
           </div>
 
           {/* branding footer */}
-          <p className="text-[10px] text-zinc-400 text-center flex items-center justify-center gap-1">
-            <Film size={9} className="text-zinc-400" />
+          <p className="text-xs text-zinc-600 text-center flex items-center justify-center gap-1">
+            <Film size={9} className="text-zinc-600" />
             MulBros Studio AI · Powered by OpenAI
           </p>
         </div>

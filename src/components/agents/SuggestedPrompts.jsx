@@ -13,15 +13,15 @@ export const SuggestedPrompts = ({ agentId, onSelectPrompt }) => {
     <div className="w-full max-w-lg px-2">
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
-        <div className="h-px flex-1" style={{ background: `${vc.neon}20` }} />
+        <div className="h-px flex-1" style={{ background: `${vc.neon}40` }} />
         <div className="flex items-center gap-1.5">
-          <Zap size={10} style={{ color: vc.neon, opacity: 0.6 }} />
-          <span className="text-[9px] font-black uppercase tracking-[0.3em]"
-            style={{ color: `${vc.neon}60` }}>
+          <Zap size={10} style={{ color: vc.ink }} />
+          <span className="text-[11px] font-black uppercase tracking-[0.3em]"
+            style={{ color: vc.ink }}>
             Quick Start
           </span>
         </div>
-        <div className="h-px flex-1" style={{ background: `${vc.neon}20` }} />
+        <div className="h-px flex-1" style={{ background: `${vc.neon}40` }} />
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -31,18 +31,19 @@ export const SuggestedPrompts = ({ agentId, onSelectPrompt }) => {
             onClick={() => onSelectPrompt(prompt)}
             className="relative text-left p-3 rounded-xl transition-all group overflow-hidden"
             style={{
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
+              background: '#ffffff',
+              border: '1px solid rgba(0,0,0,0.10)',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
             }}
             onMouseEnter={e => {
               e.currentTarget.style.background = vc.dim;
-              e.currentTarget.style.borderColor = `${vc.neon}25`;
+              e.currentTarget.style.borderColor = `${vc.neon}55`;
               e.currentTarget.style.boxShadow = vc.glow ? vc.glow.replace('16px', '10px') : '';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255,255,255,0.02)';
-              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)';
-              e.currentTarget.style.boxShadow = '';
+              e.currentTarget.style.background = '#ffffff';
+              e.currentTarget.style.borderColor = 'rgba(0,0,0,0.10)';
+              e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
             }}
           >
             {/* Left indicator */}
@@ -51,11 +52,8 @@ export const SuggestedPrompts = ({ agentId, onSelectPrompt }) => {
 
             <div className="flex items-start gap-2">
               <span className="mt-1.5 w-1 h-1 rounded-full flex-shrink-0"
-                style={{ background: vc.neon, opacity: 0.4 }} />
-              <p className="text-xs leading-relaxed line-clamp-3 transition-colors"
-                style={{ color: 'rgba(255,255,255,0.45)' }}
-                onMouseEnter={e => e.currentTarget.style.color = 'rgba(255,255,255,0.85)'}
-                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.45)'}>
+                style={{ background: vc.ink }} />
+              <p className="text-xs leading-relaxed line-clamp-3 text-zinc-700">
                 {prompt}
               </p>
             </div>

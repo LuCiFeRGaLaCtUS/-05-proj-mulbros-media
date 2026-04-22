@@ -8,6 +8,7 @@ import { getAgentById } from '../../config/agents';
 import { callAI, getApiKey, callRedditSearch, formatRedditResults } from '../../utils/ai';
 import { verticalColors } from '../../config/verticalColors';
 import { useAgentChats } from '../../hooks/useAgentChats';
+import { logger } from '../../lib/logger';
 
 const initials = (name) =>
   name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -71,7 +72,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
             content: `[Today is ${today}]\n\n${searchContext}\n\n---\n\nUser request: ${last.content}`,
           };
         } catch (searchErr) {
-          console.warn('Search failed, proceeding without live context:', searchErr.message);
+          logger.warn('AgentChat.search.unavailable', { message: searchErr.message });
           // Inject date only — tell agent search is unavailable so it doesn't hallucinate
           const last = apiMessages[apiMessages.length - 1];
           apiMessages[apiMessages.length - 1] = {
@@ -84,6 +85,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
       const response = await callAI(agent.systemPrompt, apiMessages, apiKey, agent.model);
       await addMessage('assistant', response);
     } catch (error) {
+      logger.error('AgentChat.send.failed', error);
       toast.error(error.message || 'Failed to get response from agent');
     } finally {
       setIsLoading(false);
@@ -123,7 +125,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               style={{
                 background: vc.dim,
                 border: `1px solid ${vc.neon}35`,
-                color: vc.neon,
+                color: vc.ink,
                 boxShadow: `0 0 14px ${vc.neon}20`,
               }}>
               {initials(agent.name)}
@@ -135,25 +137,25 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-zinc-900">{agent.name}</h2>
                 <span className="chip" style={{
-                  background: `${vc.neon}10`,
-                  color: `${vc.neon}90`,
-                  border: `1px solid ${vc.neon}20`,
-                  fontSize: '8px',
+                  background: `${vc.neon}14`,
+                  color: vc.ink,
+                  border: `1px solid ${vc.neon}40`,
+                  fontSize: '11px',
                 }}>
                   ONLINE
                 </span>
                 {agent.searchEnabled && (
                   <span className="flex items-center gap-1 chip" style={{
-                    background: `${vc.neon}10`,
-                    color: `${vc.neon}70`,
-                    border: `1px solid ${vc.neon}20`,
-                    fontSize: '8px',
+                    background: `${vc.neon}14`,
+                    color: vc.ink,
+                    border: `1px solid ${vc.neon}40`,
+                    fontSize: '11px',
                   }}>
                     <Search size={7} /> LIVE SEARCH
                   </span>
                 )}
               </div>
-              <p className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.35)' }}>
+              <p className="text-xs font-mono" style={{ color: 'rgba(0,0,0,0.66)' }}>
                 {messages.length > 0 ? `${messages.length} messages · Neural link active` : 'Ready for input'}
               </p>
             </div>
@@ -168,10 +170,10 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               style={{
                 background: 'rgba(0,0,0,0.025)',
                 border: '1px solid rgba(0,0,0,0.07)',
-                color: 'rgba(0,0,0,0.35)',
+                color: 'rgba(0,0,0,0.66)',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#dc2626'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = 'rgba(0,0,0,0.35)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = 'rgba(0,0,0,0.66)'; }}
             >
               <RotateCcw size={11} />
               Clear
@@ -197,7 +199,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
                   style={{
                     background: `linear-gradient(135deg, ${vc.dim}, rgba(0,0,0,0.03))`,
                     border: `1px solid ${vc.neon}30`,
-                    color: vc.neon,
+                    color: vc.ink,
                     boxShadow: `0 0 30px ${vc.neon}15, 0 8px 32px rgba(0,0,0,0.1)`,
                   }}>
                   {initials(agent.name)}
@@ -206,18 +208,18 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
                 </div>
               </div>
 
-              <h2 className="text-xl font-black mb-1" style={{ color: vc.neon }}>
+              <h2 className="text-xl font-black mb-1" style={{ color: vc.ink }}>
                 {agent.name}
               </h2>
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-px w-8" style={{ background: `${vc.neon}30` }} />
-                <span className="text-[10px] font-mono uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.3)' }}>
+                <div className="h-px w-8" style={{ background: `${vc.neon}50` }} />
+                <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.62)' }}>
                   Neural Agent Online
                 </span>
-                <div className="h-px w-8" style={{ background: `${vc.neon}30` }} />
+                <div className="h-px w-8" style={{ background: `${vc.neon}50` }} />
               </div>
 
-              <p className="text-sm text-center max-w-sm mb-8 leading-relaxed" style={{ color: 'rgba(0,0,0,0.45)' }}>
+              <p className="text-sm text-center max-w-sm mb-8 leading-relaxed" style={{ color: 'rgba(0,0,0,0.72)' }}>
                 {agent.description}
               </p>
 
@@ -227,7 +229,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
             <div className="space-y-5 max-w-3xl mx-auto w-full">
               {messages.map((message, index) => (
                 <ChatMessage
-                  key={index}
+                  key={message._id ?? `msg-${index}`}
                   message={message}
                   agentName={agent.name}
                   vertical={agent.vertical}
@@ -270,8 +272,8 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
               />
               {/* Character hint */}
               {input.length > 200 && (
-                <span className="absolute bottom-2 right-3 text-[10px] font-mono"
-                  style={{ color: 'rgba(0,0,0,0.25)' }}>
+                <span className="absolute bottom-2 right-3 text-xs font-mono"
+                  style={{ color: 'rgba(0,0,0,0.60)' }}>
                   {input.length}
                 </span>
               )}
@@ -289,7 +291,7 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
                 border: (!input.trim() || isLoading)
                   ? '1px solid rgba(0,0,0,0.09)'
                   : `1px solid ${vc.neon}35`,
-                color: (!input.trim() || isLoading) ? 'rgba(0,0,0,0.25)' : vc.neon,
+                color: (!input.trim() || isLoading) ? 'rgba(0,0,0,0.55)' : vc.ink,
                 boxShadow: (!input.trim() || isLoading) ? 'none' : `0 0 16px ${vc.neon}15`,
               }}
             >
@@ -305,15 +307,15 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
             <div className="flex items-center gap-1">
               {isLoading && agent.searchEnabled ? (
                 <>
-                  <Search size={9} style={{ color: vc.neon }} className="animate-pulse" />
-                  <span className="text-[10px] font-mono" style={{ color: vc.neon + '99' }}>
+                  <Search size={9} style={{ color: vc.ink }} className="animate-pulse" />
+                  <span className="text-xs font-mono" style={{ color: vc.ink }}>
                     Searching Reddit via Firecrawl…
                   </span>
                 </>
               ) : (
                 <>
-                  <Cpu size={9} style={{ color: 'rgba(34,211,238,0.4)' }} />
-                  <span className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.35)' }}>
+                  <Cpu size={9} style={{ color: '#0e7490' }} />
+                  <span className="text-xs font-mono" style={{ color: 'rgba(0,0,0,0.66)' }}>
                     Enter to send · Shift+Enter new line
                   </span>
                 </>

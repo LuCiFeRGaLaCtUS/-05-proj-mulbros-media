@@ -91,17 +91,17 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
           </div>
           <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
           {/* Step 2 */}
-          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
+          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">
             2
           </div>
           <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
           {/* Step 3 */}
-          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
+          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">
             3
           </div>
           <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
           {/* Step 4 */}
-          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-400 text-xs font-bold">
+          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">
             4
           </div>
         </div>
@@ -155,7 +155,7 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
                 <div>
                   <div className="font-semibold text-zinc-900 text-sm leading-snug pr-6">{v.label}</div>
                   <span
-                    className={`inline-flex mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-[0.15em] ${c.badge}`}
+                    className={`inline-flex mt-1.5 text-[11px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-[0.15em] ${c.badge}`}
                     style={{ fontFamily: 'var(--font-mono)' }}
                   >
                     {v.sub}
@@ -191,7 +191,7 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
             </p>
             <button
               onClick={onSkip}
-              className="text-xs text-zinc-400 hover:text-zinc-600 transition-colors underline"
+              className="text-xs text-zinc-600 hover:text-zinc-600 transition-colors underline"
             >
               Skip for now
             </button>
@@ -202,7 +202,7 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
               selected
                 ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
-                : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                : 'bg-zinc-200 text-zinc-600 cursor-not-allowed'
             }`}
           >
             Continue

@@ -161,14 +161,14 @@ const LukeCardView = ({ lead, onEdit }) => (
     <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-transparent to-transparent pointer-events-none" />
     <div className="relative z-10">
       <div className="flex items-start gap-1.5 mb-1">
-        <GripVertical size={12} className="text-zinc-400 flex-shrink-0 mt-0.5 cursor-grab" />
+        <GripVertical size={12} className="text-zinc-600 flex-shrink-0 mt-0.5 cursor-grab" />
         <div className="flex-1 min-w-0">
           <div className="text-xs font-semibold text-zinc-900 leading-snug">{lead.title}</div>
         </div>
         <button
           onPointerDown={e => e.stopPropagation()}
           onClick={onEdit}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-400 hover:text-amber-600 flex-shrink-0 p-0.5"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-zinc-600 hover:text-amber-600 flex-shrink-0 p-0.5"
         >
           <Pencil size={10} />
         </button>
@@ -176,7 +176,7 @@ const LukeCardView = ({ lead, onEdit }) => (
       {lead.director && <div className="text-xs text-zinc-500 mb-1 pl-4">{lead.director}</div>}
       <div className="flex gap-1.5 flex-wrap pl-4">
         <span className="text-xs bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded border border-zinc-200">{lead.budget}</span>
-        {lead.genre && <span className="text-xs text-zinc-400">{lead.genre}</span>}
+        {lead.genre && <span className="text-xs text-zinc-600">{lead.genre}</span>}
       </div>
       {lead.proposedFee && (
         <div className="text-xs text-amber-600 font-medium mt-1 pl-4">{lead.proposedFee}</div>
@@ -185,7 +185,7 @@ const LukeCardView = ({ lead, onEdit }) => (
         <div className="text-xs text-emerald-600 font-medium mt-1 pl-4">{lead.fee}</div>
       )}
       {lead.daysInStage !== undefined && (
-        <div className="flex items-center gap-1 mt-1.5 pl-4 text-zinc-400">
+        <div className="flex items-center gap-1 mt-1.5 pl-4 text-zinc-600">
           <Clock size={9} /><span className="text-xs">{lead.daysInStage}d</span>
         </div>
       )}
@@ -398,7 +398,7 @@ const LukeOverview = ({ onAgentClick, userId }) => {
                     );
                   })}
                   {leads.length === 0 && (
-                    <div className="rounded-xl border-2 border-dashed border-zinc-200 p-4 text-center text-xs text-zinc-400">
+                    <div className="rounded-xl border-2 border-dashed border-zinc-200 p-4 text-center text-xs text-zinc-600">
                       Drop here
                     </div>
                   )}
@@ -506,7 +506,7 @@ export const MusicView = ({ onAgentClick, user }) => {
         >
           <Music size={15} />
           Talise
-          <span className="text-xs font-normal text-zinc-400">Sync Artist</span>
+          <span className="text-xs font-normal text-zinc-600">Sync Artist</span>
         </button>
         <button
           onClick={() => setTalent('luke')}
@@ -518,7 +518,7 @@ export const MusicView = ({ onAgentClick, user }) => {
         >
           <Piano size={15} />
           Luke Mulholland
-          <span className="text-xs font-normal text-zinc-400">Film Composer</span>
+          <span className="text-xs font-normal text-zinc-600">Film Composer</span>
         </button>
       </div>
 
@@ -566,7 +566,7 @@ export const MusicView = ({ onAgentClick, user }) => {
                     <p className="text-sm text-zinc-700 leading-snug">{a.action}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-zinc-500">{a.agent}</span>
-                      <span className="text-zinc-300">·</span>
+                      <span className="text-zinc-500">·</span>
                       <span className="text-xs text-zinc-500">{a.time}</span>
                     </div>
                   </div>

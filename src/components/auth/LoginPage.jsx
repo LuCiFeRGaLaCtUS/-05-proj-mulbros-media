@@ -39,7 +39,7 @@ const StrengthBar = ({ password }) => {
 // ── Shared input component ────────────────────────────────────────────────────
 const Input = ({ icon: Icon, type = 'text', placeholder, value, onChange, autoComplete, rightSlot, disabled }) => (
   <div className="relative">
-    <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+    <Icon size={14} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-600 pointer-events-none" />
     <input
       type={type}
       value={value}
@@ -215,7 +215,7 @@ const SignInForm = () => {
             <button
               type="button"
               onClick={() => setShowPw(v => !v)}
-              className="text-zinc-600 hover:text-zinc-400 transition-colors"
+              className="text-zinc-600 hover:text-zinc-600 transition-colors"
               tabIndex={-1}
             >
               {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -321,7 +321,7 @@ const SignUpForm = () => {
         autoComplete="new-password"
         rightSlot={
           <button type="button" onClick={() => setShowPw(v => !v)}
-            className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
+            className="text-zinc-600 hover:text-zinc-600 transition-colors" tabIndex={-1}>
             {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         }
@@ -335,7 +335,7 @@ const SignUpForm = () => {
         autoComplete="new-password"
         rightSlot={
           <button type="button" onClick={() => setShowCf(v => !v)}
-            className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
+            className="text-zinc-600 hover:text-zinc-600 transition-colors" tabIndex={-1}>
             {showCf ? <EyeOff size={14} /> : <Eye size={14} />}
           </button>
         }
@@ -440,7 +440,7 @@ export const ResetPasswordPage = () => {
                 disabled={loading}
                 rightSlot={
                   <button type="button" onClick={() => setShowPw(v => !v)}
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
+                    className="text-zinc-600 hover:text-zinc-600 transition-colors" tabIndex={-1}>
                     {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 }
@@ -455,7 +455,7 @@ export const ResetPasswordPage = () => {
                 disabled={loading}
                 rightSlot={
                   <button type="button" onClick={() => setShowCf(v => !v)}
-                    className="text-zinc-600 hover:text-zinc-400 transition-colors" tabIndex={-1}>
+                    className="text-zinc-600 hover:text-zinc-600 transition-colors" tabIndex={-1}>
                     {showCf ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 }

@@ -20,8 +20,8 @@ export const TeamManager = () => {
             {settingsTeam.map((member, index) => (
               <tr key={index} className="border-b border-zinc-800/40 hover:bg-zinc-800/20 transition-colors">
                 <td className="py-3 px-4 text-sm text-zinc-200 font-medium">{member.name}</td>
-                <td className="py-3 px-4 text-sm text-zinc-400">{member.role}</td>
-                <td className="py-3 px-4 text-sm text-zinc-400">{member.allocation}</td>
+                <td className="py-3 px-4 text-sm text-zinc-600">{member.role}</td>
+                <td className="py-3 px-4 text-sm text-zinc-600">{member.allocation}</td>
                 <td className="py-3 px-4">
                   <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs">
                     {member.status}

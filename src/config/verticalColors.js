@@ -17,6 +17,7 @@ export const verticalColors = {
     hover:  'hover:border-blue-500/40 hover:bg-blue-500/5',
     glow:   '0 0 16px rgba(59,130,246,0.25)',
     neon:   '#60a5fa',
+    ink:    '#1d4ed8', // AA on white — use for text
     dim:    'rgba(59,130,246,0.08)',
   },
   film: {
@@ -28,6 +29,7 @@ export const verticalColors = {
     hover:  'hover:border-emerald-500/40 hover:bg-emerald-500/5',
     glow:   '0 0 16px rgba(16,185,129,0.25)',
     neon:   '#34d399',
+    ink:    '#047857',
     dim:    'rgba(16,185,129,0.08)',
   },
   music: {
@@ -39,6 +41,7 @@ export const verticalColors = {
     hover:  'hover:border-amber-500/40 hover:bg-amber-500/5',
     glow:   '0 0 16px rgba(245,158,11,0.25)',
     neon:   '#fbbf24',
+    ink:    '#b45309',
     dim:    'rgba(245,158,11,0.08)',
   },
   composer: {
@@ -50,6 +53,7 @@ export const verticalColors = {
     hover:  'hover:border-violet-500/40 hover:bg-violet-500/5',
     glow:   '0 0 16px rgba(139,92,246,0.25)',
     neon:   '#a78bfa',
+    ink:    '#6d28d9',
     dim:    'rgba(139,92,246,0.08)',
   },
   community: {
@@ -61,6 +65,7 @@ export const verticalColors = {
     hover:  'hover:border-fuchsia-500/40 hover:bg-fuchsia-500/5',
     glow:   '0 0 16px rgba(217,70,239,0.25)',
     neon:   '#e879f9',
+    ink:    '#a21caf',
     dim:    'rgba(217,70,239,0.08)',
   },
   strategy: {
@@ -72,6 +77,7 @@ export const verticalColors = {
     hover:  'hover:border-cyan-500/40 hover:bg-cyan-500/5',
     glow:   '0 0 16px rgba(6,182,212,0.25)',
     neon:   '#22d3ee',
+    ink:    '#0e7490',
     dim:    'rgba(6,182,212,0.08)',
   },
 };

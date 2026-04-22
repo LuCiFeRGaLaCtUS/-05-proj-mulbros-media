@@ -97,7 +97,7 @@ const EditPostForm = ({ post, onSave, onClose }) => {
             <h3 className="text-sm font-bold text-zinc-900">Edit Post</h3>
             <p className="text-xs text-zinc-500 mt-0.5 capitalize">{talent} · {post.date}</p>
           </div>
-          <button onClick={onClose} className="text-zinc-400 hover:text-zinc-700 transition-colors p-1">
+          <button onClick={onClose} className="text-zinc-600 hover:text-zinc-700 transition-colors p-1">
             <X size={16} />
           </button>
         </div>
@@ -108,7 +108,7 @@ const EditPostForm = ({ post, onSave, onClose }) => {
             <button
               key={p.key}
               onClick={() => setPlatform(p.key)}
-              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+              className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
                 platform === p.key
                   ? PLATFORM_STYLE[p.key] || 'bg-zinc-100 text-zinc-700 border-zinc-200'
                   : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:text-zinc-700'
@@ -148,7 +148,7 @@ const EditPostForm = ({ post, onSave, onClose }) => {
           <button
             onClick={handleSave}
             disabled={!content.trim() || saving}
-            className="text-xs bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-100 disabled:text-zinc-400 text-white px-4 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5"
+            className="text-xs bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-100 disabled:text-zinc-600 text-white px-4 py-1.5 rounded-lg font-semibold transition-all flex items-center gap-1.5"
           >
             {saving && <Loader2 size={11} className="animate-spin" />}
             {saving ? 'Saving…' : 'Save'}
@@ -171,11 +171,11 @@ const PostCard = ({ post, onCycle, onDelete, onEdit }) => {
       <div className="absolute inset-0 bg-gradient-to-br from-violet-50/30 via-white to-white pointer-events-none" />
       <div className="relative z-10">
         <div className="flex items-center gap-1.5 mb-2 flex-wrap">
-          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${plStyle}`}>{plLabel}</span>
+          <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full border ${plStyle}`}>{plLabel}</span>
           <button
             onClick={() => onCycle(post.id)}
             title="Click to advance status"
-            className={`flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-all hover:brightness-125 border border-transparent ${st.badge}`}
+            className={`flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full transition-all hover:brightness-125 border border-transparent ${st.badge}`}
           >
             <Icon size={9} /> {st.label}
           </button>
@@ -200,7 +200,7 @@ const PostCard = ({ post, onCycle, onDelete, onEdit }) => {
         <p className="text-xs text-zinc-700 leading-snug line-clamp-3 whitespace-pre-line">{post.content}</p>
         {post.scheduledTime && post.status === 'scheduled' && (
           <div className="flex items-center gap-1 mt-1.5 text-zinc-500">
-            <Clock size={9} /><span className="text-[10px]">{post.scheduledTime}</span>
+            <Clock size={9} /><span className="text-xs">{post.scheduledTime}</span>
           </div>
         )}
       </div>
@@ -250,7 +250,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
           <button
             key={p.key}
             onClick={() => setPlatform(p.key)}
-            className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
+            className={`text-[11px] font-semibold px-2 py-0.5 rounded-full border transition-all ${
               platform === p.key
                 ? `${PLATFORM_STYLE[p.key]}`
                 : 'bg-zinc-100 text-zinc-500 border-zinc-200 hover:text-zinc-700'
@@ -291,7 +291,7 @@ Generate exactly 3 content ideas as a numbered list. Each idea: one-line bold ti
         <button
           onClick={handleAdd}
           disabled={!content.trim()}
-          className="text-xs bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-100 disabled:text-zinc-400 text-white px-3 py-1.5 rounded-lg font-semibold transition-all"
+          className="text-xs bg-violet-500 hover:bg-violet-600 disabled:bg-zinc-100 disabled:text-zinc-600 text-white px-3 py-1.5 rounded-lg font-semibold transition-all"
         >
           Add post
         </button>
@@ -316,11 +316,11 @@ const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete, onEdit }
           <div key={ds} className="space-y-2">
             {/* Day header */}
             <div className={`text-center py-1.5 rounded-xl ${isToday(day) ? 'bg-violet-500/20 ring-1 ring-violet-500/30' : 'bg-zinc-50'}`}>
-              <div className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest">{format(day, 'EEE')}</div>
+              <div className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">{format(day, 'EEE')}</div>
               <div className={`text-base font-bold leading-none mt-0.5 ${isToday(day) ? 'text-violet-500' : 'text-zinc-700'}`}>
                 {format(day, 'd')}
               </div>
-              <div className="text-[9px] text-zinc-400 mt-0.5">{format(day, 'MMM')}</div>
+              <div className="text-xs text-zinc-600 mt-0.5">{format(day, 'MMM')}</div>
             </div>
 
             {/* Posts */}
@@ -339,7 +339,7 @@ const WeekView = ({ weekStart, talent, posts, onAdd, onCycle, onDelete, onEdit }
             ) : (
               <button
                 onClick={() => setAddingDay(day)}
-                className="w-full flex items-center justify-center gap-1 py-1.5 text-[10px] text-zinc-400 hover:text-violet-500 hover:bg-violet-50 rounded-lg border border-dashed border-zinc-200 hover:border-violet-300 transition-all"
+                className="w-full flex items-center justify-center gap-1 py-1.5 text-xs text-zinc-600 hover:text-violet-500 hover:bg-violet-50 rounded-lg border border-dashed border-zinc-200 hover:border-violet-300 transition-all"
               >
                 <Plus size={10} /> Add
               </button>
@@ -367,7 +367,7 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete, onEdit
       {/* DOW headers */}
       <div className="grid grid-cols-7 gap-1">
         {DOW.map(d => (
-          <div key={d} className="text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest py-1">{d}</div>
+          <div key={d} className="text-center text-[11px] font-bold text-zinc-600 uppercase tracking-widest py-1">{d}</div>
         ))}
       </div>
 
@@ -406,7 +406,7 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete, onEdit
                   {byStatus.scheduled > 0 && <span className="w-1.5 h-1.5 rounded-full bg-blue-400"   title={`${byStatus.scheduled} scheduled`} />}
                   {byStatus.posted    > 0 && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" title={`${byStatus.posted} posted`} />}
                   {dayPosts.length > 4 && (
-                    <span className="text-[8px] text-zinc-400 leading-none">+{dayPosts.length - 4}</span>
+                    <span className="text-[11px] text-zinc-600 leading-none">+{dayPosts.length - 4}</span>
                   )}
                 </div>
               )}
@@ -449,7 +449,7 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete, onEdit
                 {selPosts.map(p => <PostCard key={p.id} post={p} onCycle={onCycle} onDelete={onDelete} onEdit={onEdit} />)}
               </div>
             ) : !addingToDay && (
-              <p className="text-xs text-zinc-400 text-center py-4">No posts yet — click Add Post to schedule one.</p>
+              <p className="text-xs text-zinc-600 text-center py-4">No posts yet — click Add Post to schedule one.</p>
             )}
           </div>
         </div>
@@ -624,7 +624,7 @@ export const CalendarView = ({ user }) => {
         <div className="text-sm font-semibold text-zinc-700">{navLabel}</div>
 
         {/* Legend */}
-        <div className="ml-auto flex items-center gap-3 text-[10px] text-zinc-500">
+        <div className="ml-auto flex items-center gap-3 text-xs text-zinc-500">
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-zinc-500 inline-block" /> Draft</span>
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" /> Scheduled</span>
           <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" /> Posted</span>

@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import basicAuth from 'express-basic-auth';
 import { Resend } from 'resend';
+import * as stytch from 'stytch';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -49,6 +50,67 @@ if (process.env.ADMIN_USER && process.env.ADMIN_PASS) {
 }
 
 app.use(express.json({ limit: '512kb' }));   // tighter than 2MB for AI proxy
+
+// ── Stytch session verification middleware ───────────────────────────────────
+// Protects endpoints that spend paid quota (/api/email, /api/firecrawl-search,
+// /api/apify-reddit). Requires STYTCH_PROJECT_ID + STYTCH_SECRET in env.
+// Fails closed: if env vars missing, rejects all requests with 503 rather than
+// silently accepting anonymous traffic.
+const stytchClient = (process.env.STYTCH_PROJECT_ID && process.env.STYTCH_SECRET)
+  ? new stytch.Client({
+      project_id: process.env.STYTCH_PROJECT_ID,
+      secret:     process.env.STYTCH_SECRET,
+      env:        process.env.STYTCH_ENV === 'live' ? stytch.envs.live : stytch.envs.test,
+    })
+  : null;
+
+const requireAuth = async (req, res, next) => {
+  if (!stytchClient) {
+    return res.status(503).json({
+      error: { message: 'Auth not configured on server (STYTCH_PROJECT_ID / STYTCH_SECRET missing).' },
+    });
+  }
+  const token = (req.headers['x-stytch-session-token'] || '').toString().trim()
+             || (req.headers['x-stytch-session-jwt']   || '').toString().trim();
+  if (!token) {
+    return res.status(401).json({ error: { message: 'Missing session token.' } });
+  }
+  try {
+    const result = token.split('.').length === 3
+      ? await stytchClient.sessions.authenticateJwt({ session_jwt: token })
+      : await stytchClient.sessions.authenticate({ session_token: token });
+    req.stytchUser = {
+      userId:    result.session?.user_id || result.user?.user_id,
+      sessionId: result.session?.session_id,
+    };
+    if (!req.stytchUser.userId) {
+      return res.status(401).json({ error: { message: 'Invalid session.' } });
+    }
+    return next();
+  } catch (err) {
+    console.error('Stytch auth failed:', err.message || err);
+    return res.status(401).json({ error: { message: 'Invalid or expired session.' } });
+  }
+};
+
+// ── Per-user rate limiter (in-memory; fine for single-instance Render) ────────
+// Keyed by Stytch user_id — supplements global express-rate-limit which is IP-based.
+const perUserWindows = new Map();
+const perUserLimit = ({ windowMs, max, message }) => (req, res, next) => {
+  const uid = req.stytchUser?.userId;
+  if (!uid) return next(); // requireAuth already ran; trust it
+  const now = Date.now();
+  const entry = perUserWindows.get(uid);
+  if (!entry || now - entry.windowStart > windowMs) {
+    perUserWindows.set(uid, { windowStart: now, count: 1 });
+    return next();
+  }
+  if (entry.count >= max) {
+    return res.status(429).json({ error: { message } });
+  }
+  entry.count += 1;
+  return next();
+};
 
 // ── Rate limiter ──────────────────────────────────────────────────────────────
 const aiLimiter = rateLimit({
@@ -274,7 +336,11 @@ const firecrawlLimiter = rateLimit({
   message: { error: { message: 'Too many search requests — please wait a minute.' } },
 });
 
-app.post('/api/firecrawl-search', firecrawlLimiter, async (req, res) => {
+const firecrawlPerUser = perUserLimit({
+  windowMs: 60 * 60_000, max: 60,
+  message: 'You have exceeded your hourly search quota. Try again later.',
+});
+app.post('/api/firecrawl-search', requireAuth, firecrawlPerUser, firecrawlLimiter, async (req, res) => {
   const { query, subreddits = ['indiefilm', 'filmmakers', 'filmmaking'], limit = 10 } = req.body || {};
 
   if (!query || typeof query !== 'string' || query.trim().length < 3) {
@@ -358,7 +424,11 @@ const apifyLimiter = rateLimit({
   message: { error: { message: 'Too many Apify requests — please wait a minute.' } },
 });
 
-app.post('/api/apify-reddit', apifyLimiter, async (req, res) => {
+const apifyPerUser = perUserLimit({
+  windowMs: 60 * 60_000, max: 15,
+  message: 'You have exceeded your hourly deep-scrape quota. Try again later.',
+});
+app.post('/api/apify-reddit', requireAuth, apifyPerUser, apifyLimiter, async (req, res) => {
   const { query, subreddits = ['indiefilm', 'filmmakers', 'filmmaking'], limit = 10 } = req.body || {};
 
   if (!query || typeof query !== 'string' || query.trim().length < 3) {
@@ -437,7 +507,17 @@ const emailLimiter = rateLimit({
   message: { error: { message: 'Too many email requests — please wait a minute.' } },
 });
 
-app.post('/api/email', emailLimiter, async (req, res) => {
+// Validation helpers — reject header injection (CRLF) and enforce length caps.
+const EMAIL_RE = /^[^\s@<>"',;:\\]+@[^\s@<>"',;:\\]+\.[^\s@<>"',;:\\]+$/;
+const hasCRLF  = (s) => typeof s === 'string' && /[\r\n]/.test(s);
+const EMAIL_LIMITS = { subject: 200, html: 200_000, text: 50_000, recipients: 10 };
+
+const emailPerUser = perUserLimit({
+  windowMs: 60 * 60_000, max: 30,
+  message: 'You have exceeded your hourly email quota.',
+});
+
+app.post('/api/email', requireAuth, emailPerUser, emailLimiter, async (req, res) => {
   const resendKey = process.env.Resend_API;
   if (!resendKey) {
     return res.status(503).json({ error: 'Email service not configured (Resend_API missing).' });
@@ -448,11 +528,33 @@ app.post('/api/email', emailLimiter, async (req, res) => {
     return res.status(400).json({ error: 'to, subject, and html (or text) are required.' });
   }
 
+  // Normalize recipients to array, validate each.
+  const recipients = Array.isArray(to) ? to : [to];
+  if (recipients.length === 0 || recipients.length > EMAIL_LIMITS.recipients) {
+    return res.status(400).json({ error: `to must contain 1–${EMAIL_LIMITS.recipients} addresses.` });
+  }
+  for (const addr of recipients) {
+    if (typeof addr !== 'string' || hasCRLF(addr) || !EMAIL_RE.test(addr.trim())) {
+      return res.status(400).json({ error: 'Invalid email address.' });
+    }
+  }
+
+  // Reject header injection via subject; enforce length caps.
+  if (typeof subject !== 'string' || hasCRLF(subject) || subject.length > EMAIL_LIMITS.subject) {
+    return res.status(400).json({ error: `subject must be a string ≤${EMAIL_LIMITS.subject} chars with no newlines.` });
+  }
+  if (html && (typeof html !== 'string' || html.length > EMAIL_LIMITS.html)) {
+    return res.status(400).json({ error: `html body exceeds ${EMAIL_LIMITS.html} chars.` });
+  }
+  if (text && (typeof text !== 'string' || text.length > EMAIL_LIMITS.text)) {
+    return res.status(400).json({ error: `text body exceeds ${EMAIL_LIMITS.text} chars.` });
+  }
+
   try {
     const resend = new Resend(resendKey);
     const { data, error } = await resend.emails.send({
       from:    'MulBros Media OS <onboarding@resend.dev>',
-      to,
+      to:      recipients,
       subject,
       ...(html ? { html } : {}),
       ...(text ? { text } : {}),

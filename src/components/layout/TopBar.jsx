@@ -145,7 +145,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
           }}>
           <div className="w-1 h-1 rounded-full"
             style={{ background: pageMeta.color, boxShadow: `0 0 4px ${pageMeta.color}` }} />
-          <span className="text-[9px] font-black tracking-[0.25em]" style={{ color: `${pageMeta.color}cc` }}>
+          <span className="text-[11px] font-black tracking-[0.25em]" style={{ color: `${pageMeta.color}cc` }}>
             {pageMeta.label}
           </span>
         </div>
@@ -155,7 +155,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
             {pageMeta.name}
           </h1>
           <div className="hidden md:flex items-center gap-1.5">
-            <span className="text-[10px] font-mono" style={{ color: 'rgba(0,0,0,0.30)', fontFamily: 'var(--font-mono)' }}>
+            <span className="text-xs font-mono" style={{ color: 'rgba(0,0,0,0.62)', fontFamily: 'var(--font-mono)' }}>
               MULBROS / {pageMeta.name.toUpperCase()}
             </span>
           </div>
@@ -168,7 +168,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
         {/* Search */}
         <div className="relative" ref={searchRef}>
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-            style={{ color: 'rgba(245,158,11,0.6)' }} />
+            style={{ color: '#b45309' }} />
           <input
             type="text"
             aria-label="Search agents and pages"
@@ -197,7 +197,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
             <button
               onClick={() => { setSearchQuery(''); setSearchOpen(false); }}
               aria-label="Clear search"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-600 hover:text-zinc-600 transition-colors"
             >
               <X size={13} />
             </button>
@@ -212,7 +212,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                 backdropFilter: 'blur(20px)',
               }}>
               {results.length === 0 ? (
-                <div className="px-4 py-3 text-sm text-zinc-400">
+                <div className="px-4 py-3 text-sm text-zinc-600">
                   No results for "{searchQuery}"
                 </div>
               ) : (
@@ -223,8 +223,8 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                     const labels = { page: 'Pages', agent: 'Agents', campaign: 'Campaigns' };
                     return (
                       <div key={type}>
-                        <div className="px-3 py-2 text-[9px] font-black tracking-[0.25em] uppercase"
-                          style={{ color: 'rgba(245,158,11,0.7)', background: 'rgba(245,158,11,0.04)' }}>
+                        <div className="px-3 py-2 text-[11px] font-black tracking-[0.25em] uppercase"
+                          style={{ color: '#b45309', background: 'rgba(245,158,11,0.04)' }}>
                           {labels[type]}
                         </div>
                         {group.map(r => (
@@ -310,9 +310,9 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-zinc-700 leading-snug">{notif.action}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-mono" style={{ color: 'rgba(34,211,238,0.7)', fontFamily: 'var(--font-mono)' }}>{notif.agent}</span>
-                        <span style={{ color: 'rgba(0,0,0,0.20)' }}>·</span>
-                        <span className="text-xs text-zinc-400">{notif.time}</span>
+                        <span className="text-xs font-mono" style={{ color: '#0e7490', fontFamily: 'var(--font-mono)' }}>{notif.agent}</span>
+                        <span style={{ color: 'rgba(0,0,0,0.60)' }}>·</span>
+                        <span className="text-xs text-zinc-600">{notif.time}</span>
                       </div>
                     </div>
                   </div>
@@ -323,7 +323,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                 <button
                   onClick={() => { setHasUnread(false); setNotifOpen(false); }}
                   className="w-full text-sm font-semibold transition-colors"
-                  style={{ color: 'rgba(245,158,11,0.75)' }}
+                  style={{ color: '#b45309' }}
                   onMouseEnter={e => e.currentTarget.style.color = '#d97706'}
                   onMouseLeave={e => e.currentTarget.style.color = 'rgba(245,158,11,0.75)'}
                 >
@@ -373,7 +373,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                   <div className="min-w-0">
                     <div className="text-sm font-bold text-zinc-900 truncate">{displayName}</div>
                     <div className="flex items-center gap-1 mt-0.5">
-                      <span className="chip" style={{ background: 'rgba(245,158,11,0.08)', color: '#92400e', border: '1px solid rgba(245,158,11,0.15)', fontSize: '8px' }}>ADMIN</span>
+                      <span className="chip" style={{ background: 'rgba(245,158,11,0.08)', color: '#92400e', border: '1px solid rgba(245,158,11,0.15)', fontSize: '11px' }}>ADMIN</span>
                     </div>
                   </div>
                 </div>
@@ -385,7 +385,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                   onClick={() => { navigate('/settings'); setProfileOpen(false); }}
                   aria-label="Settings"
                   className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                  style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)', color: 'rgba(0,0,0,0.40)' }}
+                  style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)', color: 'rgba(0,0,0,0.70)' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.30)'; e.currentTarget.style.color = '#d97706'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = 'rgba(0,0,0,0.40)'; }}
                 >
@@ -401,7 +401,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                   onClick={() => { navigate('/agents'); setProfileOpen(false); }}
                   aria-label="Agent Chat"
                   className="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
-                  style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)', color: 'rgba(0,0,0,0.40)' }}
+                  style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.07)', color: 'rgba(0,0,0,0.70)' }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(34,211,238,0.35)'; e.currentTarget.style.color = '#0891b2'; }}
                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = 'rgba(0,0,0,0.40)'; }}
                 >

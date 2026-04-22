@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { lukePipeline } from '../config/mockData';
+import { logger } from '../lib/logger';
+import { UI } from '../constants';
 
 const STAGES = ['prospecting', 'pitched', 'negotiating', 'closed'];
 const EMPTY  = Object.fromEntries(STAGES.map(s => [s, []]));
@@ -35,8 +38,23 @@ const syncToSupabase = async (userId, pipeline) => {
       });
     });
   });
-  await supabase.from('music_pipeline').delete().eq('user_id', userId);
-  if (rows.length > 0) await supabase.from('music_pipeline').insert(rows);
+
+  const { data: snapshot, error: snapErr } = await supabase
+    .from('music_pipeline').select('*').eq('user_id', userId);
+  if (snapErr) throw snapErr;
+
+  const { error: delErr } = await supabase.from('music_pipeline').delete().eq('user_id', userId);
+  if (delErr) throw delErr;
+
+  if (rows.length > 0) {
+    const { error: insErr } = await supabase.from('music_pipeline').insert(rows);
+    if (insErr) {
+      if (snapshot && snapshot.length > 0) {
+        await supabase.from('music_pipeline').insert(snapshot).then(() => {}, () => {});
+      }
+      throw insErr;
+    }
+  }
 };
 
 export const useMusicPipeline = (userId) => {
@@ -51,7 +69,11 @@ export const useMusicPipeline = (userId) => {
       .select('*')
       .eq('user_id', userId)
       .order('position')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          logger.error('useMusicPipeline.load.failed', error);
+          toast.error('Could not load your music pipeline. Showing starter data.');
+        }
         if (data && data.length > 0) {
           _setPipeline(groupRows(data));
         } else {
@@ -70,7 +92,14 @@ export const useMusicPipeline = (userId) => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       if (userId) {
         clearTimeout(syncTimer.current);
-        syncTimer.current = setTimeout(() => syncToSupabase(userId, next), 800);
+        syncTimer.current = setTimeout(async () => {
+          try {
+            await syncToSupabase(userId, next);
+          } catch (err) {
+            logger.error('useMusicPipeline.sync.failed', err);
+            toast.error('Could not save pipeline changes. Your local copy is intact.');
+          }
+        }, UI.pipelineSyncMs);
       }
       return next;
     });

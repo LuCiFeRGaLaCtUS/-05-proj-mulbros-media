@@ -11,7 +11,7 @@ export const BriefPanel = ({ target, setTarget, contentType, setContentType, ton
       
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Target</label>
+          <label className="block text-sm font-medium text-zinc-600 mb-2">Target</label>
           <select
             value={target}
             onChange={(e) => {
@@ -27,7 +27,7 @@ export const BriefPanel = ({ target, setTarget, contentType, setContentType, ton
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Content Type</label>
+          <label className="block text-sm font-medium text-zinc-600 mb-2">Content Type</label>
           <select
             value={contentType}
             onChange={(e) => setContentType(e.target.value)}
@@ -40,7 +40,7 @@ export const BriefPanel = ({ target, setTarget, contentType, setContentType, ton
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Tone</label>
+          <label className="block text-sm font-medium text-zinc-600 mb-2">Tone</label>
           <select
             value={tone}
             onChange={(e) => setTone(e.target.value)}
@@ -53,7 +53,7 @@ export const BriefPanel = ({ target, setTarget, contentType, setContentType, ton
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Additional Context (Optional)</label>
+          <label className="block text-sm font-medium text-zinc-600 mb-2">Additional Context (Optional)</label>
           <textarea
             value={additionalContext}
             onChange={(e) => setAdditionalContext(e.target.value)}

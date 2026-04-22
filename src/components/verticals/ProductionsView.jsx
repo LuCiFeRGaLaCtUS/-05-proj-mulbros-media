@@ -304,8 +304,8 @@ export const ProductionsView = () => {
                     <p className="text-sm text-zinc-700 leading-snug">{a.action}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-xs text-zinc-500">{a.agent}</span>
-                      <span className="text-zinc-300">·</span>
-                      <span className="text-xs text-zinc-400">{a.time}</span>
+                      <span className="text-zinc-500">·</span>
+                      <span className="text-xs text-zinc-600">{a.time}</span>
                     </div>
                   </div>
                 </div>

@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { filmFinancingPipeline } from '../config/mockData';
+import { logger } from '../lib/logger';
+import { UI } from '../constants';
 
 const STAGES = ['discovery', 'contacted', 'qualified', 'negotiating', 'closed'];
 const EMPTY  = Object.fromEntries(STAGES.map(s => [s, []]));
@@ -40,8 +43,24 @@ const syncToSupabase = async (userId, pipeline) => {
       });
     });
   });
-  await supabase.from('film_pipeline').delete().eq('user_id', userId);
-  if (rows.length > 0) await supabase.from('film_pipeline').insert(rows);
+  // Snapshot current DB rows so we can restore on failure.
+  const { data: snapshot, error: snapErr } = await supabase
+    .from('film_pipeline').select('*').eq('user_id', userId);
+  if (snapErr) throw snapErr;
+
+  const { error: delErr } = await supabase.from('film_pipeline').delete().eq('user_id', userId);
+  if (delErr) throw delErr;
+
+  if (rows.length > 0) {
+    const { error: insErr } = await supabase.from('film_pipeline').insert(rows);
+    if (insErr) {
+      // Rollback: best-effort restore of prior snapshot so data is not lost.
+      if (snapshot && snapshot.length > 0) {
+        await supabase.from('film_pipeline').insert(snapshot).then(() => {}, () => {});
+      }
+      throw insErr;
+    }
+  }
 };
 
 export const useFilmPipeline = (userId) => {
@@ -57,11 +76,15 @@ export const useFilmPipeline = (userId) => {
       .select('*')
       .eq('user_id', userId)
       .order('position')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          logger.error('useFilmPipeline.load.failed', error);
+          toast.error('Could not load your film pipeline. Showing starter data.');
+        }
         if (data && data.length > 0) {
           _setPipeline(groupRows(data));
         } else {
-          // First run — seed from mockData
+          // First run (or error) — seed from mockData
           _setPipeline(
             Object.fromEntries(
               Object.entries(filmFinancingPipeline).map(([k, v]) => [k, v.map(c => ({ ...c }))])
@@ -72,13 +95,20 @@ export const useFilmPipeline = (userId) => {
       });
   }, [userId]);
 
-  // Debounced sync — fires 800ms after last update to avoid hammering DB on rapid drags
+  // Debounced sync — fires after UI.pipelineSyncMs to avoid hammering DB on rapid drags.
   const setPipeline = useCallback((updater) => {
     _setPipeline(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater;
       if (userId) {
         clearTimeout(syncTimer.current);
-        syncTimer.current = setTimeout(() => syncToSupabase(userId, next), 800);
+        syncTimer.current = setTimeout(async () => {
+          try {
+            await syncToSupabase(userId, next);
+          } catch (err) {
+            logger.error('useFilmPipeline.sync.failed', err);
+            toast.error('Could not save pipeline changes. Your local copy is intact.');
+          }
+        }, UI.pipelineSyncMs);
       }
       return next;
     });

@@ -45,7 +45,7 @@ const ComingSoon = ({ label }) => (
       <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto">
         <span className="text-lg font-black text-amber-400">M</span>
       </div>
-      <p className="text-zinc-400 text-sm font-mono uppercase tracking-widest">{label}</p>
+      <p className="text-zinc-600 text-sm font-mono uppercase tracking-widest">{label}</p>
       <p className="text-zinc-600 text-xs">Coming soon — check the day plan</p>
     </div>
   </div>
@@ -128,12 +128,12 @@ const EmailVerificationPending = ({ email, onSignOut }) => (
           Click it to access your account.
         </p>
       </div>
-      <p className="text-[10px] text-zinc-400" style={{ fontFamily: 'var(--font-mono)' }}>
+      <p className="text-xs text-zinc-600" style={{ fontFamily: 'var(--font-mono)' }}>
         Check spam if you don't see it.
       </p>
       <button
         onClick={onSignOut}
-        className="text-xs text-zinc-400 hover:text-amber-600 transition-colors underline"
+        className="text-xs text-zinc-600 hover:text-amber-600 transition-colors underline"
       >
         Use a different email
       </button>

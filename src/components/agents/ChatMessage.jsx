@@ -24,15 +24,14 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
         <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-xs font-bold relative"
           style={{
             background: vc.dim,
-            border: `1px solid ${vc.neon}35`,
-            color: vc.neon,
+            border: `1px solid ${vc.neon}45`,
+            color: vc.ink,
             boxShadow: `0 0 10px ${vc.neon}15`,
             flexShrink: 0,
           }}>
           {initials(agentName)}
-          {/* Online indicator */}
           <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-            style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.7)', border: '1.5px solid #050507' }} />
+            style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.7)', border: '1.5px solid #ffffff' }} />
         </div>
       )}
 
@@ -41,19 +40,19 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
         {/* Agent meta row */}
         {!isUser && (
           <div className="flex items-center gap-2 mb-1.5 px-1">
-            <span className="text-xs font-bold" style={{ color: vc.neon }}>
+            <span className="text-xs font-bold" style={{ color: vc.ink }}>
               {agentName}
             </span>
             <span className="chip" style={{
-              background: `${vc.neon}10`,
-              color: `${vc.neon}80`,
-              border: `1px solid ${vc.neon}20`,
-              fontSize: '8px',
+              background: `${vc.neon}14`,
+              color: vc.ink,
+              border: `1px solid ${vc.neon}40`,
+              fontSize: '11px',
             }}>
               AI
             </span>
             {message.timestamp && (
-              <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.18)' }}>
+              <span className="text-xs font-mono text-zinc-500">
                 {message.timestamp}
               </span>
             )}
@@ -69,9 +68,9 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
             boxShadow: '0 4px 20px rgba(245,158,11,0.25), 0 0 0 1px rgba(245,158,11,0.3)',
             padding: '12px 16px',
           } : {
-            background: 'rgba(14,14,22,0.95)',
-            border: `1px solid ${vc.neon}18`,
-            boxShadow: `0 4px 20px rgba(0,0,0,0.4), ${vc.glow ? vc.glow.replace('16px', '8px') : ''}`,
+            background: '#ffffff',
+            border: `1px solid ${vc.neon}30`,
+            boxShadow: `0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)`,
             padding: '12px 16px',
           }}>
 
@@ -82,8 +81,8 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
           )}
 
           {/* Content */}
-          <p className={`relative z-10 whitespace-pre-wrap leading-relaxed text-sm ${
-            isUser ? 'text-zinc-950 font-semibold' : 'text-zinc-200'
+          <p className={`relative z-10 whitespace-pre-wrap leading-relaxed text-[15px] ${
+            isUser ? 'text-zinc-950 font-semibold' : 'text-zinc-800'
           }`}>
             {message.content}
           </p>
@@ -93,12 +92,12 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
             <button
               onClick={handleCopy}
               className="absolute top-2 right-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+              style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid rgba(0,0,0,0.08)' }}
               title="Copy response"
             >
               {copied
-                ? <Check size={12} style={{ color: '#34d399' }} />
-                : <Copy size={12} style={{ color: 'rgba(255,255,255,0.4)' }} />
+                ? <Check size={12} style={{ color: '#059669' }} />
+                : <Copy size={12} className="text-zinc-600" />
               }
             </button>
           )}
@@ -107,7 +106,7 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
         {/* User timestamp */}
         {isUser && message.timestamp && (
           <div className="flex justify-end mt-1 px-1">
-            <span className="text-[10px] font-mono" style={{ color: 'rgba(255,255,255,0.18)' }}>
+            <span className="text-xs font-mono text-zinc-500">
               {message.timestamp}
             </span>
           </div>
@@ -118,9 +117,9 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
       {isUser && (
         <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-xs font-bold"
           style={{
-            background: 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.08))',
-            border: '1px solid rgba(245,158,11,0.25)',
-            color: '#f59e0b',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.18), rgba(245,158,11,0.06))',
+            border: '1px solid rgba(245,158,11,0.35)',
+            color: '#b45309',
             flexShrink: 0,
           }}>
           AC
@@ -137,8 +136,8 @@ export const TypingIndicator = ({ agentName, vertical }) => {
       <div className="w-8 h-8 rounded-xl flex-shrink-0 flex items-center justify-center text-xs font-bold"
         style={{
           background: vc.dim,
-          border: `1px solid ${vc.neon}35`,
-          color: vc.neon,
+          border: `1px solid ${vc.neon}45`,
+          color: vc.ink,
           flexShrink: 0,
         }}>
         {initials(agentName || 'AI')}
@@ -146,13 +145,13 @@ export const TypingIndicator = ({ agentName, vertical }) => {
 
       <div className="rounded-2xl rounded-bl-sm px-5 py-4 relative overflow-hidden"
         style={{
-          background: 'rgba(14,14,22,0.95)',
-          border: `1px solid ${vc.neon}18`,
+          background: '#ffffff',
+          border: `1px solid ${vc.neon}30`,
+          boxShadow: `0 1px 3px rgba(0,0,0,0.06)`,
         }}>
         <div className="absolute inset-0 pointer-events-none"
           style={{ background: `radial-gradient(ellipse at top left, ${vc.dim}, transparent 70%)` }} />
         <div className="relative z-10 flex items-center gap-3">
-          {/* Neural dots */}
           <div className="flex gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full neural-dot"
               style={{ background: vc.neon, boxShadow: `0 0 4px ${vc.neon}` }} />
@@ -161,10 +160,10 @@ export const TypingIndicator = ({ agentName, vertical }) => {
             <span className="w-1.5 h-1.5 rounded-full neural-dot"
               style={{ background: vc.neon, boxShadow: `0 0 4px ${vc.neon}` }} />
           </div>
-          <span className="text-xs font-mono" style={{ color: 'rgba(255,255,255,0.25)' }}>
+          <span className="text-xs font-mono text-zinc-600">
             neural link active
           </span>
-          <Zap size={10} style={{ color: vc.neon, opacity: 0.6 }} />
+          <Zap size={10} style={{ color: vc.ink }} />
         </div>
       </div>
     </div>

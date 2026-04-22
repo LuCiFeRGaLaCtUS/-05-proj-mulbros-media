@@ -1,6 +1,9 @@
 import React from 'react';
+import toast from 'react-hot-toast';
+import { logger } from '../../lib/logger';
+import { STORAGE_KEYS } from '../../constants';
 
-const STORAGE_KEY = 'mulbros_integration_toggles';
+const STORAGE_KEY = STORAGE_KEYS.integrations;
 
 const defaultIntegrations = {
   Spotify: false, YouTube: false, Instagram: false, TikTok: false,
@@ -12,7 +15,9 @@ const loadIntegrations = () => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) return { ...defaultIntegrations, ...JSON.parse(stored) };
-  } catch (_) { /* ignore */ }
+  } catch (err) {
+    logger.warn('IntegrationToggles.load.corrupt', { message: err.message });
+  }
   return defaultIntegrations;
 };
 
@@ -22,7 +27,12 @@ export const IntegrationToggles = () => {
   const toggle = (name) => {
     setIntegrations(prev => {
       const next = { ...prev, [name]: !prev[name] };
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch (_) { /* ignore */ }
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      } catch (err) {
+        logger.error('IntegrationToggles.save.failed', err);
+        toast.error('Could not save integration preference. Storage may be full.');
+      }
       return next;
     });
   };

@@ -44,7 +44,7 @@ export const OutputPanel = ({ content, agentName, isEditing, setIsEditing, editC
       <div className="flex gap-3 mt-4">
         <button
           onClick={handleCopy}
-          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-500 rounded-lg transition-all"
         >
           {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
           {copied ? 'Copied' : 'Copy'}
@@ -60,7 +60,7 @@ export const OutputPanel = ({ content, agentName, isEditing, setIsEditing, editC
 
         <button
           onClick={onRegenerate}
-          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg transition-all"
+          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-500 rounded-lg transition-all"
         >
           <RotateCcw size={16} />
           Regenerate
