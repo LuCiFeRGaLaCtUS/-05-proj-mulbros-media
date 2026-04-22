@@ -15,6 +15,7 @@ import {
   activities
 } from '../../config/mockData';
 import { useMusicPipeline } from '../../hooks/useMusicPipeline';
+import { useAppContext } from '../../App';
 import { Bot, Sparkles, Music, Piano, Clock, Pencil, Check, X, GripVertical } from 'lucide-react';
 
 // ── Light background — amber theme ───────────────────────────────────────────
@@ -430,6 +431,7 @@ const LukeOverview = ({ onAgentClick, userId }) => {
 
 // ─── Main view ────────────────────────────────────────────────────────────────
 export const MusicView = ({ onAgentClick, user }) => {
+  const { profile } = useAppContext();
   const [talent, setTalent] = useState('talise');
   const [activeTab, setActiveTab] = useState('Overview');
   const tabs = ['Overview', 'Activity'];
@@ -545,7 +547,7 @@ export const MusicView = ({ onAgentClick, user }) => {
       {activeTab === 'Overview' && (
         talent === 'talise'
           ? <TaliseOverview />
-          : <LukeOverview onAgentClick={onAgentClick} userId={user?.id} />
+          : <LukeOverview onAgentClick={onAgentClick} userId={profile?.id} />
       )}
 
       {activeTab === 'Activity' && (

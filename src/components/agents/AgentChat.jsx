@@ -9,6 +9,7 @@ import { callAI, getApiKey, callRedditSearch, formatRedditResults } from '../../
 import { verticalColors } from '../../config/verticalColors';
 import { useAgentChats } from '../../hooks/useAgentChats';
 import { logger } from '../../lib/logger';
+import { useAppContext } from '../../App';
 
 const initials = (name) =>
   name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -22,7 +23,8 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
   const agent = getAgentById(selectedAgent) || getAgentById('film-financing-discovery');
   const vc    = verticalColors[agent?.vertical] || verticalColors.financing;
 
-  const { messages, addMessage, clearHistory } = useAgentChats(user?.id, selectedAgent);
+  const { profile } = useAppContext();
+  const { messages, addMessage, clearHistory } = useAgentChats(profile?.id, selectedAgent);
 
   useEffect(() => {
     if (preselectedAgentId && preselectedAgentId !== selectedAgent) {

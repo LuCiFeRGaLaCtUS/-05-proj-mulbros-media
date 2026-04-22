@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { callAIFast } from '../../utils/ai';
 import { useCalendar } from '../../hooks/useCalendar';
+import { useAppContext } from '../../App';
 import {
   ChevronLeft, ChevronRight, Plus, Sparkles,
   Clock, CheckCircle2, FileText, Loader2, Trash2, Pencil, X,
@@ -460,12 +461,13 @@ const MonthView = ({ monthStart, talent, posts, onAdd, onCycle, onDelete, onEdit
 
 // ── Main export ───────────────────────────────────────────────────────────────
 export const CalendarView = ({ user }) => {
+  const { profile } = useAppContext();
   const [talent,      setTalent]      = useState('talise');
   const [view,        setView]        = useState('week');   // 'week' | 'month'
   const [cursor,      setCursor]      = useState(new Date());
   const [editingPost, setEditingPost] = useState(null);     // post being edited
 
-  const { posts, addPost, updatePost, deletePost, cycleStatus } = useCalendar(user?.id);
+  const { posts, addPost, updatePost, deletePost, cycleStatus } = useCalendar(profile?.id);
 
   const handleCycleStatus = (id) => {
     const post = posts.find(p => p.id === id);

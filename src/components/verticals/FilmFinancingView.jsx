@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useFilmPipeline } from '../../hooks/useFilmPipeline';
+import { useAppContext } from '../../App';
 import { BlueBg } from './film/BlueBg';
 import { kpis, financingActivities } from './film/constants';
 import { LeadGenTab } from './film/LeadGenTab';
@@ -10,7 +11,8 @@ const TABS = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
 export const FilmFinancingView = ({ user }) => {
   const [activeTab, setActiveTab] = useState('Lead Gen');
-  const { pipeline, setPipeline } = useFilmPipeline(user?.id);
+  const { profile } = useAppContext();
+  const { pipeline, setPipeline } = useFilmPipeline(profile?.id);
 
   const handleAddToPipeline = (lead) => {
     const card = {

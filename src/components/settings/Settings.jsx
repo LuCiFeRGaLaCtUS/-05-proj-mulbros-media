@@ -4,10 +4,12 @@ import { APIKeyManager } from './APIKeyManager';
 import { IntegrationToggles } from './IntegrationToggles';
 import { TeamManager } from './TeamManager';
 import { useUserSettings } from '../../hooks/useUserSettings';
+import { useAppContext } from '../../App';
 
 const tabs = ['General', 'API Keys', 'Integrations', 'Team', 'Notifications'];
 
 export const Settings = ({ user }) => {
+  const { profile } = useAppContext();
   const [activeTab, setActiveTab] = useState('general');
   const [isDirty, setIsDirty] = useState(false);
 
@@ -15,7 +17,7 @@ export const Settings = ({ user }) => {
     settings, setSettings,
     notifications, setNotifications,
     saveSettings,
-  } = useUserSettings(user?.id);
+  } = useUserSettings(profile?.id);
 
   const handleSave = async () => {
     const { error } = await saveSettings(settings, notifications);
