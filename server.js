@@ -79,8 +79,16 @@ const requireAuth = async (req, res, next) => {
     req.stytchUser = { userId: 'dev-unauthenticated', sessionId: 'dev' };
     return next();
   }
+  // Prefer header; fall back to Stytch cookies (set non-httpOnly by default).
+  const cookieHeader = (req.headers.cookie || '').toString();
+  const cookieMatch = (name) => {
+    const m = cookieHeader.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+    return m ? decodeURIComponent(m[1]) : '';
+  };
   const token = (req.headers['x-stytch-session-token'] || '').toString().trim()
-             || (req.headers['x-stytch-session-jwt']   || '').toString().trim();
+             || (req.headers['x-stytch-session-jwt']   || '').toString().trim()
+             || cookieMatch('stytch_session_jwt')
+             || cookieMatch('stytch_session');
   if (!token) {
     return res.status(401).json({ error: { message: 'Missing session token.' } });
   }
