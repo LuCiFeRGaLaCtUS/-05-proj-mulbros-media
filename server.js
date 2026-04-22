@@ -85,13 +85,18 @@ const requireAuth = async (req, res, next) => {
     const m = cookieHeader.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
     return m ? decodeURIComponent(m[1]) : '';
   };
-  const token = (req.headers['x-stytch-session-token'] || '').toString().trim()
-             || (req.headers['x-stytch-session-jwt']   || '').toString().trim()
-             || cookieMatch('stytch_session_jwt')
-             || cookieMatch('stytch_session');
+  let source = null;
+  let token = '';
+  if ((req.headers['x-stytch-session-jwt'] || '').toString().trim())  { source = 'header-jwt';   token = req.headers['x-stytch-session-jwt'].toString().trim(); }
+  else if ((req.headers['x-stytch-session-token'] || '').toString().trim()) { source = 'header-token'; token = req.headers['x-stytch-session-token'].toString().trim(); }
+  else if (cookieMatch('stytch_session_jwt'))                         { source = 'cookie-jwt';   token = cookieMatch('stytch_session_jwt'); }
+  else if (cookieMatch('stytch_session'))                             { source = 'cookie-token'; token = cookieMatch('stytch_session'); }
+
   if (!token) {
+    console.warn('[requireAuth] No token found. cookie keys:', cookieHeader.split(';').map(p => p.trim().split('=')[0]).filter(Boolean).join(','));
     return res.status(401).json({ error: { message: 'Missing session token.' } });
   }
+  console.info('[requireAuth] source=%s len=%d', source, token.length);
   try {
     const result = token.split('.').length === 3
       ? await stytchClient.sessions.authenticateJwt({ session_jwt: token })

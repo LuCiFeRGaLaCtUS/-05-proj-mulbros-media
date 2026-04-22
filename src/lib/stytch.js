@@ -2,6 +2,14 @@ import { StytchUIClient } from '@stytch/vanilla-js';
 
 export const stytch = new StytchUIClient(import.meta.env.VITE_STYTCH_PUBLIC_TOKEN);
 
+// Expose on window in non-SSR contexts so browser DevTools can inspect session.
+// Enables quick diagnostics:
+//   window.stytch.session.getTokens()
+if (typeof window !== 'undefined') {
+  // eslint-disable-next-line no-underscore-dangle
+  window.stytch = stytch;
+}
+
 // Cookie reader fallback — Stytch stores non-httpOnly cookies named
 // `stytch_session` and `stytch_session_jwt` that our server can also read.
 const readCookie = (name) => {

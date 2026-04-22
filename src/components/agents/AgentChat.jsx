@@ -74,7 +74,11 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
             content: `[Today is ${today}]\n\n${searchContext}\n\n---\n\nUser request: ${last.content}`,
           };
         } catch (searchErr) {
-          logger.warn('AgentChat.search.unavailable', { message: searchErr.message });
+          logger.warn('AgentChat.search.unavailable', {
+            message: searchErr.message,
+            status:  searchErr.status,
+            body:    searchErr.body,
+          });
           // Inject date only — tell agent search is unavailable so it doesn't hallucinate
           const last = apiMessages[apiMessages.length - 1];
           apiMessages[apiMessages.length - 1] = {

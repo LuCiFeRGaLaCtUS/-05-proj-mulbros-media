@@ -31,7 +31,13 @@ export const fetchWithTimeout = async (url, options = {}, timeoutMs = DEFAULT_TI
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(url, { ...options, signal: controller.signal });
+    // credentials: 'same-origin' ensures Stytch session cookies
+    // (stytch_session, stytch_session_jwt) are sent on all same-origin API calls.
+    const response = await fetch(url, {
+      credentials: 'same-origin',
+      ...options,
+      signal: controller.signal,
+    });
     return response;
   } catch (err) {
     if (err.name === 'AbortError') throw new TimeoutError(timeoutMs);
