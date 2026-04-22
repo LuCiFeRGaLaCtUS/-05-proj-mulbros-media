@@ -4,8 +4,9 @@ import { supabase } from '../lib/supabase';
 // user is a Stytch user object — identifier is user.user_id
 // Profiles are stored in Supabase, looked up by stytch_user_id column.
 export const useProfile = (user) => {
-  const [profile, setProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [profile,      setProfile]      = useState(null);
+  const [loading,      setLoading]      = useState(true);
+  const [profileError, setProfileError] = useState(null); // surfaces to App.jsx
 
   useEffect(() => {
     if (!user) {
@@ -18,8 +19,16 @@ export const useProfile = (user) => {
       .from('profiles')
       .select('*')
       .eq('stytch_user_id', user.user_id)
-      .single()
+      .maybeSingle()                         // maybeSingle() returns null (not error) when no row found
       .then(async ({ data, error }) => {
+        if (error) {
+          // Supabase fetch failed — surface so user sees an error instead of infinite spinner
+          console.error('useProfile: failed to fetch profile', error);
+          setProfileError('Could not load your profile. Please refresh or contact support.');
+          setLoading(false);
+          return;
+        }
+
         if (data) {
           setProfile(data);
           setLoading(false);
@@ -37,8 +46,13 @@ export const useProfile = (user) => {
             })
             .select()
             .single();
-          if (newProfile) setProfile(newProfile);
-          if (insertError) console.error('useProfile: failed to create profile', insertError);
+          if (newProfile) {
+            setProfile(newProfile);
+          } else {
+            // INSERT failed — user would be stuck at spinner forever without this
+            console.error('useProfile: failed to create profile', insertError);
+            setProfileError('Could not set up your account. Please refresh or contact support.');
+          }
           setLoading(false);
         }
       });
@@ -56,5 +70,5 @@ export const useProfile = (user) => {
     return { data, error };
   };
 
-  return { profile, loading, updateProfile, setProfile };
+  return { profile, loading, profileError, updateProfile, setProfile };
 };

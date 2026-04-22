@@ -144,7 +144,7 @@ const EmailVerificationPending = ({ email, onSignOut }) => (
 // ── Inner app — needs router context so useNavigate works ─────────────────────
 function AppInner({ session, user, loading: authLoading, signOut }) {
   const navigate = useNavigate();
-  const { profile, loading: profileLoading, updateProfile } = useProfile(user);
+  const { profile, loading: profileLoading, profileError, updateProfile } = useProfile(user);
   const [preselectedAgent, setPreselectedAgent] = useState(null);
 
   // Detect Stytch URL tokens — must be checked BEFORE loading gate
@@ -166,9 +166,32 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
   // Not authenticated
   if (!session) return <LoginPage />;
 
-  // Session exists but profile is null — Supabase INSERT may have failed (RLS) or is
-  // still in-flight. Hold at a spinner rather than falling through to the main app
-  // without a profile, which would crash OnboardingFlow's useAppContext() call.
+  // Supabase profile fetch or create failed — show error instead of infinite spinner
+  if (profileError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#FAFAF9' }}>
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-2xl bg-red-50 border border-red-200 flex items-center justify-center mx-auto mb-4">
+            <span style={{ fontSize: 24 }}>⚠️</span>
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', fontWeight: 700, color: '#0C0A09', marginBottom: 8 }}>
+            Something went wrong
+          </h2>
+          <p style={{ fontSize: '0.875rem', color: 'rgba(12,10,9,0.55)', lineHeight: 1.6, marginBottom: 20 }}>
+            {profileError}
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{ background: '#f59e0b', color: '#0C0A09', fontWeight: 600, padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+          >
+            Refresh page
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Session exists but profile is null — still loading from Supabase
   if (!profile) return <FullScreenLoader />;
 
   // Authenticated but onboarding not complete → lock to /onboarding

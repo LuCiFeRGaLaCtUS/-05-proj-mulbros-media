@@ -41,21 +41,21 @@ export const IntegrationToggles = () => {
   };
 
   return (
-    <div className="relative bg-zinc-900 rounded-xl p-6 border border-amber-900/20 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-amber-950/15 via-zinc-900 to-zinc-950 pointer-events-none" />
-      <div className="absolute -top-4 -right-4 w-20 h-20 bg-amber-500/10 blur-xl rounded-full pointer-events-none" />
+    <div className="relative bg-white rounded-xl p-6 border border-zinc-200 overflow-hidden" style={{ boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div className="absolute inset-0 bg-gradient-to-br from-amber-50/30 via-white to-white pointer-events-none" />
+      <div className="absolute -top-4 -right-4 w-20 h-20 bg-amber-500/5 blur-xl rounded-full pointer-events-none" />
       <div className="relative z-10 space-y-2">
         {Object.entries(integrations).map(([name, connected]) => (
-          <div key={name} className="flex items-center justify-between p-4 bg-zinc-800/50 hover:bg-zinc-800/70 rounded-lg transition-all border border-transparent hover:border-amber-500/10">
+          <div key={name} className="flex items-center justify-between p-4 bg-zinc-50 hover:bg-zinc-100 rounded-lg transition-all border border-zinc-100 hover:border-amber-500/20">
             <div>
-              <div className="text-sm font-medium text-zinc-200">{name}</div>
+              <div className="text-sm font-medium text-zinc-900">{name}</div>
               <div className="text-xs text-zinc-500">{descriptions[name]}</div>
             </div>
             <button
               onClick={() => toggle(name)}
               aria-label={`${connected ? 'Disconnect' : 'Connect'} ${name}`}
               aria-pressed={connected}
-              className={`w-12 h-6 rounded-full transition-all ${connected ? 'bg-emerald-500' : 'bg-zinc-600'}`}
+              className={`w-12 h-6 rounded-full transition-all ${connected ? 'bg-emerald-500' : 'bg-zinc-200'}`}
             >
               <div className={`w-5 h-5 bg-white rounded-full transition-all shadow ${connected ? 'translate-x-6' : 'translate-x-0.5'}`} />
             </button>

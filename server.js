@@ -65,9 +65,11 @@ const ALLOWED_MODELS = new Set([
   'gpt-4o',
   'gpt-4o-mini',
   'gpt-4o-search-preview',      // built-in web search
-  // Anthropic — use confirmed API model IDs
+  // Anthropic — confirmed valid model IDs only
+  'claude-opus-4-5',
+  'claude-sonnet-4-5',
+  'claude-haiku-4-5',
   'claude-3-5-sonnet-20241022',
-  'claude-3-7-sonnet-20250219',
   'claude-3-opus-20240229',
   'claude-3-5-haiku-20241022',
 ]);

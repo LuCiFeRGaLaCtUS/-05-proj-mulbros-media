@@ -95,7 +95,14 @@ export const Settings = ({ user }) => {
                 <div className="text-xs text-zinc-500">{item.description}</div>
               </div>
               <button
-                onClick={() => { setNotifications(prev => ({ ...prev, [item.key]: !prev[item.key] })); setIsDirty(true); }}
+                onClick={() => {
+                  setNotifications(prev => {
+                    const next = { ...prev, [item.key]: !prev[item.key] };
+                    saveSettings(settings, next); // auto-persist immediately on toggle
+                    return next;
+                  });
+                  setIsDirty(true);
+                }}
                 className={`w-12 h-6 rounded-full transition-all ${notifications[item.key] ? 'bg-emerald-500' : 'bg-zinc-200'}`}
               >
                 <div className={`w-5 h-5 bg-white rounded-full transition-all shadow ${notifications[item.key] ? 'translate-x-6' : 'translate-x-0.5'}`} />
