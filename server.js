@@ -64,11 +64,20 @@ const stytchClient = (process.env.STYTCH_PROJECT_ID && process.env.STYTCH_SECRET
     })
   : null;
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const requireAuth = async (req, res, next) => {
+  // Dev fallback: if Stytch backend creds not configured, allow through with a
+  // synthetic user so local/dev testing works. Production still fails closed.
   if (!stytchClient) {
-    return res.status(503).json({
-      error: { message: 'Auth not configured on server (STYTCH_PROJECT_ID / STYTCH_SECRET missing).' },
-    });
+    if (isProduction) {
+      return res.status(503).json({
+        error: { message: 'Auth not configured on server (STYTCH_PROJECT_ID / STYTCH_SECRET missing).' },
+      });
+    }
+    console.warn('[requireAuth] Stytch backend not configured — allowing request in non-production mode.');
+    req.stytchUser = { userId: 'dev-unauthenticated', sessionId: 'dev' };
+    return next();
   }
   const token = (req.headers['x-stytch-session-token'] || '').toString().trim()
              || (req.headers['x-stytch-session-jwt']   || '').toString().trim();
