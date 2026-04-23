@@ -92,6 +92,29 @@ export const callApifyReddit = (query, subreddits) =>
     { timeoutMs: 75_000, headers: getStytchAuthHeaders() },
   );
 
+/**
+ * OpenAI web search via Responses API + web_search_preview tool.
+ * Model auto-decides whether to search. Works with gpt-4o / gpt-4o-mini.
+ * Returns { text, citations: [{url, title}], source: 'openai-web-search' }.
+ */
+export const callAISearch = (input, system, model = MODELS.primary) =>
+  postJson(
+    '/api/ai-search',
+    { input, system, model },
+    { timeoutMs: 50_000, headers: getStytchAuthHeaders() },
+  );
+
+/** Format OpenAI web-search output into an LLM context block */
+export const formatWebSearchResults = ({ text, citations = [], query }) => {
+  if (!text) {
+    return `[OpenAI Web Search — "${query}"]\nNo results returned.\n[End Search Data]`;
+  }
+  const citeBlock = citations.length
+    ? '\n\nCitations:\n' + citations.map((c, i) => `[${i + 1}] ${c.title || c.url} — ${c.url}`).join('\n')
+    : '';
+  return `[Live Web Search via OpenAI — "${query}"]\n\n${text}${citeBlock}\n\n[End Search Data — Use ONLY this real data. Do NOT invent sources.]`;
+};
+
 // Keep callRedditSearch as alias → now points to Firecrawl
 export const callRedditSearch = callFirecrawlSearch;
 

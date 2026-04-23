@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
-import { Send, Loader2, Zap, Cpu, RotateCcw, Search } from 'lucide-react';
+import { Send, Loader2, Zap, Cpu, RotateCcw, Search, Globe, MessageCircle } from 'lucide-react';
 import { AgentSelector } from './AgentSelector';
 import { ChatMessage, TypingIndicator } from './ChatMessage';
 import { SuggestedPrompts } from './SuggestedPrompts';
 import { getAgentById } from '../../config/agents';
-import { callAI, getApiKey, callRedditSearch, formatRedditResults } from '../../utils/ai';
+import { callAI, getApiKey, callApifyReddit, callFirecrawlSearch, formatRedditResults, callAISearch } from '../../utils/ai';
 import { verticalColors } from '../../config/verticalColors';
 import { useAgentChats } from '../../hooks/useAgentChats';
 import { logger } from '../../lib/logger';
@@ -18,6 +18,8 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
   const [selectedAgent, setSelectedAgent] = useState(preselectedAgentId || 'film-financing-discovery');
   const [input, setInput]                 = useState('');
   const [isLoading, setIsLoading]         = useState(false);
+  // 'reddit' → Apify Reddit scrape · 'web' → OpenAI general web search · 'off' → no search
+  const [searchMode, setSearchMode] = useState(() => sessionStorage.getItem('agentchat.searchMode') || 'reddit');
   const messagesEndRef = useRef(null);
 
   const agent = getAgentById(selectedAgent) || getAgentById('film-financing-discovery');
@@ -25,6 +27,17 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
 
   const { profile } = useAppContext();
   const { messages, addMessage, clearHistory } = useAgentChats(profile?.id, selectedAgent);
+
+  useEffect(() => {
+    sessionStorage.setItem('agentchat.searchMode', searchMode);
+  }, [searchMode]);
+
+  // Auto-switch to 'web' if the selected agent has no subreddits configured
+  useEffect(() => {
+    if (searchMode === 'reddit' && agent?.searchEnabled && !agent.searchSubreddits) {
+      setSearchMode('web');
+    }
+  }, [agent?.id, agent?.searchEnabled, agent?.searchSubreddits, searchMode]);
 
   useEffect(() => {
     if (preselectedAgentId && preselectedAgentId !== selectedAgent) {
@@ -51,39 +64,121 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
     await addMessage('user', userContent);
 
     try {
+      // Client-side key optional — server injects its own from env when present.
+      // Proxy returns 401 only when BOTH server and client keys are missing.
       const apiKey = getApiKey(agent.model);
-      if (!apiKey) {
-        throw new Error('No API key configured. Go to Settings → API Keys and paste your OpenAI key.');
-      }
 
       // Build message history
       const apiMessages = [...messages, { role: 'user', content: userContent }]
         .map(({ role, content }) => ({ role, content }));
 
-      // ── Search-enabled agents: inject Firecrawl results as context ───────────
-      if (agent.searchEnabled && agent.searchSubreddits) {
+      // ── Web mode: bypass agent persona, render search output directly ────────
+      // Prevents the agent LLM from re-narrating / fabricating on top of real results.
+      // IMPORTANT: agent.systemPrompt is often Reddit-scoped ("site:reddit.com…" queries).
+      // OpenAI web_search has shallow Reddit coverage → that prompt produces zero results.
+      // In web mode we use a broad research prompt that keeps the agent's *topic* (vertical)
+      // but drops any site restrictions so the search tool can hit news, gov, industry pubs.
+      if (agent.searchEnabled && searchMode === 'web') {
+        const today = new Date().toISOString().slice(0, 10);
+        const webPrompt = [
+          `You are the "${agent.name}" research agent inside MulBros Media OS (vertical: ${agent.vertical}).`,
+          `Topic focus: ${agent.description}.`,
+          `Today's date: ${today}.`,
+          '',
+          'BEHAVIOR:',
+          '- You MUST call the web_search tool to answer. Do not claim you searched if you did not.',
+          '- Run 2–4 different search queries. Vary the terms — try industry news, LinkedIn posts, filmmaker blogs, trade forums, YouTube interviews, Twitter/X threads, podcast transcripts. Not only Reddit.',
+          '- Only cite URLs the tool actually returned. Never fabricate URLs, names, quotes, or details.',
+          '- Stay in character as the named agent. Never identify as "SearchGPT", "an AI assistant", or any other persona.',
+          '',
+          'CRITICAL — WHEN USER ASKS FOR "N FILMMAKERS / PEOPLE / LEADS":',
+          '- Each item MUST be a NAMED INDIVIDUAL PERSON (real first + last name, or real username/handle), not a state program, a policy debate, a think-tank report, or a news organization.',
+          '- Each item MUST include: the person\'s name, their role (director/producer/etc), a direct paraphrase or quote of what THEY said about the topic, and the URL where you found it.',
+          '- Policy news ≠ filmmaker discussion. If the tool only returns state-program announcements and think-tank reports, do NOT pad them as "filmmakers discussing X". Report honestly: "Search returned N policy/news articles but no individual filmmaker discussions. Named people I could identify: [list actual count]."',
+          '- If user asked for 10 and you found 3 real named people with direct quotes, say "I found 3, not 10" — then list the 3. Honest < padded.',
+          '',
+          'OUTPUT FORMAT per lead:',
+          '**[N]. [Full Name] — [Role / company if known]**',
+          'Said: [direct quote or close paraphrase of their statement]',
+          'Source: [URL]',
+          'Date: [YYYY-MM-DD if known]',
+          '',
+          'If user asked for general research (not a list of people), give a concise sourced answer with inline links. Never pad.',
+        ].join('\n');
+        try {
+          const webData = await callAISearch(userContent, webPrompt);
+          const citeLines = (webData.citations || [])
+            .map((c, i) => `[${i + 1}] [${c.title || c.url}](${c.url})`)
+            .join('\n');
+          const rendered = citeLines
+            ? `${webData.text}\n\n---\n**Sources**\n${citeLines}`
+            : webData.text;
+          await addMessage('assistant', rendered);
+        } catch (aiErr) {
+          logger.warn('AgentChat.search.aiSearchUnavailable', {
+            message: aiErr.message,
+            status:  aiErr.status,
+          });
+          await addMessage(
+            'assistant',
+            `Web search produced no verified sources for: "${userContent}".\n\nReason: ${aiErr.message || 'upstream error'}.\n\nTry a more specific query, switch to **Reddit** mode, or disable search.`,
+          );
+        }
+        return; // skip /api/ai second pass
+      }
+
+      // ── Reddit mode: Firecrawl primary (fast, Google-indexed) → Apify fallback ──
+      if (agent.searchEnabled && searchMode === 'reddit' && agent.searchSubreddits) {
         const today = new Date().toLocaleDateString('en-US', {
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
         });
+        let searchContext = null;
+        let searchNote    = null;
+
+        const hasRealResults = (data) => Array.isArray(data?.posts) && data.posts.length > 0;
+
+        // Primary: Firecrawl (~2s, Google-indexed Reddit)
         try {
-          const searchData = await callRedditSearch(userContent, agent.searchSubreddits, 'year');
-          const searchContext = formatRedditResults(searchData);
-          const last = apiMessages[apiMessages.length - 1];
-          apiMessages[apiMessages.length - 1] = {
-            ...last,
-            content: `[Today is ${today}]\n\n${searchContext}\n\n---\n\nUser request: ${last.content}`,
-          };
-        } catch (searchErr) {
-          logger.warn('AgentChat.search.unavailable', {
-            message: searchErr.message,
-            status:  searchErr.status,
-            body:    searchErr.body,
+          const firecrawlData = await callFirecrawlSearch(userContent, agent.searchSubreddits);
+          if (hasRealResults(firecrawlData)) {
+            searchContext = formatRedditResults(firecrawlData);
+          } else {
+            throw new Error('Firecrawl returned 0 results');
+          }
+        } catch (firecrawlErr) {
+          logger.warn('AgentChat.search.firecrawlUnavailable', {
+            message: firecrawlErr.message,
+            status:  firecrawlErr.status,
           });
-          // Inject date only — tell agent search is unavailable so it doesn't hallucinate
-          const last = apiMessages[apiMessages.length - 1];
+          // Fallback: Apify deep scrape (~40s, headless browser)
+          try {
+            const apifyData = await callApifyReddit(userContent, agent.searchSubreddits);
+            if (hasRealResults(apifyData)) {
+              searchContext = formatRedditResults(apifyData);
+              searchNote = 'Search via Apify (Firecrawl unavailable)';
+            } else {
+              throw new Error('Apify returned 0 results');
+            }
+          } catch (apifyErr) {
+            logger.warn('AgentChat.search.apifyUnavailable', {
+              message: apifyErr.message,
+              status:  apifyErr.status,
+            });
+            searchNote = 'Reddit scrape returned no data (both Firecrawl and Apify)';
+          }
+        }
+
+        const last = apiMessages[apiMessages.length - 1];
+        if (searchContext) {
+          const prefix = searchNote ? `[Note: ${searchNote}]\n\n` : '';
           apiMessages[apiMessages.length - 1] = {
             ...last,
-            content: `[Today is ${today}. Live search unavailable — do NOT invent usernames, URLs, or project details. Inform the user you could not retrieve live data.]\n\n${last.content}`,
+            content: `[Today is ${today}]\n\n${prefix}${searchContext}\n\n---\n\nUser request: ${last.content}`,
+          };
+        } else {
+          apiMessages[apiMessages.length - 1] = {
+            ...last,
+            content: `[Today is ${today}. ${searchNote} — do NOT invent usernames, URLs, or post details. Tell the user the scrape returned nothing and suggest switching to Web mode.]\n\n${last.content}`,
           };
         }
       }
@@ -258,6 +353,42 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
           <div className="absolute top-0 left-4 right-4 h-px"
             style={{ background: `linear-gradient(to right, transparent, ${vc.neon}20, transparent)` }} />
 
+          {/* Search-mode toggle — only for search-enabled agents */}
+          {agent.searchEnabled && (
+            <div className="max-w-3xl mx-auto w-full mb-2 flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500">Search mode:</span>
+              <div className="inline-flex rounded-lg border border-zinc-200 bg-white overflow-hidden" role="radiogroup" aria-label="Search mode">
+                {[
+                  { id: 'reddit', label: 'Reddit', Icon: MessageCircle, disabled: !agent.searchSubreddits },
+                  { id: 'web',    label: 'Web (OpenAI)',   Icon: Globe,         disabled: false },
+                  { id: 'off',    label: 'No search',      Icon: Cpu,           disabled: false },
+                ].map(({ id, label, Icon, disabled }) => {
+                  const active = searchMode === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      role="radio"
+                      aria-checked={active}
+                      disabled={disabled || isLoading}
+                      onClick={() => setSearchMode(id)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{
+                        background: active ? `${vc.neon}18` : 'transparent',
+                        color:      active ? vc.ink        : 'rgba(0,0,0,0.60)',
+                        borderRight: id !== 'off' ? '1px solid rgba(0,0,0,0.08)' : 'none',
+                      }}
+                      title={disabled ? 'This agent has no Reddit subreddits configured' : label}
+                    >
+                      <Icon size={11} />
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-3 max-w-3xl mx-auto w-full">
             <div className="flex-1 relative">
               <textarea
@@ -311,11 +442,11 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
 
           <div className="flex items-center justify-center gap-3 mt-2">
             <div className="flex items-center gap-1">
-              {isLoading && agent.searchEnabled ? (
+              {isLoading && agent.searchEnabled && searchMode !== 'off' ? (
                 <>
                   <Search size={9} style={{ color: vc.ink }} className="animate-pulse" />
                   <span className="text-xs font-mono" style={{ color: vc.ink }}>
-                    Searching Reddit via Firecrawl…
+                    {searchMode === 'reddit' ? 'Searching Reddit (Firecrawl → Apify)…' : 'Searching web via OpenAI…'}
                   </span>
                 </>
               ) : (

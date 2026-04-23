@@ -244,6 +244,74 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
   }
 });
 
+// ── OpenAI web-search proxy (Responses API) ──────────────────────────────────
+// Uses the built-in `web_search_preview` tool. Model decides whether to search.
+// Returns { text, citations[], raw }. Used as fallback when Firecrawl is down.
+app.post('/api/ai-search', aiLimiter, async (req, res) => {
+  const { model = 'gpt-4o', input, system } = req.body || {};
+
+  if (!input || typeof input !== 'string' || input.trim().length === 0) {
+    return res.status(400).json({ error: { message: 'input must be a non-empty string.' } });
+  }
+  if (!['gpt-4o', 'gpt-4o-mini'].includes(model)) {
+    return res.status(400).json({ error: { message: 'model must be gpt-4o or gpt-4o-mini.' } });
+  }
+
+  const serverKey = process.env.OPENAI_API_KEY;
+  const clientKey = (req.headers['authorization'] || '').replace('Bearer ', '').trim();
+  const apiKeyVal = serverKey || clientKey;
+  if (!apiKeyVal) {
+    return res.status(401).json({ error: { message: 'No OpenAI key configured.' } });
+  }
+
+  const controller = new AbortController();
+  const timeout    = setTimeout(() => controller.abort(), 60_000);
+
+  try {
+    const forceSearch = req.body?.forceSearch !== false;  // default: force (user explicitly picked web mode)
+    const today       = new Date().toISOString().slice(0, 10);
+    const guard = `Today is ${today}. RULES: (1) Stay in character as defined above — never identify as "SearchGPT", "an AI assistant", or any other persona. (2) You MUST call the web_search tool for this query. Do not claim you searched if you did not. (3) Only cite URLs the tool actually returned. Never fabricate URLs, usernames, or post details. (4) If the tool returns nothing useful, state exactly that — do not list generic resources as a substitute.`;
+    const r = await fetch('https://api.openai.com/v1/responses', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKeyVal}` },
+      body:    JSON.stringify({
+        model,
+        tools: [{
+          type: 'web_search_preview',
+          search_context_size: 'high',   // deeper result set — beats default 'medium' on niche queries
+        }],
+        ...(forceSearch ? { tool_choice: { type: 'web_search_preview' } } : { tool_choice: 'auto' }),
+        instructions: system ? `${system}\n\n${guard}` : guard,
+        input,
+      }),
+      signal: controller.signal,
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      return res.status(r.status).json({ error: { message: data.error?.message || `OpenAI error ${r.status}` } });
+    }
+
+    const outputs     = Array.isArray(data.output) ? data.output : [];
+    const contentArr  = outputs.flatMap(o => Array.isArray(o.content) ? o.content : []);
+    const text        = contentArr.filter(c => c.type === 'output_text').map(c => c.text).join('\n');
+    const citations   = contentArr
+      .flatMap(c => Array.isArray(c.annotations) ? c.annotations : [])
+      .filter(a => a.type === 'url_citation')
+      .map(a => ({ url: a.url, title: a.title || a.url, start: a.start_index, end: a.end_index }));
+
+    res.json({ text, citations, source: 'openai-web-search' });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      res.status(504).json({ error: { message: 'Web search timed out. Try a simpler query.' } });
+    } else {
+      console.error('AI search proxy error:', err.message);
+      res.status(500).json({ error: { message: 'Web search failed. Try again.' } });
+    }
+  } finally {
+    clearTimeout(timeout);
+  }
+});
+
 // ── Health check ──────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.0.0', timestamp: new Date().toISOString() });
@@ -369,7 +437,7 @@ app.post('/api/firecrawl-search', requireAuth, firecrawlPerUser, firecrawlLimite
     return res.status(400).json({ error: { message: 'query must be a non-empty string.' } });
   }
 
-  const apiKey = process.env.FIRECRAWL_API_KEY;
+  const apiKey = process.env.Personal_Free_FIRECRAWL_API_KEY || process.env.FIRECRAWL_API_KEY;
   if (!apiKey) {
     return res.status(503).json({ error: { message: 'Firecrawl not configured (FIRECRAWL_API_KEY missing).' } });
   }
@@ -437,7 +505,8 @@ app.post('/api/firecrawl-search', requireAuth, firecrawlPerUser, firecrawlLimite
 });
 
 // ── Apify Reddit scraper proxy ────────────────────────────────────────────────
-// Uses apify/reddit-scraper (headless browser, ~30–60s). Secondary/fallback path.
+// Uses trudax/reddit-scraper-lite by default (override via APIFY_REDDIT_ACTOR).
+// Headless browser, ~30–60s. Secondary/fallback path when Firecrawl unavailable.
 const apifyLimiter = rateLimit({
   windowMs:        60_000,
   max:             5,
@@ -462,26 +531,34 @@ app.post('/api/apify-reddit', requireAuth, apifyPerUser, apifyLimiter, async (re
     return res.status(503).json({ error: { message: 'Apify not configured (APIFY_API_TOKEN missing).' } });
   }
 
-  const actorUrl = `https://api.apify.com/v2/acts/apify~reddit-scraper/run-sync-get-dataset-items?token=${token}&timeout=60&memory=512`;
+  const slug = process.env.APIFY_REDDIT_ACTOR || 'trudax~reddit-scraper-lite';
+  const actorUrl = `https://api.apify.com/v2/acts/${slug}/run-sync-get-dataset-items?token=${token}&timeout=60&memory=512`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 70_000);
+
+  const input = {
+    searches:          [query.trim()],
+    searchPosts:       true,
+    searchCommunities: false,
+    searchUsers:       false,
+    searchComments:    false,
+    maxItems:          Math.min(Number(limit) || 10, 20),
+    time:              'week',
+    sort:              'relevance',
+    includeNSFW:       false,
+    proxy:             { useApifyProxy: true, apifyProxyGroups: ['RESIDENTIAL'] },
+  };
+  // Scope to a single subreddit if caller passes exactly one
+  if (Array.isArray(subreddits) && subreddits.length === 1) {
+    input.searchCommunityName = subreddits[0];
+  }
 
   try {
     const response = await fetch(actorUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        searches: subreddits.map(s => ({
-          type:      'community',
-          community: s,
-          query:     query.trim(),
-          sort:      'relevance',
-          time:      'year',
-          limit:     Math.ceil(limit / subreddits.length),
-        })),
-        maxItems: Math.min(Number(limit) || 10, 20),
-      }),
+      body: JSON.stringify(input),
       signal: controller.signal,
     });
 
@@ -493,12 +570,12 @@ app.post('/api/apify-reddit', requireAuth, apifyPerUser, apifyLimiter, async (re
     const items = await response.json();
 
     const posts = items.map(item => ({
-      subreddit:   item.community   || item.subreddit || 'reddit',
-      author:      item.username    || item.author    || 'unknown',
-      title:       item.title       || '',
+      subreddit:   item.communityName || item.community || item.subreddit || 'reddit',
+      author:      item.username      || item.author    || 'unknown',
+      title:       item.title         || '',
       content:     (item.body || item.text || '').slice(0, 1200),
-      url:         item.url         || `https://reddit.com/r/${item.community}/comments/${item.id}`,
-      score:       item.upVotes     || item.score       || 0,
+      url:         item.url           || `https://reddit.com/r/${item.communityName || item.community}/comments/${item.id}`,
+      score:       item.upVotes       || item.score       || 0,
       numComments: item.numberOfComments || item.numComments || 0,
       created:     item.createdAt
                      ? new Date(item.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })

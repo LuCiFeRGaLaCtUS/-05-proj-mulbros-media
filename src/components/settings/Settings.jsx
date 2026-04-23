@@ -3,14 +3,15 @@ import toast from 'react-hot-toast';
 import { APIKeyManager } from './APIKeyManager';
 import { IntegrationToggles } from './IntegrationToggles';
 import { TeamManager } from './TeamManager';
+import { ProfileTab } from './ProfileTab';
 import { useUserSettings } from '../../hooks/useUserSettings';
 import { useAppContext } from '../../App';
 
-const tabs = ['General', 'API Keys', 'Integrations', 'Team', 'Notifications'];
+const tabs = ['Profile', 'General', 'API Keys', 'Integrations', 'Team', 'Notifications'];
 
 export const Settings = ({ user }) => {
   const { profile } = useAppContext();
-  const [activeTab, setActiveTab] = useState('general');
+  const [activeTab, setActiveTab] = useState('profile');
   const [isDirty, setIsDirty] = useState(false);
 
   const {
@@ -74,6 +75,7 @@ export const Settings = ({ user }) => {
         </div>
       )}
 
+      {activeTab === 'profile'       && <ProfileTab />}
       {activeTab === 'api-keys'      && <APIKeyManager />}
       {activeTab === 'integrations'  && <IntegrationToggles />}
       {activeTab === 'team'          && <TeamManager />}
@@ -114,16 +116,18 @@ export const Settings = ({ user }) => {
         </div>
       )}
 
-      <div className="flex justify-end">
-        <button
-          onClick={handleSave}
-          className={`font-semibold rounded-lg px-6 py-3 transition-all text-sm ${
-            isDirty ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-zinc-100 text-zinc-600 border border-zinc-200 cursor-not-allowed'
-          }`}
-        >
-          Save Changes
-        </button>
-      </div>
+      {activeTab !== 'profile' && activeTab !== 'api-keys' && activeTab !== 'integrations' && activeTab !== 'team' && (
+        <div className="flex justify-end">
+          <button
+            onClick={handleSave}
+            className={`font-semibold rounded-lg px-6 py-3 transition-all text-sm ${
+              isDirty ? 'bg-amber-500 hover:bg-amber-600 text-white' : 'bg-zinc-100 text-zinc-600 border border-zinc-200 cursor-not-allowed'
+            }`}
+          >
+            Save Changes
+          </button>
+        </div>
+      )}
     </div>
   );
 };
