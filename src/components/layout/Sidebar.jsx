@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, MessageSquare, Clapperboard, Film, Music2, Piano,
   Drama, ScrollText, Camera, Palette, BookOpen, Building2,
   Settings, CalendarDays, Activity, ChevronRight, Shield, Film as FilmIcon,
+  Receipt, FileText, DollarSign, Users,
 } from 'lucide-react';
 import { agents } from '../../config/agents';
 import { VERTICALS } from '../../config/verticals';
@@ -99,11 +100,55 @@ const NavButton = ({ label, icon: Icon, isActive, onClick, activeAccent = '#f59e
   </button>
 );
 
+// ── Vertical-button renderer (extracted so sidebar can reuse in filtered + full lists) ──
+const renderVerticalButton = (v, pathname, go) => {
+  const Icon     = ICON_MAP[v.icon] || Clapperboard;
+  const c        = colorMap[v.color] || colorMap.emerald;
+  const path     = `/vertical/${v.id}`;
+  const isActive = pathname.startsWith(path);
+  return (
+    <button
+      key={v.id}
+      onClick={() => go(path)}
+      aria-current={isActive ? 'page' : undefined}
+      className={`relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-200 group overflow-hidden ${
+        isActive ? c.activeText : `text-zinc-600 ${c.hoverText}`
+      }`}
+      style={isActive ? { boxShadow: c.glowStyle } : undefined}
+    >
+      {isActive && (
+        <div className={`absolute left-0 top-2 bottom-2 w-0.5 rounded-full ${c.dot}`}
+          style={{ boxShadow: '0 0 8px currentColor' }} />
+      )}
+      {!isActive && (
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity"
+          style={{ background: 'rgba(0,0,0,0.025)' }} />
+      )}
+      <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all ${
+        isActive ? c.iconBg : 'bg-black/[0.04] group-hover:bg-black/[0.07]'
+      }`}>
+        <Icon size={14} className={isActive ? c.iconText : ''} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold leading-snug truncate">{v.label}</div>
+        <div className="text-[11px] mt-0.5 tracking-[0.12em]"
+          style={{ color: 'rgba(0,0,0,0.62)', fontFamily: 'var(--font-mono)' }}>
+          {v.sub}
+        </div>
+      </div>
+      {isActive && (
+        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot} animate-cyan-pulse`} />
+      )}
+    </button>
+  );
+};
+
 /* ── Main Sidebar ──────────────────────────────────────────────────────────── */
 export const Sidebar = ({ profile, onClose }) => {
   const navigate  = useNavigate();
   const location  = useLocation();
   const pathname  = location.pathname;
+  const [showAllVerticals, setShowAllVerticals] = useState(false);
 
   const go = (path) => {
     navigate(path);
@@ -181,8 +226,39 @@ export const Sidebar = ({ profile, onClose }) => {
 
         <HudDivider label="Verticals" />
 
-        {/* All 9 verticals — shown to everyone for testing */}
-        {VERTICALS.map(v => {
+        {(() => {
+          // Profile-driven sidebar filter: show user's selected vertical(s) by default.
+          // "+ more" disclosure reveals the rest. If no profile vertical set → show all.
+          const userVertical = profile?.vertical;
+          const hasUserVertical = userVertical && VERTICALS.some(v => v.id === userVertical);
+          const visible = !hasUserVertical || showAllVerticals
+            ? VERTICALS
+            : VERTICALS.filter(v => v.id === userVertical);
+          return (
+            <>
+              {visible.map(v => renderVerticalButton(v, pathname, go))}
+              {hasUserVertical && !showAllVerticals && (
+                <button
+                  onClick={() => setShowAllVerticals(true)}
+                  className="relative w-full flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-500 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                >
+                  + show all verticals
+                </button>
+              )}
+              {hasUserVertical && showAllVerticals && (
+                <button
+                  onClick={() => setShowAllVerticals(false)}
+                  className="relative w-full flex items-center justify-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-500 hover:text-amber-700 hover:bg-amber-50 transition-all"
+                >
+                  − collapse to my vertical
+                </button>
+              )}
+            </>
+          );
+        })()}
+
+        {/* legacy render block — kept no-op to preserve downstream sections */}
+        {false && VERTICALS.map(v => {
           const Icon     = ICON_MAP[v.icon] || Clapperboard;
           const c        = colorMap[v.color] || colorMap.emerald;
           const path     = `/vertical/${v.id}`;
@@ -283,6 +359,40 @@ export const Sidebar = ({ profile, onClose }) => {
           onClick={() => go('/agents')}
           activeAccent="#22d3ee"
           chip="AI"
+        />
+
+        <NavButton
+          label="CRM"
+          icon={Users}
+          isActive={pathname === '/crm'}
+          onClick={() => go('/crm')}
+          activeAccent="#f59e0b"
+        />
+
+        <HudDivider label="Business" />
+
+        <NavButton
+          label="Invoices"
+          icon={Receipt}
+          isActive={pathname === '/invoices'}
+          onClick={() => go('/invoices')}
+          activeAccent="#d97706"
+        />
+
+        <NavButton
+          label="Contracts"
+          icon={FileText}
+          isActive={pathname === '/contracts'}
+          onClick={() => go('/contracts')}
+          activeAccent="#d97706"
+        />
+
+        <NavButton
+          label="Payments"
+          icon={DollarSign}
+          isActive={pathname === '/payments'}
+          onClick={() => go('/payments')}
+          activeAccent="#10b981"
         />
 
         <NavButton

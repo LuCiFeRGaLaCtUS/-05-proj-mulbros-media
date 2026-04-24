@@ -8,7 +8,7 @@ import { callAI, getApiKey } from '../../utils/ai';
 const agentMap = {
   'Last County (Film)': 'last-county-distribution',  // fix: was 'distribution-marketing' (non-existent)
   'Talise (Artist)': 'talise-marketing',
-  'Luke Mulholland (Composer)': 'luke-sales',
+  'Composer': 'composer-sales',
   'Community (Newsletter)': 'community-manager'
 };
 

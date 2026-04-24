@@ -14,32 +14,32 @@ export const useAgentChats = (userId, agentId) => {
   const [messages, setMessages] = useState([]);
   const [loading,  setLoading]  = useState(true);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!userId || !agentId) return;
     setLoading(true);
     setMessages([]);
-    supabase
+    const { data, error } = await supabase
       .from('agent_chats')
       .select('*')
       .eq('user_id', userId)
       .eq('agent_id', agentId)
-      .order('created_at')
-      .then(({ data, error }) => {
-        if (error) {
-          logger.error('useAgentChats.load.failed', error);
-          toast.error('Could not load chat history.');
-        }
-        setMessages(
-          (data || []).map(row => ({
-            role:      row.role,
-            content:   row.content,
-            timestamp: formatTime(row.created_at),
-            _id:       row.id,
-          }))
-        );
-        setLoading(false);
-      });
+      .order('created_at');
+    if (error) {
+      logger.error('useAgentChats.load.failed', error);
+      toast.error('Could not load chat history.');
+    }
+    setMessages(
+      (data || []).map(row => ({
+        role:      row.role,
+        content:   row.content,
+        timestamp: formatTime(row.created_at),
+        _id:       row.id,
+      })),
+    );
+    setLoading(false);
   }, [userId, agentId]);
+
+  useEffect(() => { load(); }, [load]);
 
   const addMessage = useCallback(async (role, content) => {
     const tempId = genTempId();

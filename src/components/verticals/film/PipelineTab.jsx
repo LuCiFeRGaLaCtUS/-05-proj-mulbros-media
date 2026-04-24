@@ -4,6 +4,7 @@ import {
   useDraggable, useDroppable,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { Clock, GripVertical } from 'lucide-react';
 import { STAGES, stageColorMap } from './constants';
 
@@ -131,7 +132,7 @@ export const PipelineTab = ({ pipeline, setPipeline }) => {
       </div>
 
       {/* Ghost card overlay */}
-      <DragOverlay>
+      <DragOverlay modifiers={[snapCenterToCursor]}>
         {draggedCard ? (
           <div
             className="rounded-xl bg-white p-3 shadow-lg rotate-1 scale-105 opacity-95"

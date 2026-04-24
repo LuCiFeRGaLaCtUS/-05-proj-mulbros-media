@@ -10,7 +10,8 @@ export const useProfile = (user) => {
 
   useEffect(() => {
     if (!user) {
-      setProfile(null);
+      // Only reset if currently holding stale state — avoids cascade on mount
+      setProfile(prev => (prev === null ? prev : null));
       setLoading(false);
       return;
     }
@@ -56,7 +57,7 @@ export const useProfile = (user) => {
           setLoading(false);
         }
       });
-  }, [user?.user_id]);
+  }, [user?.user_id, user]);
 
   const updateProfile = async (updates) => {
     if (!user) return { data: null, error: new Error('No user') };

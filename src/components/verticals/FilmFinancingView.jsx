@@ -6,6 +6,7 @@ import { kpis, financingActivities } from './film/constants';
 import { LeadGenTab } from './film/LeadGenTab';
 import { IncentiveAnalystTab } from './film/IncentiveAnalystTab';
 import { PipelineTab } from './film/PipelineTab';
+import { TiltCard } from '../ui/TiltCard';
 
 const TABS = ['Lead Gen', 'Incentive Analyst', 'Pipeline', 'Activity'];
 
@@ -32,8 +33,9 @@ export const FilmFinancingView = ({ user }) => {
   return (
     <div className="space-y-5">
       {/* Page header */}
-      <div
-        className="relative overflow-hidden tile-pop bg-white rounded-2xl p-5"
+      <TiltCard
+        tiltLimit={6} scale={1.015} perspective={1400}
+        className="tile-pop bg-white rounded-2xl p-5"
         style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-transparent to-transparent pointer-events-none" />
@@ -55,7 +57,7 @@ export const FilmFinancingView = ({ user }) => {
             Vertical A
           </span>
         </div>
-      </div>
+      </TiltCard>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,8 +1,14 @@
 import React from 'react';
 import { Film, Play, ArrowRight } from 'lucide-react';
+import { agents as allAgents } from '../../../config/agents';
+import { TiltCard } from '../../ui/TiltCard';
 
-export const WelcomeMark = ({ onGoToAgents }) => (
-  <div className="tile-pop relative bg-white rounded-2xl overflow-hidden h-full"
+export const WelcomeMark = ({ onGoToAgents }) => {
+  const activeCount = allAgents.filter(a => a.status === 'active').length;
+  return (
+  <TiltCard
+    tiltLimit={6} scale={1.015} perspective={1400}
+    className="tile-pop bg-white rounded-2xl h-full"
     style={{
       minHeight: 290,
       border: '1px solid rgba(0,0,0,0.07)',
@@ -38,7 +44,7 @@ export const WelcomeMark = ({ onGoToAgents }) => (
         </h2>
         <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">
           Your AI-powered Hollywood OS is live.<br />
-          <span className="text-amber-600 font-semibold">9 agents</span> active ·{' '}
+          <span className="text-amber-600 font-semibold">{activeCount} agents</span> active ·{' '}
           <span className="text-blue-600 font-semibold">$214K</span> pipeline ·{' '}
           <span className="text-emerald-600 font-semibold">3 verticals</span>
         </p>
@@ -63,5 +69,6 @@ export const WelcomeMark = ({ onGoToAgents }) => (
         <ArrowRight size={13} className="group-hover/btn:translate-x-0.5 transition-transform" />
       </button>
     </div>
-  </div>
-);
+  </TiltCard>
+  );
+};

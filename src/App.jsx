@@ -17,6 +17,17 @@ const FilmFinancingView = lazy(() => import('./components/verticals/FilmFinancin
 const ProductionsView   = lazy(() => import('./components/verticals/ProductionsView').then(m => ({ default: m.ProductionsView })));
 const MusicView         = lazy(() => import('./components/verticals/MusicView').then(m => ({ default: m.MusicView })));
 const CalendarView      = lazy(() => import('./components/verticals/CalendarView').then(m => ({ default: m.CalendarView })));
+const CrewView          = lazy(() => import('./components/verticals/CrewView').then(m => ({ default: m.CrewView })));
+const ComposerView      = lazy(() => import('./components/verticals/ComposerView').then(m => ({ default: m.ComposerView })));
+const ActorView         = lazy(() => import('./components/verticals/ActorView').then(m => ({ default: m.ActorView })));
+const ScreenwriterView  = lazy(() => import('./components/verticals/ScreenwriterView').then(m => ({ default: m.ScreenwriterView })));
+const ArtistView        = lazy(() => import('./components/verticals/ArtistView').then(m => ({ default: m.ArtistView })));
+const WriterView        = lazy(() => import('./components/verticals/WriterView').then(m => ({ default: m.WriterView })));
+const ArtsOrgView       = lazy(() => import('./components/verticals/ArtsOrgView').then(m => ({ default: m.ArtsOrgView })));
+const Invoices          = lazy(() => import('./components/backoffice/Invoices').then(m => ({ default: m.Invoices })));
+const Contracts         = lazy(() => import('./components/backoffice/Contracts').then(m => ({ default: m.Contracts })));
+const Payments          = lazy(() => import('./components/backoffice/Payments').then(m => ({ default: m.Payments })));
+const CRMView           = lazy(() => import('./components/crm/CRMView').then(m => ({ default: m.CRMView })));
 const AgentChat         = lazy(() => import('./components/agents/AgentChat').then(m => ({ default: m.AgentChat })));
 const Settings          = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
 const OnboardingFlow    = lazy(() => import('./components/onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
@@ -272,13 +283,21 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               <Route path="/vertical/musician"     element={<MusicView onAgentClick={handleAgentClick} user={user} />} />
 
               {/* Future vertical placeholders (built in later days) */}
-              <Route path="/vertical/composer"     element={<ComingSoon label="Composer — coming soon" />} />
-              <Route path="/vertical/actor"        element={<ComingSoon label="Actor — coming soon" />} />
-              <Route path="/vertical/screenwriter" element={<ComingSoon label="Screenwriter — coming soon" />} />
-              <Route path="/vertical/crew"         element={<ComingSoon label="Film Crew — coming soon" />} />
-              <Route path="/vertical/artist"       element={<ComingSoon label="Visual Artist — coming soon" />} />
-              <Route path="/vertical/writer"       element={<ComingSoon label="Writer — coming soon" />} />
-              <Route path="/vertical/artsorg"      element={<ComingSoon label="Arts Organization — coming soon" />} />
+              <Route path="/vertical/composer"     element={<ComposerView />} />
+              <Route path="/vertical/actor"        element={<ActorView />} />
+              <Route path="/vertical/screenwriter" element={<ScreenwriterView />} />
+              <Route path="/vertical/crew"         element={<CrewView />} />
+              <Route path="/vertical/artist"       element={<ArtistView />} />
+              <Route path="/vertical/writer"       element={<WriterView />} />
+              <Route path="/vertical/artsorg"      element={<ArtsOrgView />} />
+
+              {/* Back-office */}
+              <Route path="/invoices"  element={<Invoices />} />
+              <Route path="/contracts" element={<Contracts />} />
+              <Route path="/payments"  element={<Payments />} />
+
+              {/* CRM */}
+              <Route path="/crm" element={<CRMView />} />
 
               {/* Legacy redirects — old activePage string IDs */}
               <Route path="/financing"   element={<Navigate to="/vertical/filmmaker"   replace />} />

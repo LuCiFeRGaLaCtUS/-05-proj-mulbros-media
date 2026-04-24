@@ -49,8 +49,10 @@ const syncToSupabase = async (userId, pipeline) => {
   if (rows.length > 0) {
     const { error: insErr } = await supabase.from('music_pipeline').insert(rows);
     if (insErr) {
+      logger.error('useMusicPipeline.insert.failed', insErr);
       if (snapshot && snapshot.length > 0) {
-        await supabase.from('music_pipeline').insert(snapshot).then(() => {}, () => {});
+        const restore = await supabase.from('music_pipeline').insert(snapshot);
+        if (restore.error) logger.error('useMusicPipeline.rollback.failed', restore.error);
       }
       throw insErr;
     }

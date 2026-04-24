@@ -6,6 +6,9 @@ import {
 } from 'lucide-react';
 import { agents } from '../../config/agents';
 import { campaigns, activities } from '../../config/mockData';
+import { NotificationBell } from './NotificationBell';
+import { useGlobalSearch } from '../../hooks/useGlobalSearch';
+import { useAppContext } from '../../App';
 
 // ── Page metadata — keyed by pathname prefix ──────────────────────────────────
 const PAGE_META = {
@@ -95,7 +98,10 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
     return [...matchedPages, ...matchedAgents, ...matchedCampaigns];
   };
 
-  const results = getSearchResults(searchQuery);
+  const staticResults    = getSearchResults(searchQuery);
+  const { profile }      = useAppContext();
+  const { results: live } = useGlobalSearch(searchQuery, profile?.id);
+  const results          = [...staticResults, ...live];
 
   const handleResultClick = (result) => {
     if (result.type === 'page') {
@@ -105,6 +111,8 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
       navigate('/agents');
     } else if (result.type === 'campaign') {
       navigate('/vertical/filmmaker');
+    } else if (result.link) {
+      navigate(result.link);
     }
     setSearchQuery('');
     setSearchOpen(false);
@@ -217,10 +225,14 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                 </div>
               ) : (
                 <div className="max-h-80 overflow-y-auto">
-                  {['page', 'agent', 'campaign'].map(type => {
+                  {['page', 'agent', 'campaign', 'chat', 'film', 'music', 'composer', 'crew', 'actor'].map(type => {
                     const group = results.filter(r => r.type === type);
                     if (!group.length) return null;
-                    const labels = { page: 'Pages', agent: 'Agents', campaign: 'Campaigns' };
+                    const labels = {
+                      page: 'Pages', agent: 'Agents', campaign: 'Campaigns',
+                      chat: 'Chat history', film: 'Film pipeline', music: 'Music pipeline',
+                      composer: 'Composer projects', crew: 'Crew applications', actor: 'Actor submissions',
+                    };
                     return (
                       <div key={type}>
                         <div className="px-3 py-2 text-[11px] font-black tracking-[0.25em] uppercase"
@@ -228,7 +240,7 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                           {labels[type]}
                         </div>
                         {group.map(r => (
-                          <button key={r.id || r.name} onClick={() => handleResultClick(r)}
+                          <button key={`${type}-${r.id || r.name}`} onClick={() => handleResultClick(r)}
                             className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-all"
                             style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}
                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(245,158,11,0.04)'}
@@ -238,9 +250,9 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                               <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${verticalColorMap[r.vertical] || 'bg-zinc-400'}`} />
                             )}
                             <div className="min-w-0">
-                              <div className="text-sm text-zinc-800 truncate">{r.name}</div>
-                              {r.description && (
-                                <div className="text-xs text-zinc-500 truncate">{r.description}</div>
+                              <div className="text-sm text-zinc-800 truncate">{r.name || r.title}</div>
+                              {(r.description || r.snippet) && (
+                                <div className="text-xs text-zinc-500 truncate">{r.description || r.snippet}</div>
                               )}
                             </div>
                           </button>
@@ -254,85 +266,8 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
           )}
         </div>
 
-        {/* Notification Bell */}
-        <div className="relative" ref={notifRef}>
-          <button
-            onClick={() => { setNotifOpen(o => !o); setProfileOpen(false); }}
-            aria-label="Notifications"
-            aria-expanded={notifOpen}
-            aria-haspopup="true"
-            className="relative p-2 rounded-xl transition-all"
-            style={{
-              background: notifOpen ? 'rgba(245,158,11,0.08)' : 'rgba(0,0,0,0.03)',
-              border: `1px solid ${notifOpen ? 'rgba(245,158,11,0.25)' : 'rgba(0,0,0,0.08)'}`,
-              color: notifOpen ? '#f59e0b' : 'rgba(0,0,0,0.40)',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(245,158,11,0.25)'; e.currentTarget.style.color = '#f59e0b'; }}
-            onMouseLeave={e => { if (!notifOpen) { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.08)'; e.currentTarget.style.color = 'rgba(0,0,0,0.40)'; }}}
-          >
-            <Bell size={17} />
-            {hasUnread && (
-              <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full"
-                style={{ background: '#f59e0b', boxShadow: '0 0 6px rgba(245,158,11,0.7)' }} />
-            )}
-          </button>
-
-          {notifOpen && (
-            <div className="absolute top-full right-0 mt-2 w-96 rounded-2xl overflow-hidden z-50 animate-hud-in"
-              style={{
-                background: 'rgba(255,255,255,0.97)',
-                border: '1px solid rgba(0,0,0,0.09)',
-                boxShadow: '0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(245,158,11,0.07)',
-                backdropFilter: 'blur(20px)',
-              }}>
-              <div className="flex items-center justify-between px-5 py-4"
-                style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(245,158,11,0.03)' }}>
-                <div className="flex items-center gap-2">
-                  <Bell size={14} style={{ color: '#f59e0b' }} />
-                  <span className="text-sm font-bold text-zinc-900">Notifications</span>
-                </div>
-                {hasUnread && (
-                  <span className="chip" style={{ background: 'rgba(245,158,11,0.10)', color: '#b45309', border: '1px solid rgba(245,158,11,0.20)' }}>
-                    {recentNotifs.length} NEW
-                  </span>
-                )}
-              </div>
-
-              <div className="max-h-72 overflow-y-auto">
-                {recentNotifs.map((notif, i) => (
-                  <div key={i} className="flex gap-3 px-5 py-3 transition-colors"
-                    style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.02)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                    <div className="flex-shrink-0 mt-1.5">
-                      <span className={`block w-1.5 h-1.5 rounded-full ${verticalColorMap[notif.vertical] || 'bg-zinc-400'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-zinc-700 leading-snug">{notif.action}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs font-mono" style={{ color: '#0e7490', fontFamily: 'var(--font-mono)' }}>{notif.agent}</span>
-                        <span style={{ color: 'rgba(0,0,0,0.60)' }}>·</span>
-                        <span className="text-xs text-zinc-600">{notif.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="px-5 py-3" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-                <button
-                  onClick={() => { setHasUnread(false); setNotifOpen(false); }}
-                  className="w-full text-sm font-semibold transition-colors"
-                  style={{ color: '#b45309' }}
-                  onMouseEnter={e => e.currentTarget.style.color = '#d97706'}
-                  onMouseLeave={e => e.currentTarget.style.color = 'rgba(245,158,11,0.75)'}
-                >
-                  Mark all as read
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        {/* Notification Bell — realtime, Supabase-backed */}
+        <NotificationBell />
 
         {/* Profile Avatar */}
         <div className="relative" ref={profileRef}>

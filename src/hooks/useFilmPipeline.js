@@ -54,9 +54,11 @@ const syncToSupabase = async (userId, pipeline) => {
   if (rows.length > 0) {
     const { error: insErr } = await supabase.from('film_pipeline').insert(rows);
     if (insErr) {
+      logger.error('useFilmPipeline.insert.failed', insErr);
       // Rollback: best-effort restore of prior snapshot so data is not lost.
       if (snapshot && snapshot.length > 0) {
-        await supabase.from('film_pipeline').insert(snapshot).then(() => {}, () => {});
+        const restore = await supabase.from('film_pipeline').insert(snapshot);
+        if (restore.error) logger.error('useFilmPipeline.rollback.failed', restore.error);
       }
       throw insErr;
     }

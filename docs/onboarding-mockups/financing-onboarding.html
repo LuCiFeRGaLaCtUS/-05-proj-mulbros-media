@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MulBros Media OS — Media Financing Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; background: #0D1B2E; }
+
+.container { display: flex; height: 100vh; }
+
+/* ── LEFT PANEL ── */
+.left {
+  width: 56%;
+  background: linear-gradient(160deg, #0D1B2E 0%, #0A2340 50%, #061829 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 52px;
+  overflow: hidden;
+}
+.left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  pointer-events: none;
+}
+.left::after {
+  content: '';
+  position: absolute;
+  top: -15%;
+  right: -5%;
+  width: 55%;
+  height: 55%;
+  background: radial-gradient(ellipse, rgba(245,158,11,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.left-glow-bottom {
+  position: absolute;
+  bottom: -10%;
+  left: -5%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(34,211,238,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.left-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 1;
+}
+.left-logo-icon {
+  width: 38px;
+  height: 38px;
+  background: rgba(245,158,11,0.15);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+.left-logo-text { display: flex; flex-direction: column; }
+.left-logo-name {
+  font-size: 14px;
+  font-weight: 800;
+  color: white;
+  letter-spacing: 0.08em;
+}
+.left-logo-sub {
+  font-size: 9px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.left-hero { position: relative; z-index: 1; }
+.left-category {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(245,158,11,0.7);
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+.left-headline {
+  font-size: 44px;
+  font-weight: 900;
+  color: white;
+  line-height: 1.12;
+  margin-bottom: 22px;
+  letter-spacing: -0.025em;
+}
+.left-headline span { color: rgba(245,158,11,0.9); }
+.left-desc {
+  font-size: 15px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.75;
+  max-width: 440px;
+}
+
+.left-stats { display: flex; gap: 44px; position: relative; z-index: 1; }
+.stat-number {
+  font-size: 30px;
+  font-weight: 900;
+  color: white;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+.stat-label {
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* ── RIGHT PANEL ── */
+.right {
+  width: 44%;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.right-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 44px;
+  border-bottom: 1px solid #f2f2f2;
+  flex-shrink: 0;
+}
+.right-logo { display: flex; align-items: center; gap: 8px; }
+.right-logo-icon {
+  width: 32px;
+  height: 32px;
+  background: #0D1B2E;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.right-logo-stack { display: flex; flex-direction: column; }
+.right-logo-name { font-size: 12px; font-weight: 800; color: #0D1B2E; letter-spacing: 0.06em; }
+.right-logo-sub { font-size: 9px; font-weight: 500; color: #aaa; letter-spacing: 0.14em; text-transform: uppercase; }
+
+.nav-btns { display: flex; gap: 8px; }
+.btn-ghost {
+  padding: 7px 15px;
+  border: 1.5px solid #e4e4e4;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #444;
+  background: white;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.18s;
+}
+.btn-ghost:hover { border-color: #0D1B2E; color: #0D1B2E; }
+.btn-filled {
+  padding: 7px 15px;
+  border: 1.5px solid #0D1B2E;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: #0D1B2E;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.18s;
+}
+.btn-filled:hover { background: #1a3050; }
+
+.form-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 36px 44px;
+}
+
+/* Progress */
+.progress { display: flex; gap: 5px; margin-bottom: 30px; }
+.dot {
+  height: 5px;
+  border-radius: 3px;
+  background: #eaeaea;
+  transition: all 0.3s;
+  width: 28px;
+}
+.dot.active { background: #0D1B2E; width: 40px; }
+.dot.done { background: #0D1B2E; }
+
+/* Steps */
+.step { display: none; animation: fadeIn 0.25s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.step-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  color: #bbb;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.step-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0D1B2E;
+  letter-spacing: -0.02em;
+  margin-bottom: 5px;
+  line-height: 1.2;
+}
+.step-sub {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 26px;
+  line-height: 1.55;
+}
+
+/* Fields */
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 5px; }
+.field input, .field select {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 9px;
+  font-size: 13px;
+  color: #1a1a1a;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+  background: white;
+}
+.field input:focus, .field select:focus { border-color: #0D1B2E; }
+.field input::placeholder { color: #ccc; }
+
+/* Options */
+.options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 13px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.18s;
+  user-select: none;
+}
+.option:hover { border-color: #0D1B2E; background: #f8fafc; }
+.option.selected { border-color: #0D1B2E; background: #f0f4f9; color: #0D1B2E; font-weight: 600; }
+.option .radio-dot {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.18s;
+}
+.option.selected .radio-dot { border-color: #0D1B2E; }
+.option.selected .radio-dot::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background: #0D1B2E;
+  border-radius: 50%;
+}
+
+/* Tools grid */
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 4px; }
+.tool {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+  transition: all 0.18s;
+  user-select: none;
+}
+.tool:hover { border-color: #0D1B2E; }
+.tool.selected { border-color: #0D1B2E; background: #f0f4f9; color: #0D1B2E; font-weight: 600; }
+.tool-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.check-box {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 10px;
+  transition: all 0.18s;
+}
+.tool.selected .check-box { border-color: #0D1B2E; background: #0D1B2E; color: white; }
+
+/* Skills */
+.skills { display: flex; flex-direction: column; gap: 7px; }
+.skill-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 13px;
+  border: 1.5px solid #e8e8e8;
+  border-radius: 9px;
+  transition: all 0.18s;
+}
+.skill-row.on { border-color: #0D1B2E; background: #f7f9fc; }
+.skill-left { display: flex; flex-direction: column; gap: 2px; }
+.skill-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.skill-desc { font-size: 11px; color: #aaa; }
+.toggle-wrap {
+  width: 38px;
+  height: 22px;
+  background: #e0e0e0;
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.22s;
+  flex-shrink: 0;
+}
+.toggle-wrap.on { background: #0D1B2E; }
+.toggle-wrap::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.22s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle-wrap.on::after { transform: translateX(16px); }
+
+/* CTA */
+.btn-cta {
+  width: 100%;
+  padding: 14px;
+  background: #0D1B2E;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  border: none;
+  border-radius: 11px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background 0.18s;
+  letter-spacing: 0.01em;
+}
+.btn-cta:hover { background: #1a3050; }
+.btn-cta:disabled { background: #d0d0d0; cursor: not-allowed; }
+
+.sign-in-link { text-align: center; margin-top: 14px; font-size: 12px; color: #aaa; }
+.sign-in-link a { color: #0D1B2E; font-weight: 700; text-decoration: none; }
+
+.trust-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 20px;
+  font-size: 11px;
+  color: #ccc;
+}
+.trust-icon {
+  width: 14px;
+  height: 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  color: #ccc;
+}
+
+/* Success */
+.success { text-align: center; padding: 20px 0; }
+.success-badge {
+  width: 68px;
+  height: 68px;
+  background: #f0f4f9;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 18px;
+  font-size: 30px;
+}
+.success-title { font-size: 24px; font-weight: 800; color: #0D1B2E; margin-bottom: 8px; letter-spacing: -0.02em; }
+.success-sub { font-size: 13px; color: #999; line-height: 1.65; margin-bottom: 22px; }
+
+.terms { text-align: center; font-size: 11px; color: #ccc; margin-top: 14px; }
+.terms a { color: #aaa; text-decoration: underline; }
+
+.section-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #bbb;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 16px;
+}
+.section-label:first-of-type { margin-top: 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="left-glow-bottom"></div>
+    <div class="left-logo">
+      <div class="left-logo-icon">🎬</div>
+      <div class="left-logo-text">
+        <span class="left-logo-name">MULBROS</span>
+        <span class="left-logo-sub">Media OS</span>
+      </div>
+    </div>
+
+    <div class="left-hero">
+      <p class="left-category">AI Business Manager · Media Finance</p>
+      <h1 class="left-headline">Where top film financiers<br>close more <span>deals,</span><br>faster.</h1>
+      <p class="left-desc">AI-powered business management built for film funds, production companies, and distributors — from deal sourcing and investor reporting to legal tracking and portfolio intelligence.</p>
+    </div>
+
+    <div class="left-stats">
+      <div>
+        <div class="stat-number">$2.4B+</div>
+        <div class="stat-label">Deals Tracked</div>
+      </div>
+      <div>
+        <div class="stat-number">340+</div>
+        <div class="stat-label">Finance Firms</div>
+      </div>
+      <div>
+        <div class="stat-number">7</div>
+        <div class="stat-label">AI Functions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <nav class="right-nav">
+      <div class="right-logo">
+        <div class="right-logo-icon">🎬</div>
+        <div class="right-logo-stack">
+          <span class="right-logo-name">MULBROS</span>
+          <span class="right-logo-sub">Media OS</span>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost">Sign up</button>
+        <button class="btn-filled">Sign in</button>
+      </div>
+    </nav>
+
+    <div class="form-wrap">
+      <div class="progress">
+        <div class="dot active" id="d1"></div>
+        <div class="dot" id="d2"></div>
+        <div class="dot" id="d3"></div>
+        <div class="dot" id="d4"></div>
+        <div class="dot" id="d5"></div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="step active" id="step-1">
+        <p class="step-eyebrow">Step 1 of 5</p>
+        <h2 class="step-title">Set up your workspace</h2>
+        <p class="step-sub">Tell us about yourself and your business — no password required to get started.</p>
+        <div class="field">
+          <label>Full name</label>
+          <input type="text" placeholder="Alex Rivera">
+        </div>
+        <div class="field">
+          <label>Business name</label>
+          <input type="text" placeholder="Meridian Film Partners">
+        </div>
+        <div class="field">
+          <label>Work email</label>
+          <input type="email" placeholder="alex@meridianfilms.com">
+        </div>
+        <button class="btn-cta" onclick="goTo(2)">Continue &rarr;</button>
+        <p class="sign-in-link">Already have an account? <a href="#">Sign in</a></p>
+        <div class="trust-row"><div class="trust-icon">✓</div> Trusted by 340+ finance firms across 28 countries</div>
+        <p class="terms">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" id="step-2">
+        <p class="step-eyebrow">Step 2 of 5</p>
+        <h2 class="step-title">Your business type</h2>
+        <p class="step-sub">This helps your AI manager prioritize the right functions for your entity.</p>
+        <div class="options" id="entity-options">
+          <div class="option" onclick="selectOption(this, 'entity-options')">
+            <div class="radio-dot"></div> Film Fund / Investment Group
+          </div>
+          <div class="option" onclick="selectOption(this, 'entity-options')">
+            <div class="radio-dot"></div> Production Company
+          </div>
+          <div class="option" onclick="selectOption(this, 'entity-options')">
+            <div class="radio-dot"></div> Studio or Network
+          </div>
+          <div class="option" onclick="selectOption(this, 'entity-options')">
+            <div class="radio-dot"></div> Distribution Company
+          </div>
+          <div class="option" onclick="selectOption(this, 'entity-options')">
+            <div class="radio-dot"></div> Private Equity / Family Office
+          </div>
+          <div class="option" onclick="selectOption(this, 'entity-options')">
+            <div class="radio-dot"></div> Brand / Commercial Finance
+          </div>
+        </div>
+        <button class="btn-cta" onclick="goTo(3)">Continue &rarr;</button>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step" id="step-3">
+        <p class="step-eyebrow">Step 3 of 5</p>
+        <h2 class="step-title">Your deal profile</h2>
+        <p class="step-sub">Your AI manager uses this to surface the most relevant deal flow and benchmarks.</p>
+        <p class="section-label">Typical deal size</p>
+        <div class="options" id="deal-options">
+          <div class="option" onclick="selectOption(this, 'deal-options')"><div class="radio-dot"></div> Under $500K</div>
+          <div class="option" onclick="selectOption(this, 'deal-options')"><div class="radio-dot"></div> $500K – $5M</div>
+          <div class="option" onclick="selectOption(this, 'deal-options')"><div class="radio-dot"></div> $5M – $25M</div>
+          <div class="option" onclick="selectOption(this, 'deal-options')"><div class="radio-dot"></div> $25M+</div>
+        </div>
+        <p class="section-label">Primary market focus</p>
+        <div class="options" id="market-options">
+          <div class="option" onclick="selectOption(this, 'market-options')"><div class="radio-dot"></div> US Domestic</div>
+          <div class="option" onclick="selectOption(this, 'market-options')"><div class="radio-dot"></div> International Co-productions</div>
+          <div class="option" onclick="selectOption(this, 'market-options')"><div class="radio-dot"></div> Streaming Platforms</div>
+          <div class="option" onclick="selectOption(this, 'market-options')"><div class="radio-dot"></div> Theatrical</div>
+          <div class="option" onclick="selectOption(this, 'market-options')"><div class="radio-dot"></div> Mixed / All markets</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(4)">Continue &rarr;</button>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step" id="step-4">
+        <p class="step-eyebrow">Step 4 of 5</p>
+        <h2 class="step-title">Connect your stack</h2>
+        <p class="step-sub">What tools are you already using? Your AI manager knows how to work with them.</p>
+        <div class="tools-grid">
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">📊</div> QuickBooks</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">☁️</div> Salesforce</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fff3e0">📝</div> DocuSign</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#f3e5f5">🟠</div> HubSpot</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">💹</div> Xero</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">📋</div> PandaDoc</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">📄</div> Excel / Sheets</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">💬</div> Slack</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fff3e0">🗂️</div> Airtable</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fce4ec">🎬</div> Movie Magic</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(5)" style="margin-top:14px">Continue &rarr;</button>
+        <p class="sign-in-link" style="margin-top:10px"><a href="#" onclick="goTo(5); return false;" style="color:#bbb; font-weight:400;">Skip for now</a></p>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step" id="step-5">
+        <p class="step-eyebrow">Step 5 of 5</p>
+        <h2 class="step-title">Activate your AI manager</h2>
+        <p class="step-sub">Turn on the business functions you want AI to handle. You can adjust these anytime.</p>
+        <div class="skills">
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">💼 Deal Flow & Business Development</span>
+              <span class="skill-desc">Sourcing leads, outreach drafts, pipeline tracking</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">📊 Investor Reporting & Finance</span>
+              <span class="skill-desc">Portfolio summaries, P&L snapshots, investor updates</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">⚖️ Legal & Contract Tracking</span>
+              <span class="skill-desc">Deal memo drafts, deadline alerts, contract red flags</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🗂️ Portfolio & Project Management</span>
+              <span class="skill-desc">Status tracking, milestones, project health overviews</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">📣 Marketing & Investor Relations</span>
+              <span class="skill-desc">Pitch decks, press releases, IR communications</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🏢 Operations & Team Coordination</span>
+              <span class="skill-desc">Scheduling, SOPs, task delegation across your team</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🤝 Client & Partner Communications</span>
+              <span class="skill-desc">Relationship tracking, follow-up sequences, meeting prep</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+        </div>
+        <button class="btn-cta" onclick="goTo(6)" style="margin-top:14px">Launch My AI Manager &rarr;</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="step" id="step-6">
+        <div class="success">
+          <div class="success-badge">🚀</div>
+          <h2 class="success-title">Your AI manager is live.</h2>
+          <p class="success-sub">Welcome to MulBros Media OS.<br>Your AI business manager is configured for <strong>media financing</strong> and ready to handle deal flow, investor reporting, legal, and more.</p>
+          <button class="btn-cta" onclick="alert('Redirecting to dashboard…')">Go to Dashboard &rarr;</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let current = 1;
+
+function goTo(n) {
+  document.getElementById('step-' + current).classList.remove('active');
+  document.getElementById('step-' + n).classList.add('active');
+  current = n;
+  for (let i = 1; i <= 5; i++) {
+    const dot = document.getElementById('d' + i);
+    if (!dot) continue;
+    dot.classList.remove('active', 'done');
+    if (i < current) dot.classList.add('done');
+    else if (i === current) dot.classList.add('active');
+  }
+}
+
+function selectOption(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function toggleTool(el) {
+  el.classList.toggle('selected');
+  const box = el.querySelector('.check-box');
+  box.textContent = el.classList.contains('selected') ? '✓' : '';
+}
+
+function toggleSkill(toggle) {
+  toggle.classList.toggle('on');
+  toggle.closest('.skill-row').classList.toggle('on');
+}
+</script>
+</body>
+</html>

@@ -2,9 +2,17 @@ import React from 'react';
 import { TrendingUp, TrendingDown, ExternalLink } from 'lucide-react';
 import { useCountUp } from './useCountUp';
 
-export const StatCardAnimated = ({ title, numericValue, formatter, change, changeUp, sub, Icon, iconBg, iconColor, accentColor, Bg, onClick, linkLabel, delay = 0, cardBg }) => {
-  const counted = useCountUp(numericValue, 1400, delay);
-  const display = formatter ? formatter(counted) : counted.toLocaleString();
+export const StatCardAnimated = ({ title, numericValue, formatter, change, changeUp, sub, Icon, iconBg, iconColor, accentColor, Bg, onClick, linkLabel, delay = 0, cardBg, loading = false }) => {
+  const safeVal = typeof numericValue === 'number' ? numericValue : 0;
+  const counted = useCountUp(safeVal, 1400, delay);
+  let display;
+  if (loading) {
+    display = null; // render spinner instead
+  } else if (numericValue == null) {
+    display = '—';
+  } else {
+    display = formatter ? formatter(counted) : counted.toLocaleString();
+  }
 
   return (
     <button
@@ -22,13 +30,20 @@ export const StatCardAnimated = ({ title, numericValue, formatter, change, chang
         <div className="flex-1 min-w-0">
           <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2"
             style={{ fontFamily: 'var(--font-mono)' }}>{title}</p>
-          <p className="text-[1.65rem] font-bold text-zinc-900 leading-none mb-2 tabular-nums"
-            style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.03em' }}>{display}</p>
+          {display === null ? (
+            <div className="flex items-center gap-2 mb-2 h-[1.65rem]">
+              <div className="w-5 h-5 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
+              <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">loading</span>
+            </div>
+          ) : (
+            <p className="text-[1.65rem] font-bold text-zinc-900 leading-none mb-2 tabular-nums"
+              style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.03em' }}>{display}</p>
+          )}
           <div className="flex items-center gap-1.5">
-            {changeUp
+            {change && (changeUp
               ? <TrendingUp size={10} className="text-emerald-500 flex-shrink-0" />
-              : <TrendingDown size={10} className="text-red-500 flex-shrink-0" />}
-            <span className={`text-xs font-bold ${changeUp ? 'text-emerald-600' : 'text-red-500'}`}>{change}</span>
+              : <TrendingDown size={10} className="text-red-500 flex-shrink-0" />)}
+            {change && <span className={`text-xs font-bold ${changeUp ? 'text-emerald-600' : 'text-red-500'}`}>{change}</span>}
             {sub && <span className="text-xs text-zinc-600 ml-0.5">{sub}</span>}
           </div>
         </div>

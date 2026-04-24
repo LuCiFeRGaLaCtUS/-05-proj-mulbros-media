@@ -1,17 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
-/** Normalize a Supabase row to the shape CalendarView expects */
+/** Normalize a Supabase row to the shape CalendarView expects.
+ *  Legacy rows stored talent='talise'|'luke' — treat as vertical label. */
 const normalize = (row) => ({
   ...row,
-  date:          row.post_date  || row.date          || null,
+  vertical:      row.vertical || row.talent      || null,
+  date:          row.post_date  || row.date      || null,
   scheduledTime: row.post_time  || row.scheduledTime || null,
 });
 
-/** Map CalendarView post shape → Supabase column names */
+/** Map CalendarView post shape → Supabase column names.
+ *  Stores `vertical` into legacy `talent` column (no migration needed). */
 const toRow = (post, userId) => ({
   user_id:   userId,
-  talent:    post.talent,
+  talent:    post.vertical || post.talent || null,
   platform:  post.platform,
   status:    post.status   || 'draft',
   content:   post.content  || null,

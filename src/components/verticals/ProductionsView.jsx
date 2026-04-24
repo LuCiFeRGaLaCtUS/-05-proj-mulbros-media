@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { activities, campaigns } from '../../config/mockData';
 import { Film, BarChart2, CheckCircle2, Clock } from 'lucide-react';
+import { TiltCard } from '../ui/TiltCard';
 
 // ── Light emerald accent decoration ──────────────────────────────────────────
 const EmeraldBg = () => (
@@ -84,7 +85,8 @@ export const ProductionsView = () => {
     <div className="space-y-5">
 
       {/* ── Page header ──────────────────────────────────────────────────────── */}
-      <div className="relative overflow-hidden tile-pop bg-white rounded-2xl p-5"
+      <TiltCard tiltLimit={6} scale={1.015} perspective={1400}
+        className="tile-pop bg-white rounded-2xl p-5"
         style={{ border: '1px solid rgba(16,185,129,0.15)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
         <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-24 bg-emerald-400/05 blur-xl rounded-full pointer-events-none" />
@@ -109,10 +111,10 @@ export const ProductionsView = () => {
             Vertical B
           </span>
         </div>
-      </div>
+      </TiltCard>
 
       {/* ── KPIs ─────────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map(k => (
           <div key={k.label} className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
             style={{ border: '1px solid rgba(16,185,129,0.12)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>

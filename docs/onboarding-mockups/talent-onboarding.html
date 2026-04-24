@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MulBros Media OS — Talent Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; background: #0f1f0e; }
+.container { display: flex; height: 100vh; }
+
+/* ── LEFT PANEL ── */
+.left {
+  width: 56%;
+  background: linear-gradient(160deg, #0f1f0e 0%, #142412 50%, #0a1a09 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 52px;
+  overflow: hidden;
+}
+.left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.038) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.038) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+.left::after {
+  content: '';
+  position: absolute;
+  top: -18%;
+  right: -6%;
+  width: 55%;
+  height: 58%;
+  background: radial-gradient(ellipse, rgba(52,211,153,0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+.glow-bottom {
+  position: absolute;
+  bottom: -12%;
+  left: -5%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(245,158,11,0.09) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.left-logo { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+.left-logo-icon { width: 38px; height: 38px; background: rgba(52,211,153,0.15); border: 1px solid rgba(52,211,153,0.25); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+.left-logo-text { display: flex; flex-direction: column; }
+.left-logo-name { font-size: 14px; font-weight: 800; color: white; letter-spacing: 0.08em; }
+.left-logo-sub { font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.32); letter-spacing: 0.18em; text-transform: uppercase; }
+
+.left-hero { position: relative; z-index: 1; }
+.left-category { font-size: 11px; font-weight: 600; color: rgba(52,211,153,0.75); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 22px; }
+.left-headline { font-size: 44px; font-weight: 900; color: white; line-height: 1.12; margin-bottom: 22px; letter-spacing: -0.025em; }
+.left-headline span { color: rgba(52,211,153,0.9); }
+.left-desc { font-size: 15px; color: rgba(255,255,255,0.42); line-height: 1.75; max-width: 440px; }
+
+.left-stats { display: flex; gap: 44px; position: relative; z-index: 1; }
+.stat-number { font-size: 30px; font-weight: 900; color: white; letter-spacing: -0.03em; line-height: 1; }
+.stat-label { font-size: 12px; color: rgba(255,255,255,0.33); margin-top: 4px; font-weight: 500; }
+
+/* ── RIGHT PANEL ── */
+.right { width: 44%; background: white; display: flex; flex-direction: column; overflow-y: auto; }
+.right-nav { display: flex; align-items: center; justify-content: space-between; padding: 22px 44px; border-bottom: 1px solid #f2f2f2; flex-shrink: 0; }
+.right-logo { display: flex; align-items: center; gap: 8px; }
+.right-logo-icon { width: 32px; height: 32px; background: #0f1f0e; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.right-logo-stack { display: flex; flex-direction: column; }
+.right-logo-name { font-size: 12px; font-weight: 800; color: #0f1f0e; letter-spacing: 0.06em; }
+.right-logo-sub { font-size: 9px; font-weight: 500; color: #aaa; letter-spacing: 0.14em; text-transform: uppercase; }
+
+.nav-btns { display: flex; gap: 8px; }
+.btn-ghost { padding: 7px 15px; border: 1.5px solid #e4e4e4; border-radius: 8px; font-size: 12px; font-weight: 600; color: #444; background: white; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; }
+.btn-ghost:hover { border-color: #0f1f0e; color: #0f1f0e; }
+.btn-filled { padding: 7px 15px; border: 1.5px solid #0f1f0e; border-radius: 8px; font-size: 12px; font-weight: 600; color: white; background: #0f1f0e; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; }
+.btn-filled:hover { background: #1e3d1c; }
+
+.form-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 36px 44px; }
+
+.progress { display: flex; gap: 5px; margin-bottom: 30px; }
+.dot { height: 5px; border-radius: 3px; background: #eaeaea; transition: all 0.3s; width: 28px; }
+.dot.active { background: #0f1f0e; width: 40px; }
+.dot.done { background: #0f1f0e; }
+
+.step { display: none; animation: fadeIn 0.25s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.step-eyebrow { font-size: 11px; font-weight: 600; color: #bbb; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 26px; font-weight: 800; color: #0f1f0e; letter-spacing: -0.02em; margin-bottom: 5px; line-height: 1.2; }
+.step-sub { font-size: 13px; color: #999; margin-bottom: 26px; line-height: 1.55; }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 5px; }
+.field input, .field select { width: 100%; padding: 11px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; font-size: 13px; color: #1a1a1a; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; background: white; }
+.field input:focus, .field select:focus { border-color: #0f1f0e; }
+.field input::placeholder { color: #ccc; }
+
+.options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+.option { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; transition: all 0.18s; user-select: none; }
+.option:hover { border-color: #0f1f0e; background: #f4fbf4; }
+.option.selected { border-color: #0f1f0e; background: #f0f9f0; color: #0f1f0e; font-weight: 600; }
+.option .radio-dot { width: 16px; height: 16px; border: 2px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.18s; }
+.option.selected .radio-dot { border-color: #0f1f0e; }
+.option.selected .radio-dot::after { content: ''; width: 8px; height: 8px; background: #0f1f0e; border-radius: 50%; }
+
+.check-option { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; transition: all 0.18s; user-select: none; }
+.check-option:hover { border-color: #0f1f0e; background: #f4fbf4; }
+.check-option.selected { border-color: #0f1f0e; background: #f0f9f0; color: #0f1f0e; font-weight: 600; }
+.check-box { width: 16px; height: 16px; border: 2px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; transition: all 0.18s; }
+.check-option.selected .check-box { border-color: #0f1f0e; background: #0f1f0e; color: white; }
+
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 4px; }
+.tool { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border: 1.5px solid #e8e8e8; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 500; color: #333; transition: all 0.18s; user-select: none; }
+.tool:hover { border-color: #0f1f0e; }
+.tool.selected { border-color: #0f1f0e; background: #f0f9f0; color: #0f1f0e; font-weight: 600; }
+.tool-badge { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.tool .check-box { border: 2px solid #ddd; }
+.tool.selected .check-box { border-color: #0f1f0e; background: #0f1f0e; color: white; }
+
+.skills { display: flex; flex-direction: column; gap: 7px; }
+.skill-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; transition: all 0.18s; }
+.skill-row.on { border-color: #0f1f0e; background: #f7fbf7; }
+.skill-left { display: flex; flex-direction: column; gap: 2px; }
+.skill-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.skill-desc { font-size: 11px; color: #aaa; }
+.toggle-wrap { width: 38px; height: 22px; background: #e0e0e0; border-radius: 11px; position: relative; cursor: pointer; transition: background 0.22s; flex-shrink: 0; }
+.toggle-wrap.on { background: #0f1f0e; }
+.toggle-wrap::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.22s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-wrap.on::after { transform: translateX(16px); }
+
+.btn-cta { width: 100%; padding: 14px; background: #0f1f0e; color: white; font-size: 14px; font-weight: 700; border: none; border-radius: 11px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.18s; letter-spacing: 0.01em; }
+.btn-cta:hover { background: #1e3d1c; }
+
+.sign-in-link { text-align: center; margin-top: 14px; font-size: 12px; color: #aaa; }
+.sign-in-link a { color: #0f1f0e; font-weight: 700; text-decoration: none; }
+.trust-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 20px; font-size: 11px; color: #ccc; }
+.trust-icon { width: 14px; height: 14px; border: 1.5px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #ccc; }
+.terms { text-align: center; font-size: 11px; color: #ccc; margin-top: 14px; }
+.terms a { color: #aaa; text-decoration: underline; }
+.section-label { font-size: 11px; font-weight: 600; color: #bbb; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; margin-top: 16px; }
+.section-label:first-of-type { margin-top: 0; }
+.success { text-align: center; padding: 20px 0; }
+.success-badge { width: 68px; height: 68px; background: #f0f9f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 30px; }
+.success-title { font-size: 24px; font-weight: 800; color: #0f1f0e; margin-bottom: 8px; letter-spacing: -0.02em; }
+.success-sub { font-size: 13px; color: #999; line-height: 1.65; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="glow-bottom"></div>
+    <div class="left-logo">
+      <div class="left-logo-icon">⭐</div>
+      <div class="left-logo-text">
+        <span class="left-logo-name">MULBROS</span>
+        <span class="left-logo-sub">Media OS</span>
+      </div>
+    </div>
+
+    <div class="left-hero">
+      <p class="left-category">AI Business Manager · Talent</p>
+      <h1 class="left-headline">Where rising talent<br>builds a <span>business</span><br>around their craft.</h1>
+      <p class="left-desc">Your AI business manager handles bookings, brand deals, content strategy, sync opportunities, and finances — so you can stay focused on your work.</p>
+    </div>
+
+    <div class="left-stats">
+      <div>
+        <div class="stat-number">9</div>
+        <div class="stat-label">Talent Types</div>
+      </div>
+      <div>
+        <div class="stat-number">10K+</div>
+        <div class="stat-label">Creators</div>
+      </div>
+      <div>
+        <div class="stat-number">7</div>
+        <div class="stat-label">AI Functions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <nav class="right-nav">
+      <div class="right-logo">
+        <div class="right-logo-icon">⭐</div>
+        <div class="right-logo-stack">
+          <span class="right-logo-name">MULBROS</span>
+          <span class="right-logo-sub">Media OS</span>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost">Sign up</button>
+        <button class="btn-filled">Sign in</button>
+      </div>
+    </nav>
+
+    <div class="form-wrap">
+      <div class="progress">
+        <div class="dot active" id="d1"></div>
+        <div class="dot" id="d2"></div>
+        <div class="dot" id="d3"></div>
+        <div class="dot" id="d4"></div>
+        <div class="dot" id="d5"></div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="step active" id="step-1">
+        <p class="step-eyebrow">Step 1 of 5</p>
+        <h2 class="step-title">Let's build your manager</h2>
+        <p class="step-sub">Tell us who you are and what you do — your AI manager gets smarter the more it knows about you.</p>
+        <div class="field"><label>Full name</label><input type="text" placeholder="Samira Khan"></div>
+        <div class="field">
+          <label>What do you do?</label>
+          <select>
+            <option value="" disabled selected>Select your craft</option>
+            <option>Actor</option>
+            <option>Filmmaker / Director</option>
+            <option>Musician / Artist</option>
+            <option>Film / TV Composer</option>
+            <option>Screenwriter</option>
+            <option>Film Crew (DP, AD, Gaffer…)</option>
+            <option>Visual Artist</option>
+            <option>Author / Writer</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Email address</label><input type="email" placeholder="samira@email.com"></div>
+        <button class="btn-cta" onclick="goTo(2)">Continue &rarr;</button>
+        <p class="sign-in-link">Already have an account? <a href="#">Sign in</a></p>
+        <div class="trust-row"><div class="trust-icon">✓</div> Trusted by 10,000+ creators across 9 talent verticals</div>
+        <p class="terms">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" id="step-2">
+        <p class="step-eyebrow">Step 2 of 5</p>
+        <h2 class="step-title">Where are you in your career?</h2>
+        <p class="step-sub">This helps your AI manager prioritize the right opportunities and outreach for your stage.</p>
+        <div class="options" id="stage-opts">
+          <div class="option" onclick="selectOption(this,'stage-opts')"><div class="radio-dot"></div> Just starting out — building my foundation</div>
+          <div class="option" onclick="selectOption(this,'stage-opts')"><div class="radio-dot"></div> Building momentum — some credits or releases</div>
+          <div class="option" onclick="selectOption(this,'stage-opts')"><div class="radio-dot"></div> Established — regular work and a growing profile</div>
+          <div class="option" onclick="selectOption(this,'stage-opts')"><div class="radio-dot"></div> Name talent — well-known, need scale</div>
+          <div class="option" onclick="selectOption(this,'stage-opts')"><div class="radio-dot"></div> Seeking representation — ready for an agent or manager</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(3)">Continue &rarr;</button>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step" id="step-3">
+        <p class="step-eyebrow">Step 3 of 5</p>
+        <h2 class="step-title">What are you focused on?</h2>
+        <p class="step-sub">Select everything you're actively working toward right now.</p>
+        <div class="options" id="focus-opts" style="gap:7px">
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Auditions & Bookings</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Brand Deals & Endorsements</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Sync Licensing & Music Placement</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Growing My Audience & Fanbase</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Pitching Scripts, Books, or Projects</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Live Events, Tours & Performances</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Finding an Agent or Manager</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(4)">Continue &rarr;</button>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step" id="step-4">
+        <p class="step-eyebrow">Step 4 of 5</p>
+        <h2 class="step-title">Connect your accounts</h2>
+        <p class="step-sub">Your AI manager knows your platforms. Select the ones you're active on.</p>
+        <div class="tools-grid">
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fce4ec">📸</div> Instagram</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#000;color:white;font-size:10px;border-radius:6px">♪</div> TikTok</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#ffebee">▶️</div> YouTube</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">🎵</div> Spotify for Artists</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#f3e5f5">🎬</div> IMDbPro</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">🔗</div> Linktree</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">🎶</div> SoundCloud</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fff3e0">🎸</div> Bandcamp</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">🐦</div> X / Twitter</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fce4ec">💼</div> LinkedIn</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(5)" style="margin-top:14px">Continue &rarr;</button>
+        <p class="sign-in-link" style="margin-top:10px"><a href="#" onclick="goTo(5); return false;" style="color:#bbb; font-weight:400;">Skip for now</a></p>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step" id="step-5">
+        <p class="step-eyebrow">Step 5 of 5</p>
+        <h2 class="step-title">Activate your AI manager</h2>
+        <p class="step-sub">These are the business functions your AI will handle for you. All on by default — turn off anything you don't need.</p>
+        <div class="skills">
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">📣 Career Marketing & PR</span>
+              <span class="skill-desc">Content strategy, press bios, social copy, pitch narratives</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🎯 Bookings & Opportunity Outreach</span>
+              <span class="skill-desc">Find auditions, gigs, and roles — draft cold outreach for you</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🤝 Brand Deals & Partnerships</span>
+              <span class="skill-desc">Track inbound interest, draft proposals, follow up with brands</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🎵 Sync & Licensing Tracking</span>
+              <span class="skill-desc">Monitor placements, pitch music to supervisors, track royalties</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">💰 Financial Overview</span>
+              <span class="skill-desc">Income tracking, invoice status, earnings summaries</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">📅 Scheduling & Operations</span>
+              <span class="skill-desc">Manage your calendar, prep for meetings, track deadlines</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">💌 Fan & Industry Communications</span>
+              <span class="skill-desc">Newsletter copy, DM templates, relationship follow-ups</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+        </div>
+        <button class="btn-cta" onclick="goTo(6)" style="margin-top:14px">Launch My AI Manager &rarr;</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="step" id="step-6">
+        <div class="success">
+          <div class="success-badge">🚀</div>
+          <h2 class="success-title">Your AI manager is live.</h2>
+          <p class="success-sub">Welcome to MulBros Media OS.<br>Your personal AI business manager is ready — handling bookings, brand deals, marketing, and more so you can focus on your craft.</p>
+          <button class="btn-cta" onclick="alert('Redirecting to dashboard…')">Go to Dashboard &rarr;</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let current = 1;
+function goTo(n) {
+  document.getElementById('step-' + current).classList.remove('active');
+  document.getElementById('step-' + n).classList.add('active');
+  current = n;
+  for (let i = 1; i <= 5; i++) {
+    const dot = document.getElementById('d' + i);
+    if (!dot) continue;
+    dot.classList.remove('active', 'done');
+    if (i < current) dot.classList.add('done');
+    else if (i === current) dot.classList.add('active');
+  }
+}
+function selectOption(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function toggleCheck(el) {
+  el.classList.toggle('selected');
+  const box = el.querySelector('.check-box');
+  box.textContent = el.classList.contains('selected') ? '✓' : '';
+}
+function toggleTool(el) {
+  el.classList.toggle('selected');
+  const box = el.querySelector('.check-box');
+  box.textContent = el.classList.contains('selected') ? '✓' : '';
+}
+function toggleSkill(toggle) {
+  toggle.classList.toggle('on');
+  toggle.closest('.skill-row').classList.toggle('on');
+}
+</script>
+</body>
+</html>

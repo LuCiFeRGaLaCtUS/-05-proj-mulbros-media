@@ -87,7 +87,7 @@ export const LastCountyView = () => {
       </div>
 
       {/* ── KPIs ──────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map(k => (
           <div key={k.label} className="relative bg-zinc-900 rounded-2xl ring-1 ring-emerald-900/30 p-5 overflow-hidden">
             <EmeraldBg />
@@ -184,7 +184,7 @@ export const LastCountyView = () => {
                 <div className="w-full bg-zinc-800 rounded-full h-1.5 mb-3">
                   <div className="bg-emerald-500 h-1.5 rounded-full" style={{ width: `${c.progress}%` }} />
                 </div>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {Object.entries(c.metrics).map(([key, val]) => (
                     <div key={key}>
                       <div className="text-xs text-zinc-500 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>

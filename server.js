@@ -33,7 +33,7 @@ app.use(helmet({
         'https://api.stytch.com',
         'https://test.stytch.com',
       ],
-      imgSrc:      ["'self'", 'data:'],
+      imgSrc:      ["'self'", 'data:', 'https://i.scdn.co', 'https://mosaic.scdn.co'],
     },
   },
 }));
@@ -114,6 +114,46 @@ const requireAuth = async (req, res, next) => {
     return res.status(401).json({ error: { message: 'Invalid or expired session.' } });
   }
 };
+
+// ── Role-gate middleware ──────────────────────────────────────────────────────
+// Uses user_roles table (Supabase REST) keyed by profile.id (stytch_user_id → profile).
+// Requires requireAuth upstream. Allows request if user's role is in `allowed`.
+const requireRole = (allowed) => async (req, res, next) => {
+  try {
+    const stytchUid = req.stytchUser?.userId;
+    if (!stytchUid) return res.status(401).json({ error: { code: 'unauthorized', message: 'Auth required.' } });
+    const sbHeaders = {
+      apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+      Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
+    };
+    const pr = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=id`,
+      { headers: sbHeaders },
+    );
+    const profiles = await pr.json();
+    const profileId = profiles[0]?.id;
+    if (!profileId) return res.status(403).json({ error: { code: 'forbidden', message: 'No profile.' } });
+
+    const rr = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/user_roles?user_id=eq.${profileId}&select=role`,
+      { headers: sbHeaders },
+    );
+    const rows = await rr.json();
+    const role = rows[0]?.role || 'member';
+    if (!allowed.includes(role)) {
+      return res.status(403).json({ error: { code: 'forbidden', message: `Requires role: ${allowed.join(' / ')}` } });
+    }
+    req.userRole = role;
+    req.profileId = profileId;
+    next();
+  } catch (err) {
+    console.error('requireRole error:', err.message);
+    res.status(500).json({ error: { code: 'role_check_failed', message: 'Could not verify role.' } });
+  }
+};
+// Exported-equivalent — usage: app.post('/api/admin/x', requireAuth, requireRole(['admin']), handler)
+// eslint-disable-next-line no-unused-vars
+const _requireRoleExport = requireRole; // silence unused warning if not yet applied to routes
 
 // ── Per-user rate limiter (in-memory; fine for single-instance Render) ────────
 // Keyed by Stytch user_id — supplements global express-rate-limit which is IP-based.
@@ -309,6 +349,202 @@ app.post('/api/ai-search', aiLimiter, async (req, res) => {
     }
   } finally {
     clearTimeout(timeout);
+  }
+});
+
+// ── Spotify OAuth (musician vertical) ─────────────────────────────────────────
+// Three routes:
+//   GET /api/spotify/auth?profile_id=…   → 302 to Spotify authorize
+//   GET /api/spotify/callback            → exchange code, upsert tokens, redirect to app
+//   GET /api/spotify/artist-stats?profile_id=…  → live fetch with auto-refresh
+//
+// NOTE on CSRF: state currently carries profile_id directly. Harden later by
+// pairing with a signed HttpOnly cookie nonce. Acceptable for MVP behind Stytch.
+
+const SPOTIFY_SCOPES = 'user-read-private user-top-read user-read-recently-played';
+
+const supaHeaders = () => ({
+  apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+  Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
+  'Content-Type': 'application/json',
+});
+const supaUrl = (path) => `${process.env.VITE_SUPABASE_URL}/rest/v1/${path}`;
+
+const spotifyUpsertTokens = async ({ profileId, access, refresh, expiresInSec, scope }) => {
+  const expires_at = new Date(Date.now() + Math.max(0, (expiresInSec || 3600) - 60) * 1000).toISOString();
+  const row = {
+    user_id: profileId,
+    service: 'spotify',
+    access_token: access,
+    refresh_token: refresh || null,
+    expires_at,
+    metadata: { scope: scope || SPOTIFY_SCOPES, updated_at: new Date().toISOString() },
+  };
+  const r = await fetch(supaUrl('user_integrations?on_conflict=user_id,service'), {
+    method: 'POST',
+    headers: { ...supaHeaders(), Prefer: 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(row),
+  });
+  if (!r.ok) {
+    const text = await r.text();
+    throw new Error(`Supabase upsert failed: ${r.status} ${text.slice(0, 200)}`);
+  }
+  return (await r.json())[0];
+};
+
+const spotifyReadTokens = async (profileId) => {
+  const r = await fetch(
+    supaUrl(`user_integrations?user_id=eq.${profileId}&service=eq.spotify&select=*`),
+    { headers: supaHeaders() },
+  );
+  if (!r.ok) throw new Error(`Supabase read failed: ${r.status}`);
+  const rows = await r.json();
+  return rows[0] || null;
+};
+
+const spotifyRefreshIfNeeded = async (row) => {
+  const expiresAt = row.expires_at ? new Date(row.expires_at).getTime() : 0;
+  if (expiresAt > Date.now() + 30_000) return row.access_token;
+  if (!row.refresh_token) throw new Error('No refresh token on file; user must reconnect.');
+
+  const clientId     = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error('Spotify client credentials not configured.');
+
+  const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const r = await fetch('https://accounts.spotify.com/api/token', {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${basic}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: row.refresh_token }),
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error_description || `Spotify refresh failed ${r.status}`);
+
+  await spotifyUpsertTokens({
+    profileId:    row.user_id,
+    access:       data.access_token,
+    refresh:      data.refresh_token || row.refresh_token, // Spotify may omit
+    expiresInSec: data.expires_in,
+    scope:        data.scope,
+  });
+  return data.access_token;
+};
+
+app.get('/api/spotify/auth', (req, res) => {
+  const clientId = process.env.SPOTIFY_CLIENT_ID;
+  const redirect = process.env.SPOTIFY_REDIRECT_URI;
+  const profileId = String(req.query.profile_id || '').trim();
+  if (!clientId || !redirect) return res.status(503).send('Spotify not configured.');
+  if (!profileId) return res.status(400).send('profile_id required.');
+
+  const authUrl = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+    response_type: 'code',
+    client_id:     clientId,
+    scope:         SPOTIFY_SCOPES,
+    redirect_uri:  redirect,
+    state:         profileId,
+    show_dialog:   'true',
+  });
+  res.redirect(authUrl);
+});
+
+app.get('/api/spotify/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  const appUrl  = process.env.VITE_APP_URL || 'http://localhost:5173';
+  const backTo  = `${appUrl}/vertical/musician`;
+  if (error) return res.redirect(`${backTo}?spotify=denied`);
+  if (!code || !state) return res.redirect(`${backTo}?spotify=missing_params`);
+
+  const clientId     = process.env.SPOTIFY_CLIENT_ID;
+  const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
+  const redirect     = process.env.SPOTIFY_REDIRECT_URI;
+  if (!clientId || !clientSecret || !redirect) {
+    return res.redirect(`${backTo}?spotify=server_unconfigured`);
+  }
+
+  try {
+    const basic = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+    const r = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${basic}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type:   'authorization_code',
+        code:         String(code),
+        redirect_uri: redirect,
+      }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      console.error('Spotify exchange failed', data);
+      return res.redirect(`${backTo}?spotify=exchange_failed`);
+    }
+
+    await spotifyUpsertTokens({
+      profileId:    String(state),
+      access:       data.access_token,
+      refresh:      data.refresh_token,
+      expiresInSec: data.expires_in,
+      scope:        data.scope,
+    });
+    return res.redirect(`${backTo}?spotify=connected`);
+  } catch (err) {
+    console.error('Spotify callback error', err.message);
+    return res.redirect(`${backTo}?spotify=error`);
+  }
+});
+
+app.get('/api/spotify/artist-stats', async (req, res) => {
+  const profileId = String(req.query.profile_id || '').trim();
+  if (!profileId) return res.status(400).json({ error: { message: 'profile_id required' } });
+
+  try {
+    const row = await spotifyReadTokens(profileId);
+    if (!row) return res.status(404).json({ error: { message: 'Spotify not connected' } });
+
+    const accessToken = await spotifyRefreshIfNeeded(row);
+    const auth = { Authorization: `Bearer ${accessToken}` };
+
+    const [meR, topR, recentR] = await Promise.all([
+      fetch('https://api.spotify.com/v1/me',                                     { headers: auth }),
+      fetch('https://api.spotify.com/v1/me/top/tracks?limit=5&time_range=short_term', { headers: auth }),
+      fetch('https://api.spotify.com/v1/me/player/recently-played?limit=5',      { headers: auth }),
+    ]);
+    const [me, top, recent] = await Promise.all([meR.json(), topR.json(), recentR.json()]);
+
+    res.json({
+      profile: {
+        id:           me.id,
+        display_name: me.display_name,
+        followers:    me.followers?.total ?? null,
+        country:      me.country,
+        product:      me.product,
+        external_url: me.external_urls?.spotify,
+        image:        me.images?.[0]?.url || null,
+      },
+      top_tracks: (top.items || []).map(t => ({
+        name:    t.name,
+        artists: (t.artists || []).map(a => a.name).join(', '),
+        url:     t.external_urls?.spotify,
+        album:   t.album?.name,
+        image:   t.album?.images?.[0]?.url || null,
+      })),
+      recently_played: (recent.items || []).map(r => ({
+        name:    r.track?.name,
+        artists: (r.track?.artists || []).map(a => a.name).join(', '),
+        url:     r.track?.external_urls?.spotify,
+        played_at: r.played_at,
+      })),
+      connected_at: row.created_at,
+    });
+  } catch (err) {
+    console.error('Spotify artist-stats error', err.message);
+    res.status(500).json({ error: { message: err.message || 'Failed to fetch Spotify stats' } });
   }
 });
 
@@ -675,6 +911,22 @@ app.post('/api/email', requireAuth, emailPerUser, emailLimiter, async (req, res)
 app.use(express.static(join(__dirname, 'dist')));
 app.get('*', (req, res) => {
   res.sendFile(join(__dirname, 'dist', 'index.html'));
+});
+
+// ── Global error envelope ────────────────────────────────────────────────────
+// Ensures every uncaught error response matches { error: { code, message } }.
+// Must be last middleware before listen.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, _next) => {
+  console.error('[api]', req.method, req.path, err.message || err);
+  const status = err.status || err.statusCode || 500;
+  const code   = err.code   || (status >= 500 ? 'internal_error' : 'bad_request');
+  res.status(status).json({
+    error: {
+      code,
+      message: err.message || 'Server error',
+    },
+  });
 });
 
 app.listen(port, () => {

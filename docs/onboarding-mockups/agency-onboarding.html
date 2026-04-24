@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MulBros Media OS — Talent Agency Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; height: 100vh; overflow: hidden; background: #1a0d2e; }
+.container { display: flex; height: 100vh; }
+
+/* ── LEFT PANEL ── */
+.left {
+  width: 56%;
+  background: linear-gradient(160deg, #1a0d2e 0%, #22103a 50%, #130929 100%);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 44px 52px;
+  overflow: hidden;
+}
+.left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+.left::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  right: -8%;
+  width: 55%;
+  height: 60%;
+  background: radial-gradient(ellipse, rgba(167,139,250,0.14) 0%, transparent 70%);
+  pointer-events: none;
+}
+.glow-bottom {
+  position: absolute;
+  bottom: -15%;
+  left: -5%;
+  width: 50%;
+  height: 50%;
+  background: radial-gradient(ellipse, rgba(245,158,11,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.left-logo { display: flex; align-items: center; gap: 10px; position: relative; z-index: 1; }
+.left-logo-icon {
+  width: 38px; height: 38px;
+  background: rgba(167,139,250,0.15);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+}
+.left-logo-text { display: flex; flex-direction: column; }
+.left-logo-name { font-size: 14px; font-weight: 800; color: white; letter-spacing: 0.08em; }
+.left-logo-sub { font-size: 9px; font-weight: 500; color: rgba(255,255,255,0.32); letter-spacing: 0.18em; text-transform: uppercase; }
+
+.left-hero { position: relative; z-index: 1; }
+.left-category { font-size: 11px; font-weight: 600; color: rgba(167,139,250,0.75); letter-spacing: 0.22em; text-transform: uppercase; margin-bottom: 22px; }
+.left-headline { font-size: 44px; font-weight: 900; color: white; line-height: 1.12; margin-bottom: 22px; letter-spacing: -0.025em; }
+.left-headline span { color: rgba(167,139,250,0.9); }
+.left-desc { font-size: 15px; color: rgba(255,255,255,0.42); line-height: 1.75; max-width: 440px; }
+
+.left-stats { display: flex; gap: 44px; position: relative; z-index: 1; }
+.stat-number { font-size: 30px; font-weight: 900; color: white; letter-spacing: -0.03em; line-height: 1; }
+.stat-label { font-size: 12px; color: rgba(255,255,255,0.33); margin-top: 4px; font-weight: 500; }
+
+/* ── RIGHT PANEL ── */
+.right { width: 44%; background: white; display: flex; flex-direction: column; overflow-y: auto; }
+.right-nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 44px;
+  border-bottom: 1px solid #f2f2f2;
+  flex-shrink: 0;
+}
+.right-logo { display: flex; align-items: center; gap: 8px; }
+.right-logo-icon { width: 32px; height: 32px; background: #1a0d2e; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.right-logo-stack { display: flex; flex-direction: column; }
+.right-logo-name { font-size: 12px; font-weight: 800; color: #1a0d2e; letter-spacing: 0.06em; }
+.right-logo-sub { font-size: 9px; font-weight: 500; color: #aaa; letter-spacing: 0.14em; text-transform: uppercase; }
+
+.nav-btns { display: flex; gap: 8px; }
+.btn-ghost { padding: 7px 15px; border: 1.5px solid #e4e4e4; border-radius: 8px; font-size: 12px; font-weight: 600; color: #444; background: white; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; }
+.btn-ghost:hover { border-color: #1a0d2e; color: #1a0d2e; }
+.btn-filled { padding: 7px 15px; border: 1.5px solid #1a0d2e; border-radius: 8px; font-size: 12px; font-weight: 600; color: white; background: #1a0d2e; cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s; }
+.btn-filled:hover { background: #2d1a4a; }
+
+.form-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 36px 44px; }
+
+.progress { display: flex; gap: 5px; margin-bottom: 30px; }
+.dot { height: 5px; border-radius: 3px; background: #eaeaea; transition: all 0.3s; width: 28px; }
+.dot.active { background: #1a0d2e; width: 40px; }
+.dot.done { background: #1a0d2e; }
+
+.step { display: none; animation: fadeIn 0.25s ease; }
+.step.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.step-eyebrow { font-size: 11px; font-weight: 600; color: #bbb; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
+.step-title { font-size: 26px; font-weight: 800; color: #1a0d2e; letter-spacing: -0.02em; margin-bottom: 5px; line-height: 1.2; }
+.step-sub { font-size: 13px; color: #999; margin-bottom: 26px; line-height: 1.55; }
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 5px; }
+.field input, .field select { width: 100%; padding: 11px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; font-size: 13px; color: #1a1a1a; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; background: white; }
+.field input:focus, .field select:focus { border-color: #1a0d2e; }
+.field input::placeholder { color: #ccc; }
+
+.options { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+.option { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; transition: all 0.18s; user-select: none; }
+.option:hover { border-color: #1a0d2e; background: #faf8ff; }
+.option.selected { border-color: #1a0d2e; background: #f5f0ff; color: #1a0d2e; font-weight: 600; }
+.option .radio-dot { width: 16px; height: 16px; border: 2px solid #ddd; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.18s; }
+.option.selected .radio-dot { border-color: #1a0d2e; }
+.option.selected .radio-dot::after { content: ''; width: 8px; height: 8px; background: #1a0d2e; border-radius: 50%; }
+
+.check-option { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; cursor: pointer; font-size: 13px; font-weight: 500; color: #333; transition: all 0.18s; user-select: none; }
+.check-option:hover { border-color: #1a0d2e; background: #faf8ff; }
+.check-option.selected { border-color: #1a0d2e; background: #f5f0ff; color: #1a0d2e; font-weight: 600; }
+.check-box { width: 16px; height: 16px; border: 2px solid #ddd; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 10px; transition: all 0.18s; }
+.check-option.selected .check-box { border-color: #1a0d2e; background: #1a0d2e; color: white; }
+
+.tools-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-bottom: 4px; }
+.tool { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border: 1.5px solid #e8e8e8; border-radius: 9px; cursor: pointer; font-size: 12px; font-weight: 500; color: #333; transition: all 0.18s; user-select: none; }
+.tool:hover { border-color: #1a0d2e; }
+.tool.selected { border-color: #1a0d2e; background: #f5f0ff; color: #1a0d2e; font-weight: 600; }
+.tool-badge { width: 24px; height: 24px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; flex-shrink: 0; }
+.tool .check-box { border: 2px solid #ddd; }
+.tool.selected .check-box { border-color: #1a0d2e; background: #1a0d2e; color: white; }
+
+.skills { display: flex; flex-direction: column; gap: 7px; }
+.skill-row { display: flex; align-items: center; justify-content: space-between; padding: 11px 13px; border: 1.5px solid #e8e8e8; border-radius: 9px; transition: all 0.18s; }
+.skill-row.on { border-color: #1a0d2e; background: #faf8ff; }
+.skill-left { display: flex; flex-direction: column; gap: 2px; }
+.skill-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+.skill-desc { font-size: 11px; color: #aaa; }
+.toggle-wrap { width: 38px; height: 22px; background: #e0e0e0; border-radius: 11px; position: relative; cursor: pointer; transition: background 0.22s; flex-shrink: 0; }
+.toggle-wrap.on { background: #1a0d2e; }
+.toggle-wrap::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; background: white; border-radius: 50%; transition: transform 0.22s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.toggle-wrap.on::after { transform: translateX(16px); }
+
+.btn-cta { width: 100%; padding: 14px; background: #1a0d2e; color: white; font-size: 14px; font-weight: 700; border: none; border-radius: 11px; cursor: pointer; font-family: 'Inter', sans-serif; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.18s; letter-spacing: 0.01em; }
+.btn-cta:hover { background: #2d1a4a; }
+
+.sign-in-link { text-align: center; margin-top: 14px; font-size: 12px; color: #aaa; }
+.sign-in-link a { color: #1a0d2e; font-weight: 700; text-decoration: none; }
+.trust-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 20px; font-size: 11px; color: #ccc; }
+.trust-icon { width: 14px; height: 14px; border: 1.5px solid #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #ccc; }
+.terms { text-align: center; font-size: 11px; color: #ccc; margin-top: 14px; }
+.terms a { color: #aaa; text-decoration: underline; }
+.section-label { font-size: 11px; font-weight: 600; color: #bbb; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; margin-top: 16px; }
+.section-label:first-of-type { margin-top: 0; }
+.success { text-align: center; padding: 20px 0; }
+.success-badge { width: 68px; height: 68px; background: #f5f0ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 18px; font-size: 30px; }
+.success-title { font-size: 24px; font-weight: 800; color: #1a0d2e; margin-bottom: 8px; letter-spacing: -0.02em; }
+.success-sub { font-size: 13px; color: #999; line-height: 1.65; margin-bottom: 22px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="glow-bottom"></div>
+    <div class="left-logo">
+      <div class="left-logo-icon">🎭</div>
+      <div class="left-logo-text">
+        <span class="left-logo-name">MULBROS</span>
+        <span class="left-logo-sub">Media OS</span>
+      </div>
+    </div>
+
+    <div class="left-hero">
+      <p class="left-category">AI Business Manager · Talent Agency</p>
+      <h1 class="left-headline">Where leading agencies<br>manage <span>smarter,</span><br>move faster.</h1>
+      <p class="left-desc">AI-powered operations built for talent agencies — from roster management and booking pipelines to contract tracking, commission reporting, and client marketing at scale.</p>
+    </div>
+
+    <div class="left-stats">
+      <div>
+        <div class="stat-number">1,200+</div>
+        <div class="stat-label">Agencies</div>
+      </div>
+      <div>
+        <div class="stat-number">50K+</div>
+        <div class="stat-label">Clients Managed</div>
+      </div>
+      <div>
+        <div class="stat-number">7</div>
+        <div class="stat-label">AI Functions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <nav class="right-nav">
+      <div class="right-logo">
+        <div class="right-logo-icon">🎭</div>
+        <div class="right-logo-stack">
+          <span class="right-logo-name">MULBROS</span>
+          <span class="right-logo-sub">Media OS</span>
+        </div>
+      </div>
+      <div class="nav-btns">
+        <button class="btn-ghost">Sign up</button>
+        <button class="btn-filled">Sign in</button>
+      </div>
+    </nav>
+
+    <div class="form-wrap">
+      <div class="progress">
+        <div class="dot active" id="d1"></div>
+        <div class="dot" id="d2"></div>
+        <div class="dot" id="d3"></div>
+        <div class="dot" id="d4"></div>
+        <div class="dot" id="d5"></div>
+      </div>
+
+      <!-- STEP 1 -->
+      <div class="step active" id="step-1">
+        <p class="step-eyebrow">Step 1 of 5</p>
+        <h2 class="step-title">Set up your agency</h2>
+        <p class="step-sub">Tell us about yourself and your agency — we'll configure your AI manager around your workflow.</p>
+        <div class="field"><label>Your full name</label><input type="text" placeholder="Jordan Mills"></div>
+        <div class="field"><label>Agency name</label><input type="text" placeholder="Apex Talent Group"></div>
+        <div class="field"><label>Work email</label><input type="email" placeholder="jordan@apextalentgroup.com"></div>
+        <button class="btn-cta" onclick="goTo(2)">Continue &rarr;</button>
+        <p class="sign-in-link">Already have an account? <a href="#">Sign in</a></p>
+        <div class="trust-row"><div class="trust-icon">✓</div> Trusted by 1,200+ agencies across 40+ countries</div>
+        <p class="terms">By continuing you agree to our <a href="#">Terms</a> and <a href="#">Privacy Policy</a>.</p>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="step" id="step-2">
+        <p class="step-eyebrow">Step 2 of 5</p>
+        <h2 class="step-title">Your agency type</h2>
+        <p class="step-sub">This shapes how your AI manager organizes your client workflows and deal tracking.</p>
+        <p class="section-label">Agency type</p>
+        <div class="options" id="type-opts">
+          <div class="option" onclick="selectOption(this,'type-opts')"><div class="radio-dot"></div> Full-Service Talent Agency</div>
+          <div class="option" onclick="selectOption(this,'type-opts')"><div class="radio-dot"></div> Boutique Talent Agency</div>
+          <div class="option" onclick="selectOption(this,'type-opts')"><div class="radio-dot"></div> Music Management Firm</div>
+          <div class="option" onclick="selectOption(this,'type-opts')"><div class="radio-dot"></div> Literary & Screenwriting Agency</div>
+          <div class="option" onclick="selectOption(this,'type-opts')"><div class="radio-dot"></div> Sports & Entertainment</div>
+        </div>
+        <p class="section-label">Roster size</p>
+        <div class="options" id="roster-opts">
+          <div class="option" onclick="selectOption(this,'roster-opts')"><div class="radio-dot"></div> 1 – 10 clients</div>
+          <div class="option" onclick="selectOption(this,'roster-opts')"><div class="radio-dot"></div> 10 – 50 clients</div>
+          <div class="option" onclick="selectOption(this,'roster-opts')"><div class="radio-dot"></div> 50 – 200 clients</div>
+          <div class="option" onclick="selectOption(this,'roster-opts')"><div class="radio-dot"></div> 200+ clients</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(3)">Continue &rarr;</button>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="step" id="step-3">
+        <p class="step-eyebrow">Step 3 of 5</p>
+        <h2 class="step-title">What you represent</h2>
+        <p class="step-sub">Select all talent categories your agency works with.</p>
+        <div class="options" id="cat-opts" style="gap:7px">
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Film & TV Talent (Actors, Directors)</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Musicians & Performers</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Screenwriters & Showrunners</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Composers & Music Producers</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Athletes & Sports Talent</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Influencers & Digital Creators</div>
+          <div class="check-option" onclick="toggleCheck(this)"><div class="check-box"></div> Cross-discipline / All of the above</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(4)">Continue &rarr;</button>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="step" id="step-4">
+        <p class="step-eyebrow">Step 4 of 5</p>
+        <h2 class="step-title">Connect your tools</h2>
+        <p class="step-sub">What tools does your team already use? Your AI manager knows how to work alongside them.</p>
+        <div class="tools-grid">
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">📊</div> Google Sheets</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">🗂️</div> Airtable</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fff3e0">🟠</div> HubSpot</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">☁️</div> Salesforce</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#f3e5f5">🔗</div> Linktree</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">📅</div> Calendly</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e3f2fd">📧</div> Gmail / Outlook</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fce4ec">💬</div> Slack</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#fff3e0">📝</div> DocuSign</div>
+          <div class="tool" onclick="toggleTool(this)"><div class="check-box"></div><div class="tool-badge" style="background:#e8f5e9">🎬</div> IMDbPro</div>
+        </div>
+        <button class="btn-cta" onclick="goTo(5)" style="margin-top:14px">Continue &rarr;</button>
+        <p class="sign-in-link" style="margin-top:10px"><a href="#" onclick="goTo(5); return false;" style="color:#bbb; font-weight:400;">Skip for now</a></p>
+      </div>
+
+      <!-- STEP 5 -->
+      <div class="step" id="step-5">
+        <p class="step-eyebrow">Step 5 of 5</p>
+        <h2 class="step-title">Activate your AI manager</h2>
+        <p class="step-sub">Turn on the business functions you want AI to handle. Adjust anytime from your dashboard.</p>
+        <div class="skills">
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🔍 Talent Outreach & Lead Gen</span>
+              <span class="skill-desc">Identify new signing opportunities, draft outreach messages</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">📅 Booking & Scheduling</span>
+              <span class="skill-desc">Manage auditions, shoots, events, and availability calendars</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">⚖️ Contract Management</span>
+              <span class="skill-desc">Track deal status, flag deadlines, summarize key terms</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">💰 Commission & Revenue Tracking</span>
+              <span class="skill-desc">Monitor earnings per client, invoice status, payout forecasting</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">📣 Client Marketing & PR</span>
+              <span class="skill-desc">Press releases, social copy, pitch bios for each client</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🏢 Team Operations</span>
+              <span class="skill-desc">Internal scheduling, task delegation, team briefings</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+          <div class="skill-row on">
+            <div class="skill-left">
+              <span class="skill-name">🤝 Client Communications</span>
+              <span class="skill-desc">Follow-up sequences, meeting prep, relationship updates</span>
+            </div>
+            <div class="toggle-wrap on" onclick="toggleSkill(this)"></div>
+          </div>
+        </div>
+        <button class="btn-cta" onclick="goTo(6)" style="margin-top:14px">Launch My AI Manager &rarr;</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div class="step" id="step-6">
+        <div class="success">
+          <div class="success-badge">🚀</div>
+          <h2 class="success-title">Your AI manager is live.</h2>
+          <p class="success-sub">Welcome to MulBros Media OS.<br>Your AI business manager is configured for <strong>talent agency operations</strong> — ready to handle bookings, contracts, commissions, and client marketing.</p>
+          <button class="btn-cta" onclick="alert('Redirecting to dashboard…')">Go to Dashboard &rarr;</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+let current = 1;
+function goTo(n) {
+  document.getElementById('step-' + current).classList.remove('active');
+  document.getElementById('step-' + n).classList.add('active');
+  current = n;
+  for (let i = 1; i <= 5; i++) {
+    const dot = document.getElementById('d' + i);
+    if (!dot) continue;
+    dot.classList.remove('active', 'done');
+    if (i < current) dot.classList.add('done');
+    else if (i === current) dot.classList.add('active');
+  }
+}
+function selectOption(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+function toggleCheck(el) {
+  el.classList.toggle('selected');
+  const box = el.querySelector('.check-box');
+  box.textContent = el.classList.contains('selected') ? '✓' : '';
+}
+function toggleTool(el) {
+  el.classList.toggle('selected');
+  const box = el.querySelector('.check-box');
+  box.textContent = el.classList.contains('selected') ? '✓' : '';
+}
+function toggleSkill(toggle) {
+  toggle.classList.toggle('on');
+  toggle.closest('.skill-row').classList.toggle('on');
+}
+</script>
+</body>
+</html>

@@ -1,7 +1,9 @@
 import React from 'react';
-import { DollarSign, Users, Music, Clapperboard, Film } from 'lucide-react';
+import { DollarSign, Users, Music, Clapperboard, Film, MessageSquare, Target, FileText } from 'lucide-react';
 import { AgentStatusGrid } from './AgentStatusGrid';
 import { useAppContext } from '../../App';
+import { useKPIs } from '../../hooks/useKPIs';
+import { agents as allAgents } from '../../config/agents';
 import { SectionLabel } from './parts/SectionLabel';
 import { WelcomeHero } from './parts/WelcomeHero';
 import { VerticalProfileCard } from './parts/VerticalProfileCard';
@@ -19,6 +21,7 @@ import {
 
 export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
   const { profile } = useAppContext();
+  const { leadCount, aiInteractions, contentPieces, pipelineValue, loading: kpiLoading } = useKPIs(profile?.id);
   const nav = (page) => setActivePage?.(page);
 
   return (
@@ -31,29 +34,41 @@ export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
       {/* Row 1 — Stat cards */}
       <SectionLabel label="Metrics" sub="live indicators" />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCardAnimated title="Box Office Revenue" numericValue={30000} formatter={v => `$${v.toLocaleString()}`}
-          change="+12.4%" changeUp sub="confirmed"
+        <StatCardAnimated title="Active Leads"
+          numericValue={leadCount}
+          loading={kpiLoading}
+          formatter={v => String(v)}
+          sub={leadCount === 0 ? 'no leads yet' : 'in pipeline'}
+          Icon={Target} iconBg="bg-emerald-100" iconColor="text-emerald-600"
+          accentColor={C.emerald} Bg={BgDeals} cardBg="linear-gradient(135deg, #ecfdf5 0%, #f4fdf9 45%, #ffffff 75%)"
+          onClick={() => nav('financing')} linkLabel="View Pipeline →" delay={0} />
+
+        <StatCardAnimated title="AI Interactions"
+          numericValue={aiInteractions}
+          loading={kpiLoading}
+          formatter={v => v.toLocaleString()}
+          sub="this month"
+          Icon={MessageSquare} iconBg="bg-amber-100" iconColor="text-amber-600"
+          accentColor={C.gold} Bg={BgStreams} cardBg="linear-gradient(135deg, #fffbeb 0%, #fffdf4 45%, #ffffff 75%)"
+          onClick={() => nav('agents')} linkLabel="View Agents →" delay={80} />
+
+        <StatCardAnimated title="Content Pieces"
+          numericValue={contentPieces}
+          loading={kpiLoading}
+          formatter={v => String(v)}
+          sub="this month"
+          Icon={FileText} iconBg="bg-purple-100" iconColor="text-purple-600"
+          accentColor={C.purple} Bg={BgCommunity} cardBg="linear-gradient(135deg, #f5f3ff 0%, #f9f7ff 45%, #ffffff 75%)"
+          onClick={() => nav('content')} linkLabel="View Content →" delay={160} />
+
+        <StatCardAnimated title="Pipeline Value"
+          numericValue={pipelineValue}
+          loading={kpiLoading}
+          formatter={v => `$${v >= 1_000_000 ? (v / 1_000_000).toFixed(1) + 'M' : v >= 1_000 ? (v / 1_000).toFixed(0) + 'K' : v.toFixed(0)}`}
+          sub={pipelineValue === 0 ? 'start tracking' : 'total'}
           Icon={DollarSign} iconBg="bg-blue-100" iconColor="text-blue-600"
           accentColor={C.blue} Bg={BgRevenue} cardBg="linear-gradient(135deg, #eff6ff 0%, #f4f8ff 45%, #ffffff 75%)"
-          onClick={() => nav('financing')} linkLabel="View Film Financing →" delay={0} />
-
-        <StatCardAnimated title="Monthly Streams" numericValue={85230} formatter={v => v.toLocaleString()}
-          change="+8.2%" changeUp sub="Talise"
-          Icon={Music} iconBg="bg-amber-100" iconColor="text-amber-600"
-          accentColor={C.gold} Bg={BgStreams} cardBg="linear-gradient(135deg, #fffbeb 0%, #fffdf4 45%, #ffffff 75%)"
-          onClick={() => nav('music')} linkLabel="View Music & Composition →" delay={80} />
-
-        <StatCardAnimated title="Active Deals" numericValue={14} formatter={v => String(v)}
-          change="+3" changeUp sub="pipeline"
-          Icon={Clapperboard} iconBg="bg-emerald-100" iconColor="text-emerald-600"
-          accentColor={C.emerald} Bg={BgDeals} cardBg="linear-gradient(135deg, #ecfdf5 0%, #f4fdf9 45%, #ffffff 75%)"
-          onClick={() => nav('financing')} linkLabel="View Deal Pipeline →" delay={160} />
-
-        <StatCardAnimated title="Fan Community" numericValue={2847} formatter={v => v.toLocaleString()}
-          change="-2.1%" changeUp={false} sub="members"
-          Icon={Users} iconBg="bg-purple-100" iconColor="text-purple-600"
-          accentColor={C.purple} Bg={BgCommunity} cardBg="linear-gradient(135deg, #f5f3ff 0%, #f9f7ff 45%, #ffffff 75%)"
-          onClick={() => nav('music')} linkLabel="View Community →" delay={240} />
+          onClick={() => nav('financing')} linkLabel="View Pipeline →" delay={240} />
       </div>
 
       {/* Row 2 */}
@@ -103,7 +118,7 @@ export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
       </div>
 
       {/* Row 6 — Agent Fleet */}
-      <SectionLabel label="Agent Fleet" sub="9 agents online" />
+      <SectionLabel label="Agent Fleet" sub={`${allAgents.filter(a => a.status === 'active').length} agents online`} />
       <AgentStatusGrid onAgentClick={onAgentClick} />
 
     </div>

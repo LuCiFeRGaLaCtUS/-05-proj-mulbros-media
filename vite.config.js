@@ -248,12 +248,177 @@ const aiSearchMiddleware = (env) => ({
   },
 });
 
+// ── Spotify OAuth dev middleware ──────────────────────────────────────────────
+// Mirrors the Express /api/spotify/* routes for local dev on port 5173.
+const SPOTIFY_SCOPES_DEV = 'user-read-private user-top-read user-read-recently-played';
+
+const spotifySupaHeaders = (env) => ({
+  apikey:        env.VITE_SUPABASE_ANON_KEY || '',
+  Authorization: `Bearer ${env.VITE_SUPABASE_ANON_KEY || ''}`,
+  'Content-Type': 'application/json',
+});
+const spotifySupaUrl = (env, path) => `${env.VITE_SUPABASE_URL}/rest/v1/${path}`;
+
+const spotifyMiddleware = (env) => ({
+  name: 'spotify-dev',
+  configureServer(server) {
+    const upsert = async ({ profileId, access, refresh, expiresInSec, scope }) => {
+      const expires_at = new Date(Date.now() + Math.max(0, (expiresInSec || 3600) - 60) * 1000).toISOString();
+      const row = {
+        user_id: profileId, service: 'spotify',
+        access_token: access, refresh_token: refresh || null,
+        expires_at, metadata: { scope: scope || SPOTIFY_SCOPES_DEV, updated_at: new Date().toISOString() },
+      };
+      const r = await fetch(spotifySupaUrl(env, 'user_integrations?on_conflict=user_id,service'), {
+        method: 'POST',
+        headers: { ...spotifySupaHeaders(env), Prefer: 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify(row),
+      });
+      if (!r.ok) throw new Error(`Supabase upsert failed ${r.status}`);
+    };
+    const read = async (profileId) => {
+      const r = await fetch(
+        spotifySupaUrl(env, `user_integrations?user_id=eq.${profileId}&service=eq.spotify&select=*`),
+        { headers: spotifySupaHeaders(env) },
+      );
+      if (!r.ok) throw new Error(`Supabase read failed ${r.status}`);
+      const rows = await r.json();
+      return rows[0] || null;
+    };
+    const refreshIfNeeded = async (row) => {
+      const expiresAt = row.expires_at ? new Date(row.expires_at).getTime() : 0;
+      if (expiresAt > Date.now() + 30_000) return row.access_token;
+      if (!row.refresh_token) throw new Error('No refresh token on file');
+      const basic = Buffer.from(`${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`).toString('base64');
+      const r = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        headers: { Authorization: `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: row.refresh_token }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error_description || `Spotify refresh failed ${r.status}`);
+      await upsert({
+        profileId:    row.user_id,
+        access:       data.access_token,
+        refresh:      data.refresh_token || row.refresh_token,
+        expiresInSec: data.expires_in,
+        scope:        data.scope,
+      });
+      return data.access_token;
+    };
+
+    // /api/spotify/auth — redirect
+    server.middlewares.use('/api/spotify/auth', (req, res) => {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const profileId = url.searchParams.get('profile_id');
+      if (!env.SPOTIFY_CLIENT_ID || !env.SPOTIFY_REDIRECT_URI) {
+        res.statusCode = 503; return res.end('Spotify not configured');
+      }
+      if (!profileId) { res.statusCode = 400; return res.end('profile_id required'); }
+      const authUrl = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
+        response_type: 'code',
+        client_id:     env.SPOTIFY_CLIENT_ID,
+        scope:         SPOTIFY_SCOPES_DEV,
+        redirect_uri:  env.SPOTIFY_REDIRECT_URI,
+        state:         profileId,
+        show_dialog:   'true',
+      });
+      res.statusCode = 302;
+      res.setHeader('Location', authUrl);
+      res.end();
+    });
+
+    // /api/spotify/callback — exchange + store + redirect
+    server.middlewares.use('/api/spotify/callback', async (req, res) => {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const code  = url.searchParams.get('code');
+      const state = url.searchParams.get('state');
+      const error = url.searchParams.get('error');
+      const appUrl = env.VITE_APP_URL || 'http://localhost:5173';
+      const backTo = `${appUrl}/vertical/musician`;
+      const redirect = (qs) => { res.statusCode = 302; res.setHeader('Location', `${backTo}?${qs}`); res.end(); };
+
+      if (error) return redirect('spotify=denied');
+      if (!code || !state) return redirect('spotify=missing_params');
+      if (!env.SPOTIFY_CLIENT_ID || !env.SPOTIFY_CLIENT_SECRET || !env.SPOTIFY_REDIRECT_URI) {
+        return redirect('spotify=server_unconfigured');
+      }
+
+      try {
+        const basic = Buffer.from(`${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`).toString('base64');
+        const r = await fetch('https://accounts.spotify.com/api/token', {
+          method: 'POST',
+          headers: { Authorization: `Basic ${basic}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: env.SPOTIFY_REDIRECT_URI }),
+        });
+        const data = await r.json();
+        if (!r.ok) {
+          console.error('Spotify exchange failed', data);
+          return redirect('spotify=exchange_failed');
+        }
+        await upsert({
+          profileId:    state,
+          access:       data.access_token,
+          refresh:      data.refresh_token,
+          expiresInSec: data.expires_in,
+          scope:        data.scope,
+        });
+        return redirect('spotify=connected');
+      } catch (err) {
+        console.error('Spotify callback error', err.message);
+        return redirect('spotify=error');
+      }
+    });
+
+    // /api/spotify/artist-stats — live fetch with refresh
+    server.middlewares.use('/api/spotify/artist-stats', async (req, res) => {
+      const url = new URL(req.url, `http://${req.headers.host}`);
+      const profileId = url.searchParams.get('profile_id');
+      const json = (status, body) => {
+        res.statusCode = status; res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify(body));
+      };
+      if (!profileId) return json(400, { error: { message: 'profile_id required' } });
+      try {
+        const row = await read(profileId);
+        if (!row) return json(404, { error: { message: 'Spotify not connected' } });
+        const accessToken = await refreshIfNeeded(row);
+        const auth = { Authorization: `Bearer ${accessToken}` };
+        const [meR, topR, recentR] = await Promise.all([
+          fetch('https://api.spotify.com/v1/me', { headers: auth }),
+          fetch('https://api.spotify.com/v1/me/top/tracks?limit=5&time_range=short_term', { headers: auth }),
+          fetch('https://api.spotify.com/v1/me/player/recently-played?limit=5', { headers: auth }),
+        ]);
+        const [me, top, recent] = await Promise.all([meR.json(), topR.json(), recentR.json()]);
+        json(200, {
+          profile: {
+            id: me.id, display_name: me.display_name,
+            followers: me.followers?.total ?? null, country: me.country, product: me.product,
+            external_url: me.external_urls?.spotify, image: me.images?.[0]?.url || null,
+          },
+          top_tracks: (top.items || []).map(t => ({
+            name: t.name, artists: (t.artists || []).map(a => a.name).join(', '),
+            url: t.external_urls?.spotify, album: t.album?.name, image: t.album?.images?.[0]?.url || null,
+          })),
+          recently_played: (recent.items || []).map(r => ({
+            name: r.track?.name, artists: (r.track?.artists || []).map(a => a.name).join(', '),
+            url: r.track?.external_urls?.spotify, played_at: r.played_at,
+          })),
+          connected_at: row.created_at,
+        });
+      } catch (err) {
+        console.error('Spotify artist-stats error', err.message);
+        json(500, { error: { message: err.message || 'Failed to fetch Spotify stats' } });
+      }
+    });
+  },
+});
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
   const OPENAI_KEY = env.OPENAI_API_KEY || '';
 
   return {
-    plugins: [react(), redditSearchMiddleware, firecrawlMiddleware(env), apifyMiddleware(env), aiSearchMiddleware(env)],
+    plugins: [react(), redditSearchMiddleware, firecrawlMiddleware(env), apifyMiddleware(env), aiSearchMiddleware(env), spotifyMiddleware(env)],
 
     server: {
       port: 5173,

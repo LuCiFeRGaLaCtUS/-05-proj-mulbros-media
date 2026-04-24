@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import {
   DndContext,
   PointerSensor,
@@ -8,15 +9,17 @@ import {
   DragOverlay,
 } from '@dnd-kit/core';
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import {
-  taliseBio, taliseStreamingStats, taliseRelationships,
-  lukeBio, lukeMetrics,
-  activities
-} from '../../config/mockData';
+import { activities } from '../../config/mockData';
 import { useMusicPipeline } from '../../hooks/useMusicPipeline';
+import { useSpotifyIntegration } from '../../hooks/useSpotifyIntegration';
 import { useAppContext } from '../../App';
-import { Bot, Sparkles, Music, Piano, Clock, Pencil, Check, X, GripVertical } from 'lucide-react';
+import {
+  Bot, Sparkles, Music, Clock, Pencil, Check, X, GripVertical,
+  Headphones, ExternalLink, Link as LinkIcon, PlayCircle, Unlink, Loader2,
+} from 'lucide-react';
+import { TiltCard } from '../ui/TiltCard';
 
 // ── Light background — amber theme ───────────────────────────────────────────
 const AmberBg = () => (
@@ -28,14 +31,53 @@ const AmberBg = () => (
 
 const musicActivities = activities.filter(a => ['music', 'composer'].includes(a.vertical));
 
-const LUKE_STAGES = [
+// ── Goal → recommended tools (per spec) ──────────────────────────────────────
+const TOOL_BY_GOAL = {
+  'Sync licensing': [
+    { name: 'Groover',   url: 'https://groover.co',        desc: 'Curator + supervisor pitching' },
+    { name: 'ASCAP',     url: 'https://ascap.com',         desc: 'Performing rights & royalties' },
+    { name: 'BMI',       url: 'https://bmi.com',           desc: 'Performing rights & royalties' },
+    { name: 'Marmoset',  url: 'https://marmosetmusic.com', desc: 'Boutique sync licensing' },
+  ],
+  'Grow my audience': [
+    { name: 'SymphonyOS',    url: 'https://symphonyos.co',    desc: 'Marketing automation' },
+    { name: 'Chartmetric',   url: 'https://chartmetric.com',  desc: 'Music analytics' },
+    { name: 'SubmitHub',     url: 'https://submithub.com',    desc: 'Curator pitching' },
+    { name: 'Playlist Push', url: 'https://playlistpush.com', desc: 'Playlist promotion' },
+  ],
+  'Record deal': [
+    { name: 'Chartmetric',   url: 'https://chartmetric.com',   desc: 'Analytics to back your pitch' },
+    { name: 'UnitedMasters', url: 'https://unitedmasters.com', desc: 'Distribution + label services' },
+    { name: 'Symphonic',     url: 'https://symphonic.com',     desc: 'Distribution + marketing' },
+    { name: 'Bandcamp',      url: 'https://bandcamp.com',      desc: 'Direct sales + fanbase' },
+  ],
+  'Brand partnerships': [
+    { name: 'SymphonyOS', url: 'https://symphonyos.co', desc: 'Brand/sync automation' },
+    { name: 'Bandcamp',   url: 'https://bandcamp.com',  desc: 'Direct sales' },
+    { name: 'AirGigs',    url: 'https://airgigs.com',   desc: 'Session + brand gigs' },
+  ],
+  'Live performance / touring': [
+    { name: 'Bandcamp',    url: 'https://bandcamp.com',    desc: 'Tour merch + direct sales' },
+    { name: 'SymphonyOS',  url: 'https://symphonyos.co',   desc: 'Tour marketing' },
+    { name: 'AirGigs',     url: 'https://airgigs.com',     desc: 'Session gigs between dates' },
+  ],
+};
+
+const DEFAULT_TOOLS = [
+  { name: 'CD Baby',       url: 'https://cdbaby.com',       desc: 'Distribution' },
+  { name: 'Chartmetric',   url: 'https://chartmetric.com',  desc: 'Analytics' },
+  { name: 'Bandcamp',      url: 'https://bandcamp.com',     desc: 'Direct sales' },
+  { name: 'SymphonyOS',    url: 'https://symphonyos.co',    desc: 'Marketing automation' },
+];
+
+const PIPELINE_STAGES = [
   { key: 'prospecting', label: 'Prospecting' },
   { key: 'pitched',     label: 'Pitched'     },
   { key: 'negotiating', label: 'Negotiating' },
   { key: 'closed',      label: 'Closed'      },
 ];
 
-const lukeStageBadge = {
+const pipelineStageBadge = {
   prospecting: 'bg-zinc-100 text-zinc-700',
   pitched:     'bg-blue-50 text-blue-700',
   negotiating: 'bg-amber-50 text-amber-700',
@@ -43,7 +85,6 @@ const lukeStageBadge = {
 };
 
 // ── DnD primitives ────────────────────────────────────────────────────────────
-
 const DraggableCard = ({ id, children, disabled }) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id });
   return (
@@ -75,86 +116,8 @@ const DroppableColumn = ({ id, children }) => {
   );
 };
 
-// ─── Talise overview ──────────────────────────────────────────────────────────
-const TaliseOverview = () => (
-  <div className="space-y-5">
-    {/* Bio */}
-    <div
-      className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-    >
-      <AmberBg />
-      <div className="relative z-10">
-        <div className="text-xs font-semibold uppercase tracking-wider text-amber-600 mb-2">Bio</div>
-        <p className="text-sm text-zinc-700 leading-relaxed">{taliseBio}</p>
-      </div>
-    </div>
-
-    {/* Streaming stats */}
-    <div className="grid grid-cols-4 gap-4">
-      {taliseStreamingStats.map(s => (
-        <div
-          key={s.platform}
-          className="relative tile-pop bg-white rounded-2xl p-4 overflow-hidden"
-          style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-        >
-          <AmberBg />
-          <div className="relative z-10">
-            <div className="text-xs text-zinc-500 mb-1.5 leading-snug">{s.platform}</div>
-            <div className="text-2xl font-bold font-mono text-zinc-900">{s.value}</div>
-            <div className="text-xs text-amber-600 mt-0.5 font-medium">{s.change}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-
-    {/* Relationships table */}
-    <div
-      className="relative tile-pop bg-white rounded-2xl overflow-hidden"
-      style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-    >
-      <AmberBg />
-      <div className="relative z-10">
-        <div className="px-5 py-3 border-b border-zinc-200 bg-gradient-to-r from-amber-50 to-transparent">
-          <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Relationships</div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-200 text-xs text-zinc-500">
-                <th className="text-left py-2.5 px-5 font-medium">Name</th>
-                <th className="text-left py-2.5 px-4 font-medium">Role</th>
-                <th className="text-left py-2.5 px-4 font-medium">Platform</th>
-                <th className="text-left py-2.5 px-4 font-medium">Status</th>
-                <th className="text-left py-2.5 px-4 font-medium">Next Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {taliseRelationships.map((r, i) => (
-                <tr key={i} className="border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
-                  <td className="py-2.5 px-5 text-zinc-900 font-medium">{r.name}</td>
-                  <td className="py-2.5 px-4 text-zinc-700">{r.role}</td>
-                  <td className="py-2.5 px-4 text-zinc-700">{r.platform}</td>
-                  <td className="py-2.5 px-4">
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                      r.status === 'Active'
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-zinc-100 text-zinc-700 border border-zinc-200'
-                    }`}>{r.status}</span>
-                  </td>
-                  <td className="py-2.5 px-4 text-zinc-500 text-xs">{r.nextAction}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-// ─── Luke Card (view mode) ────────────────────────────────────────────────────
-const LukeCardView = ({ lead, onEdit }) => (
+// ── Pipeline card (view) ─────────────────────────────────────────────────────
+const PipelineCardView = ({ lead, onEdit }) => (
   <div
     className="relative bg-white rounded-xl p-3 overflow-hidden group"
     style={{ border: '1px solid rgba(0,0,0,0.07)' }}
@@ -176,8 +139,8 @@ const LukeCardView = ({ lead, onEdit }) => (
       </div>
       {lead.director && <div className="text-xs text-zinc-500 mb-1 pl-4">{lead.director}</div>}
       <div className="flex gap-1.5 flex-wrap pl-4">
-        <span className="text-xs bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded border border-zinc-200">{lead.budget}</span>
-        {lead.genre && <span className="text-xs text-zinc-600">{lead.genre}</span>}
+        {lead.budget && <span className="text-xs bg-zinc-100 text-zinc-700 px-1.5 py-0.5 rounded border border-zinc-200">{lead.budget}</span>}
+        {lead.genre  && <span className="text-xs text-zinc-600">{lead.genre}</span>}
       </div>
       {lead.proposedFee && (
         <div className="text-xs text-amber-600 font-medium mt-1 pl-4">{lead.proposedFee}</div>
@@ -194,8 +157,7 @@ const LukeCardView = ({ lead, onEdit }) => (
   </div>
 );
 
-// ─── Luke Card (edit mode) ────────────────────────────────────────────────────
-const LukeCardEdit = ({ draft, onChange, onSave, onCancel }) => (
+const PipelineCardEdit = ({ draft, onChange, onSave, onCancel }) => (
   <div
     className="relative bg-white rounded-xl p-3 overflow-hidden"
     style={{ border: '1px solid rgba(245,158,11,0.4)' }}
@@ -203,8 +165,7 @@ const LukeCardEdit = ({ draft, onChange, onSave, onCancel }) => (
   >
     <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-transparent to-transparent pointer-events-none" />
     <div className="relative z-10 space-y-1.5">
-      <input
-        autoFocus
+      <input autoFocus
         className="w-full bg-white text-zinc-900 text-xs rounded px-2 py-1.5 border border-amber-400 focus:outline-none focus:border-amber-500 placeholder-zinc-400"
         value={draft.title}
         onChange={e => onChange('title', e.target.value)}
@@ -233,16 +194,12 @@ const LukeCardEdit = ({ draft, onChange, onSave, onCancel }) => (
         placeholder="Proposed fee (e.g. $8K)"
       />
       <div className="flex gap-1.5 pt-1">
-        <button
-          onClick={onSave}
-          className="flex items-center gap-1 text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors"
-        >
+        <button onClick={onSave}
+          className="flex items-center gap-1 text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg transition-colors">
           <Check size={10} /> Save
         </button>
-        <button
-          onClick={onCancel}
-          className="flex items-center gap-1 text-xs bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg transition-colors"
-        >
+        <button onClick={onCancel}
+          className="flex items-center gap-1 text-xs bg-zinc-100 hover:bg-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg transition-colors">
           <X size={10} /> Cancel
         </button>
       </div>
@@ -250,8 +207,8 @@ const LukeCardEdit = ({ draft, onChange, onSave, onCancel }) => (
   </div>
 );
 
-// ─── Luke overview ────────────────────────────────────────────────────────────
-const LukeOverview = ({ onAgentClick, userId }) => {
+// ── Deal Pipeline (per-user Kanban) ──────────────────────────────────────────
+const DealPipeline = ({ userId }) => {
   const { pipeline, setPipeline } = useMusicPipeline(userId);
   const [editing, setEditing] = useState(null);
   const [editDraft, setEditDraft] = useState({});
@@ -290,8 +247,7 @@ const LukeOverview = ({ onAgentClick, userId }) => {
     setEditing(null);
   };
 
-  const cancelEdit = () => setEditing(null);
-
+  const cancelEdit  = () => setEditing(null);
   const changeDraft = (field, value) => setEditDraft(d => ({ ...d, [field]: value }));
 
   const handleDragStart = ({ active }) => {
@@ -322,56 +278,25 @@ const LukeOverview = ({ onAgentClick, userId }) => {
   const draggedCard = getDraggedCard();
 
   return (
-    <div className="space-y-5">
-      {/* Bio */}
-      <div
-        className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
-        style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-      >
-        <AmberBg />
-        <div className="relative z-10">
-          <div className="text-xs font-semibold uppercase tracking-wider text-amber-600 mb-2">Bio</div>
-          <p className="text-sm text-zinc-700 leading-relaxed">{lukeBio}</p>
-        </div>
-      </div>
-
-      {/* Metrics */}
-      <div className="grid grid-cols-4 gap-4">
-        {lukeMetrics.map(m => (
-          <div
-            key={m.label}
-            className="relative tile-pop bg-white rounded-2xl p-4 overflow-hidden"
-            style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
-          >
-            <AmberBg />
-            <div className="relative z-10">
-              <div className="text-xs text-zinc-500 mb-1.5">{m.label}</div>
-              <div className="text-2xl font-bold font-mono text-zinc-900">{m.value}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pipeline header */}
+    <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div className="text-sm font-semibold text-zinc-900">Deal Pipeline</div>
         <div className="text-xs text-zinc-500">Drag cards between stages · Click <Pencil size={9} className="inline" /> to edit</div>
       </div>
 
-      {/* Kanban with DnD */}
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDragCancel={() => setActiveCardId(null)}
       >
-        <div className="grid grid-cols-4 gap-4">
-          {LUKE_STAGES.map(stage => {
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PIPELINE_STAGES.map(stage => {
             const leads = pipeline[stage.key] || [];
             return (
               <div key={stage.key} className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${lukeStageBadge[stage.key]} border-zinc-200`}>
+                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${pipelineStageBadge[stage.key]} border-zinc-200`}>
                     {stage.label}
                   </span>
                   <span className="text-xs font-mono text-zinc-500">{leads.length}</span>
@@ -379,10 +304,10 @@ const LukeOverview = ({ onAgentClick, userId }) => {
 
                 <DroppableColumn id={stage.key}>
                   {leads.map((lead, i) => {
-                    const cardId = `${stage.key}::${i}`;
+                    const cardId    = `${stage.key}::${i}`;
                     const isEditing = editing?.stage === stage.key && editing?.index === i;
                     return isEditing ? (
-                      <LukeCardEdit
+                      <PipelineCardEdit
                         key={cardId}
                         draft={editDraft}
                         onChange={changeDraft}
@@ -391,10 +316,7 @@ const LukeOverview = ({ onAgentClick, userId }) => {
                       />
                     ) : (
                       <DraggableCard key={cardId} id={cardId}>
-                        <LukeCardView
-                          lead={lead}
-                          onEdit={() => startEdit(stage.key, i)}
-                        />
+                        <PipelineCardView lead={lead} onEdit={() => startEdit(stage.key, i)} />
                       </DraggableCard>
                     );
                   })}
@@ -409,7 +331,7 @@ const LukeOverview = ({ onAgentClick, userId }) => {
           })}
         </div>
 
-        <DragOverlay>
+        <DragOverlay modifiers={[snapCenterToCursor]}>
           {draggedCard ? (
             <div
               className="relative bg-white rounded-xl p-3 overflow-hidden shadow-lg rotate-1 scale-105"
@@ -419,7 +341,7 @@ const LukeOverview = ({ onAgentClick, userId }) => {
               <div className="relative z-10">
                 <div className="text-xs font-semibold text-zinc-900 mb-1">{draggedCard.title}</div>
                 {draggedCard.director && <div className="text-xs text-zinc-500">{draggedCard.director}</div>}
-                <div className="text-xs bg-zinc-100 text-zinc-700 border border-zinc-200 inline-block px-1.5 py-0.5 rounded mt-1">{draggedCard.budget}</div>
+                {draggedCard.budget && <div className="text-xs bg-zinc-100 text-zinc-700 border border-zinc-200 inline-block px-1.5 py-0.5 rounded mt-1">{draggedCard.budget}</div>}
               </div>
             </div>
           ) : null}
@@ -429,99 +351,162 @@ const LukeOverview = ({ onAgentClick, userId }) => {
   );
 };
 
+// ── Empty-state tile ─────────────────────────────────────────────────────────
+const EmptyTile = ({ icon: Icon, label, message, cta, ctaDisabled }) => (
+  <div
+    className="relative bg-white rounded-2xl p-4 overflow-hidden border-2 border-dashed border-zinc-200"
+  >
+    <div className="absolute inset-0 bg-gradient-to-br from-amber-50/40 via-transparent to-transparent pointer-events-none" />
+    <div className="relative z-10">
+      <div
+        style={{ fontFamily: 'var(--font-mono)' }}
+        className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2 flex items-center gap-1.5"
+      >
+        {Icon && <Icon size={10} />}
+        {label}
+      </div>
+      <div className="text-sm text-zinc-600 mb-2 leading-snug">{message}</div>
+      {cta && (
+        <button
+          disabled={ctaDisabled}
+          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+            ctaDisabled
+              ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed'
+              : 'bg-amber-500 hover:bg-amber-600 text-white'
+          }`}
+        >
+          {cta}
+        </button>
+      )}
+    </div>
+  </div>
+);
+
 // ─── Main view ────────────────────────────────────────────────────────────────
-export const MusicView = ({ onAgentClick, user }) => {
+export const MusicView = () => {
   const { profile } = useAppContext();
-  const [talent, setTalent] = useState('talise');
   const [activeTab, setActiveTab] = useState('Overview');
   const tabs = ['Overview', 'Activity'];
+
+  const {
+    connected: spotifyConnected,
+    stats: spotifyStats,
+    loading: spotifyLoading,
+    connect: connectSpotify,
+    disconnect: disconnectSpotify,
+  } = useSpotifyIntegration(profile?.id);
+
+  // Toast on OAuth callback query param
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('spotify');
+    if (!status) return;
+    const map = {
+      connected: () => toast.success('Spotify connected'),
+      denied:    () => toast.error('Spotify authorization denied'),
+      missing_params: () => toast.error('Spotify callback missing params'),
+      exchange_failed: () => toast.error('Spotify token exchange failed'),
+      server_unconfigured: () => toast.error('Spotify not configured on server'),
+      error:     () => toast.error('Spotify connection error'),
+    };
+    (map[status] || (() => {}))();
+    // Clean URL
+    params.delete('spotify');
+    const next = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (next ? `?${next}` : ''));
+  }, []);
+
+  const answers = profile?.onboarding_data?.answers || {};
+  const vertical    = profile?.vertical || 'musician';
+  const isComposer  = vertical === 'composer';
+  const displayName = profile?.display_name || profile?.email?.split('@')[0] || 'Artist';
+  const genre       = answers.genre || answers.speciality || null;
+  const goal        = answers.goal || answers.seeking || null;
+  const listeners   = answers.monthly_listeners || null;
+  const releaseStat = answers.release_status || null;
+  const credits     = answers.credits || null;
+  const daw         = answers.daw || null;
+
+  const tools = (goal && TOOL_BY_GOAL[goal]) || DEFAULT_TOOLS;
+
+  const pageTitle = isComposer ? 'Composer Studio' : 'Music & Composition';
+  const pageSubtitle = isComposer
+    ? 'Sync pitches, scoring pipeline, and collaborator discovery for film and media composers.'
+    : 'Sync licensing, audience growth, and pipeline management for working musicians.';
 
   return (
     <div className="space-y-5">
 
       {/* ── Page header ───────────────────────────────────────────────────── */}
-      <div
-        className="relative overflow-hidden tile-pop bg-white rounded-2xl p-5"
+      <TiltCard
+        tiltLimit={6} scale={1.015} perspective={1400}
+        className="tile-pop bg-white rounded-2xl p-5"
         style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-amber-50 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-0 right-0 w-48 h-24 bg-amber-100 blur-xl rounded-full pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(245,158,11,0.04),transparent_70%)] pointer-events-none" />
-        <div className="absolute bottom-2 left-0 right-0 flex flex-col gap-1.5 px-4 pointer-events-none opacity-10">
-          {[0, 1, 2, 3, 4].map(i => (
-            <div key={i} className="h-px bg-amber-400" />
-          ))}
-        </div>
         <div className="absolute right-8 top-1/2 -translate-y-1/2 w-20 h-20 rounded-full border border-amber-200 pointer-events-none" />
         <div className="absolute right-12 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-amber-200 pointer-events-none" />
         <div className="relative z-10 flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-zinc-900">Music & Composition</h1>
-            <p className="text-sm text-zinc-500 mt-1">
-              AI-driven composer matching, sync licensing, and scoring workflow management for film and media projects.
-            </p>
+            <h1 className="text-2xl font-bold text-zinc-900">{pageTitle}</h1>
+            <p className="text-sm text-zinc-500 mt-1">{pageSubtitle}</p>
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              <span className="text-xs bg-white border border-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg font-medium">
+                {displayName}
+              </span>
+              {spotifyConnected && (
+                <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-lg font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  Spotify connected
+                </span>
+              )}
+              {genre && (
+                <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg font-medium">
+                  {genre}
+                </span>
+              )}
+              {goal && (
+                <span className="text-xs bg-white border border-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg font-medium">
+                  Goal: {goal}
+                </span>
+              )}
+              {releaseStat && (
+                <span className="text-xs bg-white border border-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg font-medium">
+                  {releaseStat}
+                </span>
+              )}
+              {credits && (
+                <span className="text-xs bg-white border border-zinc-200 text-zinc-700 px-2.5 py-1 rounded-lg font-medium">
+                  {credits}
+                </span>
+              )}
+            </div>
           </div>
-          <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1.5 rounded-lg font-medium">
-            Vertical C
-          </span>
         </div>
-      </div>
+      </TiltCard>
 
       {/* ── AI Engine banner ──────────────────────────────────────────────── */}
       <div className="tile-pop relative overflow-hidden bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-center gap-4">
         <div className="absolute -top-4 right-8 w-24 h-24 bg-amber-200/60 blur-xl rounded-full pointer-events-none" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_50%,rgba(245,158,11,0.06),transparent_70%)] pointer-events-none" />
-        <div className="absolute bottom-1 left-0 right-0 flex flex-col gap-1 px-4 pointer-events-none opacity-30">
-          {[0, 1, 2].map(i => <div key={i} className="h-px bg-amber-300" />)}
-        </div>
         <div className="relative z-10 w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 flex items-center justify-center flex-shrink-0">
           <Bot size={18} className="text-amber-600" />
         </div>
         <div className="relative z-10 flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-sm font-semibold text-zinc-900">AI Music & Composition Engine — Online</span>
+            <span className="text-sm font-semibold text-zinc-900">
+              AI {isComposer ? 'Composer' : 'Music'} Engine — Online
+            </span>
             <span className="flex items-center gap-1 text-xs bg-amber-100 text-amber-700 border border-amber-300 px-1.5 py-0.5 rounded-full font-medium">
               <Sparkles size={9} /> AI
             </span>
           </div>
           <p className="text-xs text-zinc-600 leading-snug">
-            Connects filmmakers with composers and scoring talent. Manages sync licensing opportunities, scoring workflows, and music deliverables end-to-end.
-            Luke → AI-matched to indie films in pre-production via IMDb Pro and Film Freeway.
-            Talise → sync pitches to supervisors, brand partnerships, and editorial playlist placements.
+            {isComposer
+              ? `Matches ${daw ? daw + ' ' : ''}composers to films in pre-production, manages sync pitches, and tracks scoring deliverables.`
+              : `Handles sync pitches, playlist campaigns, and audience growth for ${genre ? genre + ' ' : ''}artists end-to-end.`}
           </p>
         </div>
-        <div className="relative z-10 flex-shrink-0 text-right">
-          <div className="text-xs text-zinc-500">Active deals</div>
-          <div className="text-lg font-bold font-mono text-zinc-900">$127.5K</div>
-        </div>
-      </div>
-
-      {/* ── Talent selector ───────────────────────────────────────────────── */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() => setTalent('talise')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            talent === 'talise'
-              ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300 border border-amber-200'
-              : 'bg-zinc-100 text-zinc-500 hover:text-zinc-800'
-          }`}
-        >
-          <Music size={15} />
-          Talise
-          <span className="text-xs font-normal text-zinc-600">Sync Artist</span>
-        </button>
-        <button
-          onClick={() => setTalent('luke')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            talent === 'luke'
-              ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-300 border border-amber-200'
-              : 'bg-zinc-100 text-zinc-500 hover:text-zinc-800'
-          }`}
-        >
-          <Piano size={15} />
-          Luke Mulholland
-          <span className="text-xs font-normal text-zinc-600">Film Composer</span>
-        </button>
       </div>
 
       {/* ── Tabs ──────────────────────────────────────────────────────────── */}
@@ -543,16 +528,182 @@ export const MusicView = ({ onAgentClick, user }) => {
         </div>
       </div>
 
-      {/* ── Content ───────────────────────────────────────────────────────── */}
+      {/* ── Overview ──────────────────────────────────────────────────────── */}
       {activeTab === 'Overview' && (
-        talent === 'talise'
-          ? <TaliseOverview />
-          : <LukeOverview onAgentClick={onAgentClick} userId={profile?.id} />
+        <div className="space-y-5 animate-hud-in">
+
+          {/* KPI grid — live Spotify data when connected; connect-button empty-state otherwise */}
+          {spotifyLoading ? (
+            <div className="tile-pop bg-white rounded-2xl p-6 flex items-center gap-3" style={{ border: '1px solid rgba(0,0,0,0.07)' }}>
+              <Loader2 size={16} className="animate-spin text-amber-600" />
+              <span className="text-sm text-zinc-600">Loading Spotify stats…</span>
+            </div>
+          ) : spotifyConnected && spotifyStats ? (
+            <>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="tile-pop relative bg-white rounded-2xl p-4 overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+                  <AmberBg />
+                  <div className="relative z-10">
+                    <div
+                      style={{ fontFamily: 'var(--font-mono)' }}
+                      className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2 flex items-center gap-1.5"
+                    >
+                      <Headphones size={10} /> Followers
+                    </div>
+                    <div
+                      style={{ fontFamily: 'var(--font-mono)', letterSpacing: '-0.03em' }}
+                      className="text-[1.65rem] font-bold text-zinc-900 leading-none tabular-nums"
+                    >
+                      {spotifyStats.profile?.followers != null ? spotifyStats.profile.followers.toLocaleString() : '—'}
+                    </div>
+                    <div className="text-[10px] text-zinc-500 mt-1">{spotifyStats.profile?.display_name}</div>
+                  </div>
+                </div>
+                <div className="tile-pop relative bg-white rounded-2xl p-4 overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+                  <AmberBg />
+                  <div className="relative z-10">
+                    <div style={{ fontFamily: 'var(--font-mono)' }} className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2 flex items-center gap-1.5">
+                      <Music size={10} /> Top Track (4 wk)
+                    </div>
+                    {spotifyStats.top_tracks?.[0] ? (
+                      <a href={spotifyStats.top_tracks[0].url} target="_blank" rel="noreferrer" className="block hover:text-amber-700 transition-colors">
+                        <div className="text-sm font-bold text-zinc-900 leading-snug truncate">{spotifyStats.top_tracks[0].name}</div>
+                        <div className="text-[10px] text-zinc-500 truncate">{spotifyStats.top_tracks[0].artists}</div>
+                      </a>
+                    ) : (
+                      <div className="text-sm text-zinc-500">No recent top track</div>
+                    )}
+                  </div>
+                </div>
+                <div className="tile-pop relative bg-white rounded-2xl p-4 overflow-hidden" style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}>
+                  <AmberBg />
+                  <div className="relative z-10">
+                    <div style={{ fontFamily: 'var(--font-mono)' }} className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2 flex items-center gap-1.5">
+                      <PlayCircle size={10} /> Recently Played
+                    </div>
+                    {spotifyStats.recently_played?.[0] ? (
+                      <a href={spotifyStats.recently_played[0].url} target="_blank" rel="noreferrer" className="block hover:text-amber-700 transition-colors">
+                        <div className="text-sm font-bold text-zinc-900 leading-snug truncate">{spotifyStats.recently_played[0].name}</div>
+                        <div className="text-[10px] text-zinc-500 truncate">{spotifyStats.recently_played[0].artists}</div>
+                      </a>
+                    ) : (
+                      <div className="text-sm text-zinc-500">No recent plays</div>
+                    )}
+                  </div>
+                </div>
+                <EmptyTile
+                  icon={Sparkles}
+                  label="Active Pitches"
+                  message="Track sync pitches in the pipeline below."
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <a href="https://open.spotify.com" target="_blank" rel="noreferrer" className="text-[10px] text-zinc-400 hover:text-amber-700">
+                  Powered by Spotify
+                </a>
+                <button
+                  onClick={disconnectSpotify}
+                  className="text-xs text-zinc-500 hover:text-red-600 flex items-center gap-1"
+                >
+                  <Unlink size={11} /> Disconnect Spotify
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="tile-pop relative bg-white rounded-2xl p-4 overflow-hidden border-2 border-dashed border-zinc-200">
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-50/40 via-transparent to-transparent pointer-events-none" />
+                <div className="relative z-10">
+                  <div style={{ fontFamily: 'var(--font-mono)' }} className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em] mb-2 flex items-center gap-1.5">
+                    <Headphones size={10} /> Spotify stats
+                  </div>
+                  <div className="text-sm text-zinc-600 mb-2 leading-snug">
+                    {listeners
+                      ? `Onboarding bucket: ${listeners}. Connect Spotify for live data.`
+                      : 'Connect Spotify to see followers, top tracks, and recent plays.'}
+                  </div>
+                  <button
+                    onClick={connectSpotify}
+                    disabled={!profile?.id}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors bg-amber-500 hover:bg-amber-600 text-white disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Connect Spotify
+                  </button>
+                </div>
+              </div>
+              <EmptyTile
+                icon={Music}
+                label="Top Track"
+                message="Surfaces once Spotify is connected."
+              />
+              <EmptyTile
+                icon={Sparkles}
+                label="Active Pitches"
+                message="No pitches tracked yet. Add a deal in the pipeline below."
+              />
+              <EmptyTile
+                icon={LinkIcon}
+                label="Pipeline Value"
+                message="No pipeline data yet. Start tracking deals in the Kanban below."
+              />
+            </div>
+          )}
+
+          {/* Deal pipeline */}
+          <div
+            className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
+            style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+          >
+            <AmberBg />
+            <div className="relative z-10">
+              <DealPipeline userId={profile?.id} />
+            </div>
+          </div>
+
+          {/* Recommended tools — driven by goal */}
+          <div
+            className="relative tile-pop bg-white rounded-2xl p-5 overflow-hidden"
+            style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
+          >
+            <AmberBg />
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div
+                  style={{ fontFamily: 'var(--font-mono)' }}
+                  className="text-[10px] font-semibold text-zinc-500 uppercase tracking-[0.18em]"
+                >
+                  Recommended tools
+                </div>
+                {goal && (
+                  <span className="text-xs text-zinc-500">Tuned for: <span className="text-amber-700 font-medium">{goal}</span></span>
+                )}
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {tools.map(t => (
+                  <a
+                    key={t.name}
+                    href={t.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group relative bg-white rounded-xl p-3 border border-zinc-200 hover:border-amber-500/50 transition-colors"
+                  >
+                    <div className="flex items-start justify-between gap-2 mb-1">
+                      <div className="text-sm font-semibold text-zinc-900">{t.name}</div>
+                      <ExternalLink size={12} className="text-zinc-400 group-hover:text-amber-600 transition-colors flex-shrink-0 mt-0.5" />
+                    </div>
+                    <div className="text-xs text-zinc-500 leading-snug">{t.desc}</div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
+      {/* ── Activity ──────────────────────────────────────────────────────── */}
       {activeTab === 'Activity' && (
         <div
-          className="relative tile-pop bg-white rounded-2xl overflow-hidden"
+          className="relative tile-pop bg-white rounded-2xl overflow-hidden animate-hud-in"
           style={{ border: '1px solid rgba(0,0,0,0.07)', boxShadow: '0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04)' }}
         >
           <AmberBg />

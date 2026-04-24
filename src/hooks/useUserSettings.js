@@ -17,6 +17,7 @@ const DEFAULTS = {
 export const useUserSettings = (userId) => {
   const [settings,      setSettings]      = useState(DEFAULTS.settings);
   const [notifications, setNotifications] = useState(DEFAULTS.notifications);
+  const [integrations,  setIntegrations]  = useState({});
   const [loading,       setLoading]       = useState(true);
 
   useEffect(() => {
@@ -37,6 +38,9 @@ export const useUserSettings = (userId) => {
           if (data.notifications && Object.keys(data.notifications).length > 0) {
             setNotifications(data.notifications);
           }
+          if (data.integrations && typeof data.integrations === 'object') {
+            setIntegrations(data.integrations);
+          }
         }
         setLoading(false);
       });
@@ -47,7 +51,7 @@ export const useUserSettings = (userId) => {
       id:                  userId,
       organization:        newSettings.organization,
       engagement_type:     newSettings.engagementType,
-      vendor:              newSettings.vendor,
+      vendor:               newSettings.vendor,
       methodology:         newSettings.methodology,
       notifications:       newNotifications,
       updated_at:          new Date().toISOString(),
@@ -58,5 +62,19 @@ export const useUserSettings = (userId) => {
     return { error };
   }, [userId]);
 
-  return { settings, setSettings, notifications, setNotifications, loading, saveSettings };
+  const saveIntegrations = useCallback(async (next) => {
+    if (!userId) return { error: new Error('no userId') };
+    setIntegrations(next);
+    const { error } = await supabase
+      .from('user_settings')
+      .upsert({ id: userId, integrations: next, updated_at: new Date().toISOString() }, { onConflict: 'id' });
+    return { error };
+  }, [userId]);
+
+  return {
+    settings, setSettings,
+    notifications, setNotifications,
+    integrations, setIntegrations, saveIntegrations,
+    loading, saveSettings,
+  };
 };

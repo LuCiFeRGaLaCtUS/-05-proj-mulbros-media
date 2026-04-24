@@ -6,7 +6,7 @@ export const stytch = new StytchUIClient(import.meta.env.VITE_STYTCH_PUBLIC_TOKE
 // Enables quick diagnostics:
 //   window.stytch.session.getTokens()
 if (typeof window !== 'undefined') {
-  // eslint-disable-next-line no-underscore-dangle
+   
   window.stytch = stytch;
 }
 

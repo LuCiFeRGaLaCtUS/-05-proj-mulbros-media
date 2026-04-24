@@ -1,337 +1,269 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Send, Loader2, Zap, Cpu, RotateCcw, Search, Globe, MessageCircle } from 'lucide-react';
-import { AgentSelector } from './AgentSelector';
+import {
+  Send, Loader2, Plus, MessageSquare, Trash2, Bot, Sparkles,
+  Globe, MessageCircle, Cpu, Search, X, Pencil, Check, ListTree, ChevronRight,
+} from 'lucide-react';
+import { AgentPlan } from '../ui/AgentPlan';
+import { AIPromptBox } from '../ui/AIPromptBox';
 import { ChatMessage, TypingIndicator } from './ChatMessage';
-import { SuggestedPrompts } from './SuggestedPrompts';
 import { getAgentById } from '../../config/agents';
-import { callAI, getApiKey, callApifyReddit, callFirecrawlSearch, formatRedditResults, callAISearch } from '../../utils/ai';
-import { verticalColors } from '../../config/verticalColors';
-import { useAgentChats } from '../../hooks/useAgentChats';
-import { logger } from '../../lib/logger';
+import {
+  callAI, getApiKey, callApifyReddit, callFirecrawlSearch,
+  formatRedditResults, callAISearch,
+} from '../../utils/ai';
 import { useAppContext } from '../../App';
+import { useChatSessions } from '../../hooks/useChatSessions';
+import { useSessionMessages } from '../../hooks/useSessionMessages';
+import { logger } from '../../lib/logger';
 
-const initials = (name) =>
-  name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const AGENT_ID_DEFAULT = 'universal';
 
-export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
-  const [selectedAgent, setSelectedAgent] = useState(preselectedAgentId || 'film-financing-discovery');
-  const [input, setInput]                 = useState('');
-  const [isLoading, setIsLoading]         = useState(false);
-  // 'reddit' → Apify Reddit scrape · 'web' → OpenAI general web search · 'off' → no search
-  const [searchMode, setSearchMode] = useState(() => sessionStorage.getItem('agentchat.searchMode') || 'reddit');
+const relTime = (iso) => {
+  if (!iso) return '';
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60)    return `${diff}s`;
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)}d`;
+  return new Date(iso).toLocaleDateString();
+};
+
+export const AgentChat = ({ preselectedAgentId }) => {
+  const { profile, preselectedAgent, setPreselectedAgent } = useAppContext();
+  const agentId = preselectedAgentId || preselectedAgent || AGENT_ID_DEFAULT;
+  const agent   = getAgentById(agentId) || getAgentById(AGENT_ID_DEFAULT);
+
+  const { sessions, createSession, renameSession, touchSession, deleteSession } = useChatSessions(profile?.id);
+  const [activeSessionId, setActiveSessionId] = useState(null);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchMode, setSearchMode] = useState(() => sessionStorage.getItem('agentchat.searchMode.v2') || 'web');
+  const [renameOpen, setRenameOpen] = useState(null);
+  const [showPlan, setShowPlan]     = useState(false);
   const messagesEndRef = useRef(null);
 
-  const agent = getAgentById(selectedAgent) || getAgentById('film-financing-discovery');
-  const vc    = verticalColors[agent?.vertical] || verticalColors.financing;
+  const { messages, appendMessage } = useSessionMessages(profile?.id, activeSessionId);
 
-  const { profile } = useAppContext();
-  const { messages, addMessage, clearHistory } = useAgentChats(profile?.id, selectedAgent);
-
+  // Initial: open most recent or start fresh
   useEffect(() => {
-    sessionStorage.setItem('agentchat.searchMode', searchMode);
-  }, [searchMode]);
+    if (!activeSessionId && sessions.length > 0) setActiveSessionId(sessions[0].id);
+  }, [sessions, activeSessionId]);
 
-  // Auto-switch to 'web' if the selected agent has no subreddits configured
+  // Prefill from sessionStorage (triggered by vertical agent tabs)
   useEffect(() => {
-    if (searchMode === 'reddit' && agent?.searchEnabled && !agent.searchSubreddits) {
-      setSearchMode('web');
+    const pref = sessionStorage.getItem('agentchat.prefill');
+    if (pref) {
+      setInput(pref);
+      sessionStorage.removeItem('agentchat.prefill');
     }
-  }, [agent?.id, agent?.searchEnabled, agent?.searchSubreddits, searchMode]);
-
-  useEffect(() => {
-    if (preselectedAgentId && preselectedAgentId !== selectedAgent) {
-      setSelectedAgent(preselectedAgentId);
-    }
-  }, [preselectedAgentId]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isLoading]);
-
-  const switchAgent = useCallback((id) => {
-    setSelectedAgent(id);
   }, []);
 
-  const handleSend = async () => {
-    if (!input.trim() || isLoading) return;
+  useEffect(() => { sessionStorage.setItem('agentchat.searchMode.v2', searchMode); }, [searchMode]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, isLoading]);
 
-    const userContent = input;
+  const newChat = async () => {
+    const s = await createSession('New chat');
+    if (s) setActiveSessionId(s.id);
+    setPreselectedAgent?.(null);
+  };
+
+  const send = async (explicitText) => {
+    const raw  = explicitText != null ? explicitText : input;
+    const text = (raw || '').trim();
+    if (!text || isLoading) return;
+
     setInput('');
     setIsLoading(true);
 
-    // Optimistic user message (hook handles the DB insert)
-    await addMessage('user', userContent);
-
     try {
-      // Client-side key optional — server injects its own from env when present.
-      // Proxy returns 401 only when BOTH server and client keys are missing.
-      const apiKey = getApiKey(agent.model);
-
-      // Build message history
-      const apiMessages = [...messages, { role: 'user', content: userContent }]
-        .map(({ role, content }) => ({ role, content }));
-
-      // ── Web mode: bypass agent persona, render search output directly ────────
-      // Prevents the agent LLM from re-narrating / fabricating on top of real results.
-      // IMPORTANT: agent.systemPrompt is often Reddit-scoped ("site:reddit.com…" queries).
-      // OpenAI web_search has shallow Reddit coverage → that prompt produces zero results.
-      // In web mode we use a broad research prompt that keeps the agent's *topic* (vertical)
-      // but drops any site restrictions so the search tool can hit news, gov, industry pubs.
-      if (agent.searchEnabled && searchMode === 'web') {
-        const today = new Date().toISOString().slice(0, 10);
-        const webPrompt = [
-          `You are the "${agent.name}" research agent inside MulBros Media OS (vertical: ${agent.vertical}).`,
-          `Topic focus: ${agent.description}.`,
-          `Today's date: ${today}.`,
-          '',
-          'BEHAVIOR:',
-          '- You MUST call the web_search tool to answer. Do not claim you searched if you did not.',
-          '- Run 2–4 different search queries. Vary the terms — try industry news, LinkedIn posts, filmmaker blogs, trade forums, YouTube interviews, Twitter/X threads, podcast transcripts. Not only Reddit.',
-          '- Only cite URLs the tool actually returned. Never fabricate URLs, names, quotes, or details.',
-          '- Stay in character as the named agent. Never identify as "SearchGPT", "an AI assistant", or any other persona.',
-          '',
-          'CRITICAL — WHEN USER ASKS FOR "N FILMMAKERS / PEOPLE / LEADS":',
-          '- Each item MUST be a NAMED INDIVIDUAL PERSON (real first + last name, or real username/handle), not a state program, a policy debate, a think-tank report, or a news organization.',
-          '- Each item MUST include: the person\'s name, their role (director/producer/etc), a direct paraphrase or quote of what THEY said about the topic, and the URL where you found it.',
-          '- Policy news ≠ filmmaker discussion. If the tool only returns state-program announcements and think-tank reports, do NOT pad them as "filmmakers discussing X". Report honestly: "Search returned N policy/news articles but no individual filmmaker discussions. Named people I could identify: [list actual count]."',
-          '- If user asked for 10 and you found 3 real named people with direct quotes, say "I found 3, not 10" — then list the 3. Honest < padded.',
-          '',
-          'OUTPUT FORMAT per lead:',
-          '**[N]. [Full Name] — [Role / company if known]**',
-          'Said: [direct quote or close paraphrase of their statement]',
-          'Source: [URL]',
-          'Date: [YYYY-MM-DD if known]',
-          '',
-          'If user asked for general research (not a list of people), give a concise sourced answer with inline links. Never pad.',
-        ].join('\n');
-        try {
-          const webData = await callAISearch(userContent, webPrompt);
-          const citeLines = (webData.citations || [])
-            .map((c, i) => `[${i + 1}] [${c.title || c.url}](${c.url})`)
-            .join('\n');
-          const rendered = citeLines
-            ? `${webData.text}\n\n---\n**Sources**\n${citeLines}`
-            : webData.text;
-          await addMessage('assistant', rendered);
-        } catch (aiErr) {
-          logger.warn('AgentChat.search.aiSearchUnavailable', {
-            message: aiErr.message,
-            status:  aiErr.status,
-          });
-          await addMessage(
-            'assistant',
-            `Web search produced no verified sources for: "${userContent}".\n\nReason: ${aiErr.message || 'upstream error'}.\n\nTry a more specific query, switch to **Reddit** mode, or disable search.`,
-          );
+      // Ensure we have a session; auto-create on first message
+      let sid = activeSessionId;
+      let titleUpdate = null;
+      if (!sid) {
+        const s = await createSession(text.slice(0, 48));
+        if (!s) throw new Error('Could not create chat');
+        sid = s.id;
+        setActiveSessionId(sid);
+      } else {
+        // If session is still "New chat" and this is the first message, retitle from query
+        const current = sessions.find(x => x.id === sid);
+        if (current && current.title === 'New chat' && messages.length === 0) {
+          titleUpdate = text.slice(0, 48);
         }
-        return; // skip /api/ai second pass
       }
 
-      // ── Reddit mode: Firecrawl primary (fast, Google-indexed) → Apify fallback ──
-      if (agent.searchEnabled && searchMode === 'reddit' && agent.searchSubreddits) {
-        const today = new Date().toLocaleDateString('en-US', {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
-        });
-        let searchContext = null;
-        let searchNote    = null;
+      await appendMessage('user', text, sid);
 
-        const hasRealResults = (data) => Array.isArray(data?.posts) && data.posts.length > 0;
+      // Build message history (post-append is async; include optimistic state)
+      const apiMessages = [
+        ...messages.map(m => ({ role: m.role, content: m.content })),
+        { role: 'user', content: text },
+      ];
 
-        // Primary: Firecrawl (~2s, Google-indexed Reddit)
-        try {
-          const firecrawlData = await callFirecrawlSearch(userContent, agent.searchSubreddits);
-          if (hasRealResults(firecrawlData)) {
-            searchContext = formatRedditResults(firecrawlData);
-          } else {
-            throw new Error('Firecrawl returned 0 results');
-          }
-        } catch (firecrawlErr) {
-          logger.warn('AgentChat.search.firecrawlUnavailable', {
-            message: firecrawlErr.message,
-            status:  firecrawlErr.status,
-          });
-          // Fallback: Apify deep scrape (~40s, headless browser)
+      // Optional live search (reuses existing cascade)
+      if (searchMode !== 'off') {
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        const hasPosts = (d) => Array.isArray(d?.posts) && d.posts.length > 0;
+        const hasText  = (d) => typeof d?.text === 'string' && d.text.trim().length > 0;
+
+        let ctx = null;
+        if (searchMode === 'reddit') {
           try {
-            const apifyData = await callApifyReddit(userContent, agent.searchSubreddits);
-            if (hasRealResults(apifyData)) {
-              searchContext = formatRedditResults(apifyData);
-              searchNote = 'Search via Apify (Firecrawl unavailable)';
-            } else {
-              throw new Error('Apify returned 0 results');
-            }
-          } catch (apifyErr) {
-            logger.warn('AgentChat.search.apifyUnavailable', {
-              message: apifyErr.message,
-              status:  apifyErr.status,
-            });
-            searchNote = 'Reddit scrape returned no data (both Firecrawl and Apify)';
+            const subs = agent.searchSubreddits || ['indiefilm','filmmakers','WeAreTheMusicMakers','Screenwriting','ArtistLounge'];
+            const data = await callFirecrawlSearch(text, subs);
+            if (hasPosts(data)) ctx = formatRedditResults(data);
+            else throw new Error('firecrawl empty');
+          } catch {
+            try {
+              const subs = agent.searchSubreddits || ['indiefilm','filmmakers','WeAreTheMusicMakers','Screenwriting','ArtistLounge'];
+              const data = await callApifyReddit(text, subs);
+              if (hasPosts(data)) ctx = formatRedditResults(data);
+            } catch (err) { logger.warn('AgentChat.search.reddit.failed', err); }
           }
+        } else if (searchMode === 'web') {
+          try {
+            const data = await callAISearch(text, `${agent.systemPrompt}\n\nUse web_search for current info. Today: ${today}.`);
+            if (hasText(data)) {
+              const cites = (data.citations || []).map((c, i) => `[${i+1}] ${c.title || c.url} — ${c.url}`).join('\n');
+              ctx = `[Web search results]\n${data.text}\n\n${cites}\n[End search]`;
+            }
+          } catch (err) { logger.warn('AgentChat.search.web.failed', err); }
         }
 
-        const last = apiMessages[apiMessages.length - 1];
-        if (searchContext) {
-          const prefix = searchNote ? `[Note: ${searchNote}]\n\n` : '';
+        if (ctx) {
           apiMessages[apiMessages.length - 1] = {
-            ...last,
-            content: `[Today is ${today}]\n\n${prefix}${searchContext}\n\n---\n\nUser request: ${last.content}`,
-          };
-        } else {
-          apiMessages[apiMessages.length - 1] = {
-            ...last,
-            content: `[Today is ${today}. ${searchNote} — do NOT invent usernames, URLs, or post details. Tell the user the scrape returned nothing and suggest switching to Web mode.]\n\n${last.content}`,
+            role: 'user',
+            content: `[Today: ${today}]\n\n${ctx}\n\n---\n\nUser: ${text}`,
           };
         }
       }
 
-      const response = await callAI(agent.systemPrompt, apiMessages, apiKey, agent.model);
-      await addMessage('assistant', response);
-    } catch (error) {
-      logger.error('AgentChat.send.failed', error);
-      toast.error(error.message || 'Failed to get response from agent');
+      const apiKey = getApiKey(agent.model);
+      const systemWithMode =
+        `${agent.systemPrompt}\n\nCURRENT SEARCH MODE: ${searchMode}. ` +
+        (searchMode === 'off'
+          ? 'Live search is OFF for this message. Do NOT claim to search, do NOT say "please hold", "let me check", "I\'ll look that up". Answer from your training data only. If the user needs live/current data, tell them plainly: "Live search is off — toggle Web or Reddit in the composer and resend."'
+          : searchMode === 'web'
+            ? 'The web_search has already completed BEFORE your reply runs. Its results and citations are embedded above in the user message. Use them, cite the URLs. Do not claim you will search — you already did.'
+            : 'Reddit scrape has already completed BEFORE your reply runs. Real posts are embedded above. Use those posts and their URLs. Do not claim you will search — you already did.');
+      const response = await callAI(systemWithMode, apiMessages, apiKey, agent.model);
+      await appendMessage('assistant', response, sid);
+      touchSession(sid);
+      if (titleUpdate) renameSession(sid, titleUpdate);
+    } catch (err) {
+      logger.error('AgentChat.send.failed', err);
+      toast.error(err.message || 'Failed to send');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handlePromptSelect = (prompt) => { setInput(prompt); };
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+  const onKey = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); }
   };
 
   return (
-    <div className="flex -mx-6 -mt-6 h-[calc(100vh-4rem)]">
-      <AgentSelector selectedAgent={selectedAgent} onSelectAgent={switchAgent} />
+    <div className="flex -mx-6 -mt-6 h-[calc(100vh-4rem)] bg-zinc-50">
+      {/* ── Sessions sidebar ─────────────────────────────────────────────── */}
+      <div className="w-64 flex-shrink-0 border-r border-zinc-200 bg-white flex flex-col">
+        <div className="p-3 border-b border-zinc-200">
+          <button onClick={newChat}
+            className="w-full flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold py-2 rounded-lg transition-colors">
+            <Plus size={14} /> New chat
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+          {sessions.length === 0 && (
+            <div className="text-xs text-zinc-500 text-center py-8 px-4">No chats yet. Start a new conversation.</div>
+          )}
+          {sessions.map(s => {
+            const active = s.id === activeSessionId;
+            const isRenaming = renameOpen === s.id;
+            return (
+              <div key={s.id}
+                className={`group relative rounded-lg text-sm transition-colors ${active ? 'bg-amber-50 text-amber-900' : 'text-zinc-700 hover:bg-zinc-100'}`}>
+                {isRenaming ? (
+                  <form onSubmit={e => { e.preventDefault(); const v = e.target.title.value.trim(); if (v) renameSession(s.id, v); setRenameOpen(null); }}
+                    className="flex items-center gap-1 px-2 py-2">
+                    <input name="title" defaultValue={s.title} autoFocus
+                      className="flex-1 text-sm bg-white border border-amber-400 rounded px-2 py-1 focus:outline-none" />
+                    <button type="submit" className="text-emerald-600 p-1"><Check size={13} /></button>
+                    <button type="button" onClick={() => setRenameOpen(null)} className="text-zinc-500 p-1"><X size={13} /></button>
+                  </form>
+                ) : (
+                  <button onClick={() => setActiveSessionId(s.id)}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-left">
+                    <MessageSquare size={13} className={active ? 'text-amber-700' : 'text-zinc-400'} />
+                    <span className="flex-1 truncate">{s.title}</span>
+                    <span className="text-[10px] text-zinc-400 font-mono">{relTime(s.last_message_at)}</span>
+                  </button>
+                )}
+                {!isRenaming && (
+                  <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5 bg-inherit">
+                    <button onClick={() => setRenameOpen(s.id)} className="p-1 rounded hover:bg-white/60 text-zinc-500 hover:text-amber-700" title="Rename"><Pencil size={11} /></button>
+                    <button onClick={() => { if (confirm('Delete this chat?')) deleteSession(s.id); }}
+                      className="p-1 rounded hover:bg-white/60 text-zinc-500 hover:text-red-600" title="Delete"><Trash2 size={11} /></button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className="p-3 border-t border-zinc-200 text-[10px] text-zinc-500 flex items-center gap-1.5">
+          <Bot size={11} className="text-amber-600" /> {agent.name}
+        </div>
+      </div>
 
-      {/* ── Main chat area ── */}
-      <div className="flex-1 flex flex-col min-w-0" style={{ background: '#F7F7FA' }}>
-
-        {/* Agent header bar */}
-        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 relative"
-          style={{
-            borderBottom: '1px solid rgba(0,0,0,0.07)',
-            background: 'rgba(255,255,255,0.97)',
-            backdropFilter: 'blur(12px)',
-          }}>
-          {/* Bottom neon line */}
-          <div className="absolute bottom-0 left-0 right-0 h-px"
-            style={{ background: `linear-gradient(to right, transparent, ${vc.neon}30, transparent)` }} />
-
+      {/* ── Conversation pane ─────────────────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-zinc-200 bg-white">
           <div className="flex items-center gap-3">
-            {/* Agent avatar */}
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-sm relative"
-              style={{
-                background: vc.dim,
-                border: `1px solid ${vc.neon}35`,
-                color: vc.ink,
-                boxShadow: `0 0 14px ${vc.neon}20`,
-              }}>
-              {initials(agent.name)}
-              <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full"
-                style={{ background: '#22d3ee', boxShadow: '0 0 6px rgba(34,211,238,0.8)', border: '1.5px solid #ffffff' }} />
+            <div className="w-8 h-8 rounded-lg bg-amber-100 border border-amber-200 flex items-center justify-center">
+              <Bot size={15} className="text-amber-700" />
             </div>
-
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-sm font-bold text-zinc-900">{agent.name}</h2>
-                <span className="chip" style={{
-                  background: `${vc.neon}14`,
-                  color: vc.ink,
-                  border: `1px solid ${vc.neon}40`,
-                  fontSize: '11px',
-                }}>
-                  ONLINE
-                </span>
-                {agent.searchEnabled && (
-                  <span className="flex items-center gap-1 chip" style={{
-                    background: `${vc.neon}14`,
-                    color: vc.ink,
-                    border: `1px solid ${vc.neon}40`,
-                    fontSize: '11px',
-                  }}>
-                    <Search size={7} /> LIVE SEARCH
-                  </span>
-                )}
+                <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">ONLINE</span>
               </div>
-              <p className="text-xs font-mono" style={{ color: 'rgba(0,0,0,0.66)' }}>
-                {messages.length > 0 ? `${messages.length} messages · Neural link active` : 'Ready for input'}
-              </p>
+              <p className="text-[11px] text-zinc-500 font-mono">{messages.length} messages</p>
             </div>
           </div>
-
-          {/* Clear button */}
-          {messages.length > 0 && (
-            <button
-              onClick={clearHistory}
-              title="Clear conversation"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all text-xs font-semibold"
-              style={{
-                background: 'rgba(0,0,0,0.025)',
-                border: '1px solid rgba(0,0,0,0.07)',
-                color: 'rgba(0,0,0,0.66)',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(239,68,68,0.3)'; e.currentTarget.style.color = '#dc2626'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(0,0,0,0.07)'; e.currentTarget.style.color = 'rgba(0,0,0,0.66)'; }}
-            >
-              <RotateCcw size={11} />
-              Clear
-            </button>
-          )}
+          <button onClick={() => setShowPlan(v => !v)}
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              showPlan ? 'bg-amber-500 text-white' : 'bg-zinc-100 text-zinc-700 hover:bg-zinc-200'
+            }`}
+            title="Agent plan">
+            <ListTree size={12} /> Plan <ChevronRight size={11} className={`transition-transform ${showPlan ? 'rotate-90' : ''}`} />
+          </button>
         </div>
 
-        {/* ── Messages area ── */}
-        <div
-          className="flex-1 overflow-y-auto p-6"
-          aria-live="polite"
-          aria-label={`Chat with ${agent.name}`}
-          style={{ backgroundSize: '24px 24px' }}
-        >
-          {messages.length === 0 ? (
-            /* ── Empty state ── */
-            <div className="h-full flex flex-col justify-center items-center">
-              {/* Large avatar */}
-              <div className="relative mb-6">
-                <div className="absolute -inset-4 rounded-3xl pointer-events-none"
-                  style={{ background: `radial-gradient(circle, ${vc.neon}10 0%, transparent 70%)` }} />
-                <div className="w-20 h-20 rounded-2xl flex items-center justify-center text-3xl font-black relative"
-                  style={{
-                    background: `linear-gradient(135deg, ${vc.dim}, rgba(0,0,0,0.03))`,
-                    border: `1px solid ${vc.neon}30`,
-                    color: vc.ink,
-                    boxShadow: `0 0 30px ${vc.neon}15, 0 8px 32px rgba(0,0,0,0.1)`,
-                  }}>
-                  {initials(agent.name)}
-                  <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full"
-                    style={{ background: '#22d3ee', boxShadow: '0 0 8px rgba(34,211,238,0.9)', border: '2px solid #ffffff' }} />
-                </div>
+        {/* Messages */}
+        <div className="flex-1 overflow-y-auto p-6" aria-live="polite">
+          {!activeSessionId || messages.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center max-w-xl mx-auto">
+              <div className="w-16 h-16 rounded-2xl bg-amber-100 border border-amber-200 flex items-center justify-center mb-4">
+                <Bot size={28} className="text-amber-700" />
               </div>
-
-              <h2 className="text-xl font-black mb-1" style={{ color: vc.ink }}>
-                {agent.name}
-              </h2>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-px w-8" style={{ background: `${vc.neon}50` }} />
-                <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: 'rgba(0,0,0,0.62)' }}>
-                  Neural Agent Online
-                </span>
-                <div className="h-px w-8" style={{ background: `${vc.neon}50` }} />
+              <h3 className="text-lg font-bold text-zinc-900 mb-1">{agent.name}</h3>
+              <p className="text-sm text-zinc-600 mb-6 max-w-md leading-relaxed">{agent.description}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
+                {(agent.suggestedPrompts || []).map(p => (
+                  <button key={p} onClick={() => send(p)}
+                    className="text-left text-sm bg-white border border-zinc-200 hover:border-amber-500/50 rounded-lg px-3 py-2 text-zinc-700 transition-colors">
+                    {p}
+                  </button>
+                ))}
               </div>
-
-              <p className="text-sm text-center max-w-sm mb-8 leading-relaxed" style={{ color: 'rgba(0,0,0,0.72)' }}>
-                {agent.description}
-              </p>
-
-              <SuggestedPrompts agentId={selectedAgent} onSelectPrompt={handlePromptSelect} />
             </div>
           ) : (
             <div className="space-y-5 max-w-3xl mx-auto w-full">
-              {messages.map((message, index) => (
+              {messages.map(m => (
                 <ChatMessage
-                  key={message._id ?? `msg-${index}`}
-                  message={message}
+                  key={m._id}
+                  message={{ ...m, timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
                   agentName={agent.name}
                   vertical={agent.vertical}
                 />
@@ -342,125 +274,70 @@ export const AgentChat = ({ user, preselectedAgentId, onClose }) => {
           )}
         </div>
 
-        {/* ── Input bar ── */}
-        <div className="flex-shrink-0 p-4 relative"
-          style={{
-            background: 'rgba(255,255,255,0.97)',
-            borderTop: '1px solid rgba(0,0,0,0.07)',
-            backdropFilter: 'blur(12px)',
-          }}>
-          {/* Top accent line */}
-          <div className="absolute top-0 left-4 right-4 h-px"
-            style={{ background: `linear-gradient(to right, transparent, ${vc.neon}20, transparent)` }} />
-
-          {/* Search-mode toggle — only for search-enabled agents */}
-          {agent.searchEnabled && (
-            <div className="max-w-3xl mx-auto w-full mb-2 flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500">Search mode:</span>
-              <div className="inline-flex rounded-lg border border-zinc-200 bg-white overflow-hidden" role="radiogroup" aria-label="Search mode">
-                {[
-                  { id: 'reddit', label: 'Reddit', Icon: MessageCircle, disabled: !agent.searchSubreddits },
-                  { id: 'web',    label: 'Web (OpenAI)',   Icon: Globe,         disabled: false },
-                  { id: 'off',    label: 'No search',      Icon: Cpu,           disabled: false },
-                ].map(({ id, label, Icon, disabled }) => {
-                  const active = searchMode === id;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      role="radio"
-                      aria-checked={active}
-                      disabled={disabled || isLoading}
-                      onClick={() => setSearchMode(id)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{
-                        background: active ? `${vc.neon}18` : 'transparent',
-                        color:      active ? vc.ink        : 'rgba(0,0,0,0.60)',
-                        borderRight: id !== 'off' ? '1px solid rgba(0,0,0,0.08)' : 'none',
-                      }}
-                      title={disabled ? 'This agent has no Reddit subreddits configured' : label}
-                    >
-                      <Icon size={11} />
-                      {label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-3 max-w-3xl mx-auto w-full">
-            <div className="flex-1 relative">
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder={`Message ${agent.name}…`}
-                className="w-full rounded-xl px-4 py-3 text-sm resize-none transition-all"
-                style={{
-                  background: '#ffffff',
-                  border: input ? `1px solid ${vc.neon}50` : '1px solid rgba(0,0,0,0.12)',
-                  color: '#18181b',
-                  outline: 'none',
-                  boxShadow: input ? `0 0 0 3px ${vc.neon}06, 0 0 16px ${vc.neon}08` : 'none',
-                }}
-                rows={2}
-                disabled={isLoading}
-              />
-              {/* Character hint */}
-              {input.length > 200 && (
-                <span className="absolute bottom-2 right-3 text-xs font-mono"
-                  style={{ color: 'rgba(0,0,0,0.60)' }}>
-                  {input.length}
-                </span>
-              )}
-            </div>
-
-            <button
-              onClick={handleSend}
-              disabled={!input.trim() || isLoading}
-              aria-label="Send message"
-              className="rounded-xl px-4 transition-all flex items-center justify-center font-bold"
-              style={{
-                background: (!input.trim() || isLoading)
-                  ? 'rgba(0,0,0,0.04)'
-                  : `linear-gradient(135deg, ${vc.neon}22 0%, ${vc.neon}10 100%)`,
-                border: (!input.trim() || isLoading)
-                  ? '1px solid rgba(0,0,0,0.09)'
-                  : `1px solid ${vc.neon}35`,
-                color: (!input.trim() || isLoading) ? 'rgba(0,0,0,0.55)' : vc.ink,
-                boxShadow: (!input.trim() || isLoading) ? 'none' : `0 0 16px ${vc.neon}15`,
-              }}
-            >
-              {isLoading ? (
-                <Loader2 className="animate-spin" size={20} />
+        {/* Composer */}
+        <div className="flex-shrink-0 p-4 bg-white border-t border-zinc-200">
+          {/* Search mode toggle */}
+          <div className="max-w-3xl mx-auto w-full">
+            <AIPromptBox
+              isLoading={isLoading}
+              placeholder="Message MulBros Assistant…"
+              searchMode={searchMode}
+              onSearchModeChange={setSearchMode}
+              initialValue={input}
+              onSend={(text /*, files */) => send(text)}
+            />
+            <div className="text-[10px] text-zinc-400 font-mono text-center mt-2">
+              {isLoading && searchMode !== 'off' ? (
+                <span className="flex items-center justify-center gap-1"><Search size={9} className="animate-pulse" /> {searchMode === 'reddit' ? 'Searching Reddit…' : 'Searching web…'}</span>
               ) : (
-                <Send size={20} />
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-center gap-3 mt-2">
-            <div className="flex items-center gap-1">
-              {isLoading && agent.searchEnabled && searchMode !== 'off' ? (
-                <>
-                  <Search size={9} style={{ color: vc.ink }} className="animate-pulse" />
-                  <span className="text-xs font-mono" style={{ color: vc.ink }}>
-                    {searchMode === 'reddit' ? 'Searching Reddit (Firecrawl → Apify)…' : 'Searching web via OpenAI…'}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Cpu size={9} style={{ color: '#0e7490' }} />
-                  <span className="text-xs font-mono" style={{ color: 'rgba(0,0,0,0.66)' }}>
-                    Enter to send · Shift+Enter new line
-                  </span>
-                </>
+                'Enter to send · Shift+Enter for newline'
               )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* ── Right rail: Agent Plan ────────────────────────────────────────── */}
+      {showPlan && (
+        <div className="w-80 flex-shrink-0 border-l border-zinc-200 bg-zinc-50 flex flex-col">
+          <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-zinc-200 bg-white">
+            <div className="flex items-center gap-2">
+              <ListTree size={14} className="text-amber-600" />
+              <span className="text-sm font-bold text-zinc-900">Agent Plan</span>
+            </div>
+            <button onClick={() => setShowPlan(false)} className="text-zinc-400 hover:text-zinc-700"><X size={14} /></button>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <AgentPlan tasks={DEMO_PLAN} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+// Demo plan data — wire to real agent orchestration when backend provides steps.
+const DEMO_PLAN = [
+  {
+    id: '1', title: 'Understand user request', status: 'completed', priority: 'high', dependencies: [],
+    subtasks: [
+      { id: '1.1', title: 'Parse query intent', status: 'completed', description: 'Identified target vertical + outcome', tools: ['intent-classifier'] },
+      { id: '1.2', title: 'Load profile context', status: 'completed', description: 'Pulled onboarding answers + past chats' },
+    ],
+  },
+  {
+    id: '2', title: 'Gather live data', status: 'in-progress', priority: 'high', dependencies: ['1'],
+    subtasks: [
+      { id: '2.1', title: 'Search Reddit via Firecrawl', status: 'completed', tools: ['firecrawl'] },
+      { id: '2.2', title: 'Search Web via OpenAI', status: 'in-progress', tools: ['openai-web-search'] },
+      { id: '2.3', title: 'Deduplicate + rank results', status: 'pending' },
+    ],
+  },
+  {
+    id: '3', title: 'Draft response', status: 'pending', priority: 'medium', dependencies: ['2'],
+    subtasks: [
+      { id: '3.1', title: 'Cite every source', status: 'pending' },
+      { id: '3.2', title: 'Apply agent voice', status: 'pending' },
+    ],
+  },
+];
