@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { VerticalSelect }    from './VerticalSelect';
 import { ProfileQuestions }  from './ProfileQuestions';
 import { useAppContext }      from '../../App';
@@ -51,23 +52,31 @@ export const OnboardingFlow = () => {
 
   const handleComplete = async (answers) => {
     setSaving(true);
-    await updateProfile({
+    const { error } = await updateProfile({
       vertical:            selectedVertical,
       onboarding_complete: true,
       onboarding_data:     { answers, skipped_questions: false },
     });
     setSaving(false);
-    // App.jsx gate lifts automatically — profile.onboarding_complete is now true
+    if (error) {
+      console.error('onboarding.complete.failed', error);
+      toast.error(`Could not save profile: ${error.message || 'unknown error'}`);
+    }
+    // On success App.jsx gate lifts automatically — profile.onboarding_complete is true
   };
 
   const handleSkip = async () => {
     setSaving(true);
-    await updateProfile({
+    const { error } = await updateProfile({
       vertical:            selectedVertical || null,
       onboarding_complete: true,
       onboarding_data:     { answers: allAnswers, skipped_questions: true },
     });
     setSaving(false);
+    if (error) {
+      console.error('onboarding.skip.failed', error);
+      toast.error(`Could not skip onboarding: ${error.message || 'unknown error'}`);
+    }
   };
 
   if (saving) return <SavingScreen />;
