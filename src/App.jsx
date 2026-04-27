@@ -8,7 +8,7 @@ import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './utils/useTheme';
 import { useAuth } from './hooks/useAuth';
-import { useProfile } from './hooks/useProfile';
+import { useSupabaseSession } from './hooks/useSupabaseSession';
 import { LoginPage, ResetPasswordPage } from './components/auth/LoginPage';
 
 // ── Route-level code splitting ────────────────────────────────────────────────
@@ -155,7 +155,8 @@ const EmailVerificationPending = ({ email, onSignOut }) => (
 // ── Inner app — needs router context so useNavigate works ─────────────────────
 function AppInner({ session, user, loading: authLoading, signOut }) {
   const navigate = useNavigate();
-  const { profile, loading: profileLoading, profileError, updateProfile } = useProfile(user);
+  // Bridge Stytch session → Supabase JWT (single source: server-side profile lookup/create + JWT mint)
+  const { profile, loading: profileLoading, profileError, updateProfile } = useSupabaseSession(user);
   const [preselectedAgent, setPreselectedAgent] = useState(null);
 
   // Detect Stytch URL tokens — must be checked BEFORE loading gate

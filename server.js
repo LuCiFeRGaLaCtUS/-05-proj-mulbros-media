@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import basicAuth from 'express-basic-auth';
 import { Resend } from 'resend';
 import * as stytch from 'stytch';
+import jwt from 'jsonwebtoken';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -197,6 +198,99 @@ const ALLOWED_MODELS = new Set([
   'claude-3-opus-20240229',
   'claude-3-5-haiku-20241022',
 ]);
+
+// ── Stytch → Supabase JWT bridge ──────────────────────────────────────────────
+// Mints a Supabase-compatible JWT (HS256, signed with project JWT secret) so
+// authenticated Supabase queries get role=authenticated and auth.uid()=profile.id.
+// This enables RLS policies of the form `user_id = auth.uid()` to work.
+// Mint a service-role JWT (HS256, role=service_role) for internal Supabase ops
+// that bypass RLS — used by server for profile lookup + auto-creation.
+const mintServiceJwt = () => {
+  const now = Math.floor(Date.now() / 1000);
+  return jwt.sign(
+    { aud: 'authenticated', role: 'service_role', iss: 'mulbros-bridge-svc', iat: now, exp: now + 600 },
+    process.env.SUPABASE_JWT_SECRET,
+    { algorithm: 'HS256' },
+  );
+};
+
+app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
+  if (!process.env.SUPABASE_JWT_SECRET) {
+    return res.status(503).json({ error: { message: 'SUPABASE_JWT_SECRET not configured.' } });
+  }
+  try {
+    const stytchUid = req.stytchUser?.userId;
+    if (!stytchUid) return res.status(401).json({ error: { message: 'No Stytch user.' } });
+
+    // Look up Supabase profile.id (uuid) by stytch_user_id — uses service_role JWT
+    // to bypass RLS (chicken-egg: profile lookup happens BEFORE user has session).
+    const svcJwt = mintServiceJwt();
+    const sbHeaders = {
+      apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+      Authorization: `Bearer ${svcJwt}`,
+    };
+    const pr = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=id,email`,
+      { headers: sbHeaders },
+    );
+    const profilesArr = await pr.json();
+    let profile = profilesArr[0];
+
+    // First login — auto-create profile via service_role
+    if (!profile?.id) {
+      const email = req.body?.email || null;
+      const cr = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles`,
+        {
+          method:  'POST',
+          headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+          body:    JSON.stringify({
+            stytch_user_id:      stytchUid,
+            email,
+            onboarding_complete: false,
+          }),
+        },
+      );
+      if (!cr.ok) {
+        const txt = await cr.text();
+        console.error('profile auto-create failed:', cr.status, txt);
+        return res.status(500).json({ error: { message: 'Profile create failed.' } });
+      }
+      const created = await cr.json();
+      profile = Array.isArray(created) ? created[0] : created;
+    }
+    if (!profile?.id) return res.status(500).json({ error: { message: 'Profile resolution failed.' } });
+
+    // Mint Supabase JWT — sub=profile.id, role=authenticated, exp=1h
+    const now = Math.floor(Date.now() / 1000);
+    const accessToken = jwt.sign(
+      {
+        aud:   'authenticated',
+        role:  'authenticated',
+        sub:   profile.id,
+        email: profile.email || undefined,
+        iss:   'mulbros-bridge',
+        iat:   now,
+        exp:   now + 3600,
+      },
+      process.env.SUPABASE_JWT_SECRET,
+      { algorithm: 'HS256' },
+    );
+
+    // refresh_token is opaque to Supabase HS256 path — reuse access_token; client
+    // will re-fetch via this endpoint when it nears expiry.
+    return res.json({
+      access_token:  accessToken,
+      refresh_token: accessToken,
+      token_type:    'bearer',
+      expires_in:    3600,
+      profile,
+    });
+  } catch (err) {
+    console.error('supabase-token mint failed:', err.message || err);
+    return res.status(500).json({ error: { message: 'Token mint failed.' } });
+  }
+});
 
 // ── AI proxy ──────────────────────────────────────────────────────────────────
 app.post('/api/ai', aiLimiter, async (req, res) => {
