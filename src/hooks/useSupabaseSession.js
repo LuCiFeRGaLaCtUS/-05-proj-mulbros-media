@@ -46,12 +46,26 @@ export const useSupabaseSession = (stytchUser) => {
         return;
       }
 
-      const { error } = await supabase.auth.setSession({
-        access_token:  data.access_token,
-        refresh_token: data.refresh_token,
-      });
-      if (error) {
-        logger.error('useSupabaseSession.setSession.failed', error);
+      // Stytch users have no auth.users row, so supabase.auth.setSession()
+      // fails its internal _getUser check. PostgREST + Realtime only need the
+      // JWT claims (sub, role) to enforce RLS — install Authorization header
+      // directly on the underlying clients instead.
+      try {
+        const bearer = `Bearer ${data.access_token}`;
+        // PostgREST: mutate headers map (public field on PostgrestClient)
+        if (supabase.rest && supabase.rest.headers) {
+          supabase.rest.headers.Authorization = bearer;
+        }
+        // Storage: same pattern
+        if (supabase.storage && supabase.storage.headers) {
+          supabase.storage.headers.Authorization = bearer;
+        }
+        // Realtime: official setAuth API
+        if (supabase.realtime && typeof supabase.realtime.setAuth === 'function') {
+          supabase.realtime.setAuth(data.access_token);
+        }
+      } catch (err) {
+        logger.error('useSupabaseSession.headerInstall.failed', err);
         setProfileError('Could not install Supabase session.');
         setLoading(false);
         return;
@@ -77,7 +91,12 @@ export const useSupabaseSession = (stytchUser) => {
       setProfile(null);
       setLoading(false);
       setProfileError(null);
-      supabase.auth.signOut().catch(() => {});
+      // Clear injected Authorization headers
+      try {
+        if (supabase.rest?.headers) delete supabase.rest.headers.Authorization;
+        if (supabase.storage?.headers) delete supabase.storage.headers.Authorization;
+        if (supabase.realtime?.setAuth) supabase.realtime.setAuth(null);
+      } catch { /* noop */ }
       if (refreshTimerRef.current) {
         clearTimeout(refreshTimerRef.current);
         refreshTimerRef.current = null;
