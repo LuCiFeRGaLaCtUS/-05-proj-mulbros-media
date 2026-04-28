@@ -1,0 +1,44 @@
+[project]
+name = "fszt-platform"
+version = "0.1.0"
+description = "Multi-OS agent platform — Sales OS first"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.50",
+    "claude-agent-sdk>=0.1.60",
+    "supabase>=2.7.0",
+    "mem0ai>=2.0.0",
+    "composio>=1.0.0",
+    "langfuse>=3.0.0",
+    "stytch>=13.0.0",
+    "pyjwt[crypto]>=2.8.0",
+    "livekit-api>=0.7.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.0.0",
+    "pyyaml>=6.0",
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["apps*", "chat*", "governance*", "oses*", "platform_os*", "shared*", "skills*", "tools*", "wizards*"]
+exclude = ["config*", "tests*"]
+
+[tool.setuptools.package-data]
+"*" = ["*.md", "*.yaml", "*.sql"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]

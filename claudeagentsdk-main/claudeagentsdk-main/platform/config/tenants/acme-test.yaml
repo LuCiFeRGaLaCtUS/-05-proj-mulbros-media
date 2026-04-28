@@ -1,0 +1,53 @@
+# Test tenant for Phase 0. Sandbox mode ON by default — every outbound
+# (email, SMS, voice) is redirected to the operator's contact rather than
+# the real prospect. The original target is preserved in metadata.
+#
+# Turning sandbox off is a deliberate Settings action, with a confirm
+# dialog, once you've verified end-to-end behavior.
+
+tenant_id: acme-test
+display_name: "Acme (Test)"
+locale: en-US
+timezone: Asia/Kolkata
+
+entitled_oses:
+  - sales
+  - brief
+
+sandbox:
+  enabled: true
+  # Env-var indirection: each developer's local .env supplies their own
+  # inbox/phone, so sandboxed outbound lands wherever they're testing.
+  # If unset, governance/sandbox.py warns at startup and refuses sends.
+  redirect_email_env: SANDBOX_EMAIL
+  redirect_phone_env: SANDBOX_PHONE
+  badge_on_ui: true
+
+policy_overrides:
+  cost_cap_per_run_usd: 5.00
+
+# Starter budgets seeded by `make bootstrap`. Override your Apollo plan size
+# here to match your actual Composio-connected plan. Gmail/Twilio defaults
+# are conservative; bump them once you've validated end-to-end.
+resource_defaults:
+  apollo_credits:
+    limit: 100
+    period: month
+  gmail_sends:
+    limit: 50
+    period: day
+  twilio_sms:
+    # Set TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM_NUMBER in .env
+    # to actually dispatch. Otherwise send_sms logs "skipped" and moves on.
+    limit: 20
+    period: day
+  voice_minutes:
+    limit: 0
+    period: month
+
+# North-star metric seeded by `make bootstrap`. The pacing engine uses this
+# to decide whether agents should push harder, hold, or notify.
+initial_goal:
+  metric: new_leads
+  target: 50
+  period: month

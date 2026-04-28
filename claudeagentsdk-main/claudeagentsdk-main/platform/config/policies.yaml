@@ -1,0 +1,30 @@
+# Governance policies. Re-read on every @governed call — edits here take
+# effect without restart. The operator can tighten rules mid-run if something
+# starts firing off the rails.
+#
+# Per-tenant overrides live in config/tenants/<slug>.yaml under `policy_overrides`.
+
+# Max cumulative cost (USD) allowed within a single run. Once breached,
+# non-essential tool calls are blocked with a policy-deny variance alert.
+# Each `claude-agent-sdk` ResultMessage's cost is accumulated in the gov ctx.
+cost_cap_per_run_usd: 5.00
+
+# Outbound domains that must NEVER receive mail/SMS, regardless of sandbox.
+# Fnmatch patterns (glob), case-insensitive.
+outbound_domain_blocklist:
+  - "*.gov"
+  - "*.mil"
+  - "*.edu"
+
+# Per-agent tool allowlist — in addition to the MCP-level scoping. Empty
+# list = no extra restriction. Patterns use fnmatch too.
+# Example to lock down BDR:
+#   bdr_outbound:
+#     - "mcp__sales_internal__*"
+#     - "mcp__sales_outbound__send_email"
+#     # (no SMS, no voice — BDR in email-only mode)
+tool_allowlist: {}
+
+# When governance denies, the audit row records `policy_decision='deny'`
+# and `policy_reason=<the `reason` string from below>`. The reason text
+# surfaces to the agent as the tool's response, so agents can adapt.

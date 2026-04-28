@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Inter+Tight:wght@700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div id="app">
+    <aside id="sidebar">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          <div class="brand-name" id="brand-name">Platform</div>
+          <div class="brand-tenant-row">
+            <button id="tenant-switcher" class="brand-tenant" type="button"
+                    title="Switch tenant"></button>
+            <div id="tenant-menu" class="tenant-menu" hidden></div>
+          </div>
+        </div>
+      </div>
+
+      <button id="new-chat" class="new-chat">+  New chat</button>
+
+      <nav class="nav">
+        <div class="nav-section-title" id="os-list-title" hidden>Your workspaces</div>
+        <div id="os-list" class="os-list" hidden></div>
+        <div class="nav-section-title">Views</div>
+        <div class="views-list">
+          <div class="view-item active" data-view="chat">Chat</div>
+          <div class="view-item" data-view="dashboard">Dashboard</div>
+          <div class="view-item" data-view="demo">
+            Demo <span class="demo-progress-pill" id="demo-progress-pill" hidden>0/0</span>
+          </div>
+          <div class="view-item view-item-operator" data-view="operator">
+            Operator <span class="op-pitch-pill" id="op-pitch-pill" hidden>0</span>
+          </div>
+        </div>
+        <div class="nav-section-title">Recent chats</div>
+        <div id="sessions-list" class="sessions-list"></div>
+      </nav>
+
+      <div class="sandbox-badge" id="sandbox-badge" hidden>
+        SANDBOX MODE — outbound redirected
+      </div>
+    </aside>
+
+    <main id="main">
+      <header class="main-header">
+        <div class="current-os" id="current-os-label">—</div>
+        <button id="edit-config" class="ghost-btn" type="button">Edit config</button>
+      </header>
+
+      <section id="empty-state" class="empty-state">
+        <div class="greeting">
+          <h1 id="greeting">Good day.</h1>
+          <p id="tagline">Your AI operations layer.</p>
+        </div>
+        <div class="quick-actions" id="quick-actions"></div>
+      </section>
+
+      <section id="messages" class="messages" hidden></section>
+
+      <section id="demo-pane" class="demo-pane" hidden>
+        <div class="dash-header">
+          <div>
+            <h2>Guided demo</h2>
+            <p class="demo-tagline">Exercise everything shipped end-to-end. Buttons fire the real thing — this runs against your real tenant.</p>
+          </div>
+          <button id="demo-reset-progress" class="ghost-btn" type="button">Reset progress</button>
+        </div>
+        <div id="demo-progress-bar" class="demo-progress-bar">
+          <div id="demo-progress-fill" class="demo-progress-fill"></div>
+        </div>
+        <div id="demo-steps"></div>
+      </section>
+
+      <section id="operator-pane" class="operator-pane" hidden>
+        <div class="dash-header">
+          <div>
+            <h2>Operator pitches</h2>
+            <p class="demo-tagline">Cross-tenant view of upsell signals the meta-OS spotted. Phase 5 deploy will gate this behind operator-role auth.</p>
+          </div>
+          <button id="operator-refresh" class="ghost-btn" type="button">↻ Re-scan all tenants</button>
+        </div>
+        <div id="operator-tiles" class="dash-tiles"></div>
+        <div id="operator-pitches" class="dash-section"></div>
+      </section>
+
+      <section id="dashboard-pane" class="dashboard-pane" hidden>
+        <div class="dash-header">
+          <h2 id="dash-title">Pipeline overview</h2>
+          <button id="dash-refresh" class="ghost-btn">↻ Refresh</button>
+        </div>
+
+        <div id="dash-tiles" class="dash-tiles"></div>
+        <div id="dash-opps" class="dash-opps"></div>
+        <div id="dash-goals" class="dash-section"></div>
+        <div id="dash-budgets" class="dash-section"></div>
+        <div id="dash-top" class="dash-section"></div>
+        <div id="dash-cadence" class="dash-section"></div>
+        <div id="dash-inbound" class="dash-section"></div>
+        <div id="dash-recent" class="dash-section"></div>
+      </section>
+
+      <form id="composer" class="composer">
+        <input id="input" placeholder="What would you like me to do?" autocomplete="off">
+        <button id="send" type="submit" aria-label="Send">→</button>
+      </form>
+    </main>
+  </div>
+  <script src="/static/app.js" type="module"></script>
+</body>
+</html>

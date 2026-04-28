@@ -1,0 +1,43 @@
+# Platform catalog of OSes. Per-tenant entitlement gates which of these a
+# customer actually sees (see config/tenants/<slug>.yaml).
+#
+# status: stable | experimental | roadmap
+#   - stable       → available for all entitled tenants
+#   - experimental → available but flagged in the UI
+#   - roadmap      → declared here so we can reference it in pitch reports,
+#                    but not actually loaded at runtime
+
+oses:
+  sales:
+    module: oses.sales
+    version: "0.1.0"
+    status: stable
+
+  # Brief OS — the plug-and-play proof. Single-subagent OS that reads
+  # cross-OS state and produces a personalized markdown digest.
+  # Disable/remove with: comment out this entry, OR remove `brief` from
+  # the tenant's entitled_oses, OR set status: roadmap.
+  brief:
+    module: oses.brief
+    version: "0.1.0"
+    status: experimental
+
+  marketing:
+    module: oses.marketing
+    version: "0.0.1"
+    status: roadmap
+
+  customer_satisfaction:
+    module: oses.customer_satisfaction
+    version: "0.0.1"
+    status: roadmap
+
+  finance:
+    module: oses.finance
+    version: "0.0.1"
+    status: roadmap
+
+  hr:
+    module: oses.hr
+    version: "0.0.1"
+    status: roadmap

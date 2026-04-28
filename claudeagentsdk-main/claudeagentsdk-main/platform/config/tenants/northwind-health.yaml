@@ -1,0 +1,51 @@
+# Second tenant — proves the multi-tenant story end-to-end.
+#
+# Differentiated from acme-test by:
+#   - vertical (healthcare vs fintech)
+#   - entitled OSes (sales only — Brief OS is intentionally NOT entitled
+#     so the operator dashboard surfaces a Brief OS upsell pitch)
+#   - smaller budgets (mimics a smaller plan)
+#
+# Sandbox redirects point at the same operator inbox/phone as acme-test so
+# any outbound from either tenant lands somewhere visible. The redirect
+# still preserves the original target in audit metadata.
+
+tenant_id: northwind-health
+display_name: "Northwind Health"
+locale: en-US
+timezone: America/New_York
+
+entitled_oses:
+  - sales
+  # brief intentionally absent — the meta-OS pitches it via cross_os_pitch.
+
+sandbox:
+  enabled: true
+  # Env-var indirection — same SANDBOX_EMAIL/SANDBOX_PHONE as other dev tenants;
+  # each developer's local .env owns the actual values.
+  redirect_email_env: SANDBOX_EMAIL
+  redirect_phone_env: SANDBOX_PHONE
+  badge_on_ui: true
+
+policy_overrides:
+  cost_cap_per_run_usd: 3.00          # tighter than acme-test's $5.00
+
+resource_defaults:
+  apollo_credits:
+    limit: 50
+    period: month
+  gmail_sends:
+    limit: 25
+    period: day
+  twilio_sms:
+    limit: 10
+    period: day
+  voice_minutes:
+    limit: 0
+    period: month
+
+# Smaller goal — Northwind is a smaller-plan tenant.
+initial_goal:
+  metric: new_leads
+  target: 25
+  period: month

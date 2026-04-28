@@ -1,8 +1,24 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { X, Send, Loader2, Clapperboard, Film, Star, Mic, DollarSign, Users } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { formatDataForAI } from '../../utils/appData';
 import { createActionHandlers, parseUserIntent, getQuickResponses } from '../../utils/appActions';
 import { callAIFast, getApiKey } from '../../utils/ai';
+
+const CHATBOT_MD = {
+  p:      ({ node, ...p }) => <p {...p} className="mb-1.5 last:mb-0" />,
+  strong: ({ node, ...p }) => <strong {...p} className="font-bold" />,
+  em:     ({ node, ...p }) => <em {...p} className="italic" />,
+  ul:     ({ node, ...p }) => <ul {...p} className="list-disc pl-4 my-1.5 space-y-0.5" />,
+  ol:     ({ node, ...p }) => <ol {...p} className="list-decimal pl-4 my-1.5 space-y-0.5" />,
+  li:     ({ node, ...p }) => <li {...p} />,
+  a:      ({ node, ...p }) => <a {...p} target="_blank" rel="noopener noreferrer" className="text-amber-600 underline hover:text-amber-700" />,
+  code:   ({ node, inline, ...p }) => inline
+    ? <code {...p} className="px-1 py-0.5 rounded bg-zinc-200 text-[12px] font-mono text-zinc-800" />
+    : <code {...p} className="block p-2 rounded-lg bg-zinc-900 text-zinc-100 text-[12px] font-mono overflow-x-auto my-1.5" />,
+  pre:    ({ node, ...p }) => <pre {...p} />,
+};
 
 // M2: system prompt is memoised — formatDataForAI() only runs when the component mounts,
 //     not on every message send.
@@ -223,12 +239,18 @@ export const FloatingChatbot = ({ appState }) => {
                   <Clapperboard size={11} className="text-zinc-950" />
                 </div>
               )}
-              <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm whitespace-pre-wrap leading-relaxed ${
+              <div className={`max-w-[82%] px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'bg-amber-500 text-white font-medium rounded-br-sm shadow-sm shadow-amber-500/20'
+                  ? 'bg-amber-500 text-white font-medium rounded-br-sm shadow-sm shadow-amber-500/20 whitespace-pre-wrap'
                   : 'bg-zinc-50 border border-zinc-200 text-zinc-800 rounded-bl-sm shadow-sm'
               }`}>
-                {msg.content}
+                {msg.role === 'user' ? (
+                  msg.content
+                ) : (
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={CHATBOT_MD}>
+                    {msg.content}
+                  </ReactMarkdown>
+                )}
               </div>
             </div>
           ))}

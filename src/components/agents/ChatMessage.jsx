@@ -1,6 +1,32 @@
 import React, { useState } from 'react';
 import { Copy, Check, Zap } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { verticalColors } from '../../config/verticalColors';
+
+// Markdown renderer — minimal, safe defaults. Tailwind classes via prose-like
+// inline styles; no plugins beyond GFM (tables, strikethrough, task lists).
+const MD_COMPONENTS = {
+  p:      ({ node, ...p }) => <p {...p} className="mb-2 last:mb-0" />,
+  strong: ({ node, ...p }) => <strong {...p} className="font-bold" />,
+  em:     ({ node, ...p }) => <em {...p} className="italic" />,
+  ul:     ({ node, ...p }) => <ul {...p} className="list-disc pl-5 my-2 space-y-1" />,
+  ol:     ({ node, ...p }) => <ol {...p} className="list-decimal pl-5 my-2 space-y-1" />,
+  li:     ({ node, ...p }) => <li {...p} className="leading-relaxed" />,
+  h1:     ({ node, ...p }) => <h1 {...p} className="text-lg font-bold mt-3 mb-2" />,
+  h2:     ({ node, ...p }) => <h2 {...p} className="text-base font-bold mt-3 mb-2" />,
+  h3:     ({ node, ...p }) => <h3 {...p} className="text-sm font-bold mt-2 mb-1" />,
+  a:      ({ node, ...p }) => <a {...p} target="_blank" rel="noopener noreferrer" className="text-amber-600 underline hover:text-amber-700" />,
+  code:   ({ node, inline, ...p }) => inline
+    ? <code {...p} className="px-1 py-0.5 rounded bg-zinc-100 text-[13px] font-mono text-zinc-800" />
+    : <code {...p} className="block p-3 rounded-lg bg-zinc-900 text-zinc-100 text-[13px] font-mono overflow-x-auto" />,
+  pre:    ({ node, ...p }) => <pre {...p} className="my-2" />,
+  blockquote: ({ node, ...p }) => <blockquote {...p} className="border-l-2 border-amber-400 pl-3 my-2 italic text-zinc-700" />,
+  table:  ({ node, ...p }) => <table {...p} className="my-2 border-collapse text-sm" />,
+  th:     ({ node, ...p }) => <th {...p} className="border border-zinc-300 px-2 py-1 bg-zinc-100 font-semibold text-left" />,
+  td:     ({ node, ...p }) => <td {...p} className="border border-zinc-300 px-2 py-1" />,
+  hr:     ({ node, ...p }) => <hr {...p} className="my-3 border-zinc-200" />,
+};
 
 const initials = (name) =>
   name.split(' ').filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
@@ -80,12 +106,21 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
               style={{ background: `radial-gradient(ellipse at top left, ${vc.dim}, transparent 70%)` }} />
           )}
 
-          {/* Content */}
-          <p className={`relative z-10 whitespace-pre-wrap leading-relaxed text-[15px] ${
-            isUser ? 'text-zinc-950 font-semibold' : 'text-zinc-800'
-          }`}>
-            {message.content}
-          </p>
+          {/* Content — user messages stay plain text; agent messages render markdown */}
+          {isUser ? (
+            <p className="relative z-10 whitespace-pre-wrap leading-relaxed text-[15px] text-zinc-950 font-semibold">
+              {message.content}
+            </p>
+          ) : (
+            <div className="relative z-10 leading-relaxed text-[15px] text-zinc-800">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={MD_COMPONENTS}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
+          )}
 
           {/* Copy button — agent messages */}
           {!isUser && (

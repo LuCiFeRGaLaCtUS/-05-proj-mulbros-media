@@ -1,0 +1,2320 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-04-24T13:37:31.371290Z",
+  "tenant": {
+    "tenant_id": "acme-test",
+    "display_name": "Acme (Test)",
+    "locale": "en-US",
+    "timezone": "Asia/Kolkata",
+    "created_at": "2026-04-24T06:00:11.941981+00:00",
+    "updated_at": "2026-04-24T06:00:11.941981+00:00"
+  },
+  "active_configs": [
+    {
+      "id": "bd0c6cd5-002c-439f-8f3d-a83c3ae6357c",
+      "tenant_id": "acme-test",
+      "os_name": "sales",
+      "version_number": 2,
+      "config_json": {
+        "prompt_pins": {}
+      },
+      "change_note": "unpin prompt lead_sourcer",
+      "created_by": "cli:rollback-test",
+      "created_at": "2026-04-24T09:53:32.257587+00:00",
+      "is_active": true
+    }
+  ],
+  "config_history": [
+    {
+      "version_number": 2,
+      "os_name": "sales",
+      "created_at": "2026-04-24T09:53:32.257587+00:00",
+      "created_by": "cli:rollback-test",
+      "change_note": "unpin prompt lead_sourcer",
+      "is_active": true
+    },
+    {
+      "version_number": 1,
+      "os_name": "sales",
+      "created_at": "2026-04-24T09:53:26.402558+00:00",
+      "created_by": "cli:rollback-test",
+      "change_note": "pin prompt lead_sourcer=v1",
+      "is_active": false
+    }
+  ],
+  "leads": [
+    {
+      "id": "f012eaa0-bfcf-4c1d-a300-4b548c3b68ba",
+      "tenant_id": "acme-test",
+      "name": "Alex Brightwood",
+      "email": "alex.brightwood@modulrfinance.com",
+      "phone": "+441234567890",
+      "title": "VP Sales",
+      "company": "Modulr Finance",
+      "company_domain": "modulrfinance.com",
+      "company_size": "201-1000",
+      "company_revenue": "$50M-$100M",
+      "industry": "Fintech",
+      "location": "London, UK",
+      "tech_stack": [
+        "Salesforce",
+        "Segment",
+        "Snowflake",
+        "dbt"
+      ],
+      "linkedin_url": "https://www.linkedin.com/in/demo-alex-brightwood",
+      "source": "demo-seed",
+      "status": "replied",
+      "score": 91,
+      "score_rationale": "Exact VP Sales title at UK Series C fintech with active BDR/AE hiring and Snowflake stack signal; held at 91 consistent with prior April 2026 run \u2014 no inbound-reply signal present.",
+      "enrichment": {
+        "qual_notes": "Need confirmed (BDR ramp-time). Timing confirmed (actively hiring now). Authority likely (VP Sales, hiring decision). Budget: pricing question signals awareness but unconfirmed.",
+        "provider_id": "19dbfabd392b0312",
+        "last_reply_at": "2026-04-24T00:00:00Z",
+        "last_touch_at": "2026-04-24T00:00:00Z",
+        "last_reply_class": "positive",
+        "last_touch_number": 2,
+        "last_touch_channel": "email",
+        "reply_sentiment_score": 0.9,
+        "last_reply_text_summary": "Prospect confirmed ramp-time pain resonates, asked about pricing, offered Thursday or Friday for a call"
+      },
+      "created_at": "2026-04-24T13:24:15.899327+00:00",
+      "updated_at": "2026-04-24T13:30:37.307879+00:00"
+    },
+    {
+      "id": "99e6aca6-a116-43e0-9dea-2ce5a992f01d",
+      "tenant_id": "acme-test",
+      "name": "Priya Malhotra",
+      "email": "priya.malhotra@iwoca.co.uk",
+      "phone": null,
+      "title": "Head of Revenue",
+      "company": "iwoca",
+      "company_domain": "iwoca.co.uk",
+      "company_size": "51-200",
+      "company_revenue": "$10M-$50M",
+      "industry": "Fintech",
+      "location": "London, UK",
+      "tech_stack": [
+        "HubSpot",
+        "Apollo",
+        "Gong",
+        "Outreach"
+      ],
+      "linkedin_url": "https://www.linkedin.com/in/demo-priya-malhotra",
+      "source": "demo-seed",
+      "status": "replied",
+      "score": 77,
+      "score_rationale": "Adjacent Head of Revenue title at UK fintech with active BDR hiring and outbound-scaling press signal; docked for title adjacency, sub-band company size, and Series D funding beyond the 12-month signal window.",
+      "enrichment": {
+        "notes": "Opt-out received 2026-04-24. Priya requested removal from active cadence. Indicated openness to Q3 re-engagement. Do not contact before 2026-07-01.",
+        "q3_reengage": true,
+        "last_reply_at": "2026-04-24",
+        "objection_note": "Not a priority Q2-2026; requested removal from active cadence; willing to re-engage Q3",
+        "reengage_after": "2026-07-01",
+        "last_reply_class": "unsubscribe+future_interest",
+        "cadence_opt_out_at": "2026-04-24",
+        "reply_sentiment_score": -0.2,
+        "last_reply_text_summary": "Not a priority this quarter; requested cadence removal; open to Q3 re-engagement"
+      },
+      "created_at": "2026-04-24T13:24:16.112758+00:00",
+      "updated_at": "2026-04-24T13:31:01.208485+00:00"
+    },
+    {
+      "id": "b0b1d155-ce10-441f-8610-d8b65ebc8d5a",
+      "tenant_id": "acme-test",
+      "name": "Nathan Crowther",
+      "email": "nathan.crowther@currencycloud.com",
+      "phone": "+441234567891",
+      "title": "VP Sales",
+      "company": "Currencycloud",
+      "company_domain": "currencycloud.com",
+      "company_size": "201-1000",
+      "company_revenue": "$100M-$250M",
+      "industry": "Fintech",
+      "location": "London, UK",
+      "tech_stack": [
+        "Salesforce",
+        "Marketo",
+        "LinkedIn Sales Navigator"
+      ],
+      "linkedin_url": "https://www.linkedin.com/in/demo-nathan-crowther",
+      "source": "demo-seed",
+      "status": "scored",
+      "score": 72,
+      "score_rationale": "Exact VP Sales title at UK fintech but post-acquisition Visa subsidiary status cuts company size fit (-10) and industry fit (-5); no open roles and stale funding floor signals to 72, consistent with prior 71 score.",
+      "enrichment": {
+        "hooks": [
+          {
+            "text": "APAC expansion announced in Q1 2026",
+            "source": "company"
+          }
+        ],
+        "caveat": "Post-acquisition \u2014 buyer autonomy may be reduced",
+        "open_roles": [],
+        "recent_news": [
+          "Operating as a Visa subsidiary since acquisition",
+          "Product expansion into APAC markets"
+        ],
+        "email_source": "demo-seed",
+        "funding_stage": "Acquired by Visa",
+        "last_funding_months_ago": 36
+      },
+      "created_at": "2026-04-24T13:24:16.293581+00:00",
+      "updated_at": "2026-04-24T13:25:35.997849+00:00"
+    },
+    {
+      "id": "e2aa0d92-46a0-4254-9f8d-98f2485dea28",
+      "tenant_id": "acme-test",
+      "name": "Nicholas Reynolds",
+      "email": "nick@acmepay.io",
+      "phone": "+15551239999",
+      "title": "VP Sales",
+      "company": "AcmePay",
+      "company_domain": "acmepay.io",
+      "company_size": "1-50",
+      "company_revenue": null,
+      "industry": "Fintech - Payments",
+      "location": "San Francisco, CA, US",
+      "tech_stack": [
+        "REST API",
+        "JavaScript SDK",
+        "WordPress",
+        "Freshdesk",
+        "Google Workspace"
+      ],
+      "linkedin_url": null,
+      "source": "manual",
+      "status": "scored",
+      "score": 80,
+      "score_rationale": "Exact VP Sales title match at a US Seed-stage fintech with direct B2B payments/API-first ICP alignment across every industry dimension; score capped from higher tier by Seed-stage size band and absence of confirmed intent signals in enrichment data.",
+      "enrichment": {
+        "hooks": [
+          {
+            "text": "AcmePay at Seed stage \u2014 payfac-as-a-service positioning means the window between seed close and Series A is exactly when outbound pipeline infrastructure matters most.",
+            "source": "funding_signal",
+            "fetched_at": "2026-04-24"
+          },
+          {
+            "text": "Nicholas is VP Sales responsible for revenue targets at an API-first payments company that will need to ramp a sales team fast post-seed.",
+            "source": "role_signal",
+            "fetched_at": "2026-04-24"
+          },
+          {
+            "text": "API-first, embedded payments, B2B SaaS fintech \u2014 the exact ICP where BDR outbound-engine ROI is clearest.",
+            "source": "company_signal",
+            "fetched_at": "2026-04-24"
+          }
+        ],
+        "last_send_error": "voice/place_call failed: LiveKit error 'name os is not defined' \u2014 sip_bridged=false, room=call-d2c2ddadd6d4, provider_id=null. Sandbox redirect was +919821535682, real target +15551239999. Retry on next run.",
+        "no_viable_channel": false,
+        "last_touch_attempted_at": "2026-04-24",
+        "last_touch_channel_attempted": "voice"
+      },
+      "created_at": "2026-04-24T13:30:42.697751+00:00",
+      "updated_at": "2026-04-24T13:35:02.686299+00:00"
+    }
+  ],
+  "outreach_events": [
+    {
+      "id": "ebb7fd84-beff-4615-8921-2558752cb7ba",
+      "tenant_id": "acme-test",
+      "lead_id": "f012eaa0-bfcf-4c1d-a300-4b548c3b68ba",
+      "channel": "email",
+      "direction": "outbound",
+      "subject": "[SANDBOX] \u2192 alex.brightwood@modulrfinance.com  |  BDR ramp at Modulr",
+      "body": "Saw your post about cutting BDR ramp from 90 to 45 days \u2014 that's one of the harder things to pull off while you're scaling a team post-Series C.\n\nWe help VP Sales leaders at UK fintechs build the onboarding and pipeline-methodology layer that makes that kind of compression repeatable, not a one-off.\n\nWorth a 15-minute call, or too early in the quarter?\n\n\u2014 [Your Name]\n\nReply STOP and I'll remove you from outreach.",
+      "original_target": "alex.brightwood@modulrfinance.com",
+      "dispatched_to": "avifszt@gmail.com",
+      "sandbox": true,
+      "provider_id": "19dbfabd392b0312",
+      "status": "sent",
+      "ts": "2026-04-24T13:26:42.736597+00:00"
+    },
+    {
+      "id": "bf52b0bf-7df4-4791-a2ac-2ff8f89c43f6",
+      "tenant_id": "acme-test",
+      "lead_id": "99e6aca6-a116-43e0-9dea-2ce5a992f01d",
+      "channel": "email",
+      "direction": "outbound",
+      "subject": "[SANDBOX] \u2192 priya.malhotra@iwoca.co.uk  |  \u00a33B milestone + scaling outbound",
+      "body": "Saw the \u00a33B SME lending milestone \u2014 and your LinkedIn post about hitting outbound-qualified pipeline targets. That combination usually means BDR capacity is the next constraint.\n\nWe work with Heads of Revenue at UK fintechs to build the outbound engine that keeps pace with that kind of growth \u2014 especially when you're actively hiring BDRs and need ramp to actually stick.\n\nIs scaling outbound a priority this quarter, or too early?\n\n\u2014 [Your Name]\n\nReply STOP and I'll remove you from outreach.",
+      "original_target": "priya.malhotra@iwoca.co.uk",
+      "dispatched_to": "avifszt@gmail.com",
+      "sandbox": true,
+      "provider_id": "19dbfabe056bbe41",
+      "status": "sent",
+      "ts": "2026-04-24T13:26:46.05915+00:00"
+    },
+    {
+      "id": "affd546b-3f0f-4f13-ab10-bd77dae99e68",
+      "tenant_id": "acme-test",
+      "lead_id": "f012eaa0-bfcf-4c1d-a300-4b548c3b68ba",
+      "channel": "email",
+      "direction": "inbound",
+      "subject": "Re: Modulr Finance outreach",
+      "body": "Thanks \u2014 this actually lands at a good time for us. We're hiring BDRs right now and your note about ramp-time is relevant. How does pricing work? Happy to jump on a call Thursday or Friday.",
+      "original_target": "alex.brightwood@modulrfinance.com",
+      "dispatched_to": null,
+      "sandbox": false,
+      "provider_id": null,
+      "status": "received",
+      "ts": "2026-04-24T13:29:00.345408+00:00"
+    },
+    {
+      "id": "2430aa46-649e-4bcc-a7b6-fb82705ec87f",
+      "tenant_id": "acme-test",
+      "lead_id": "99e6aca6-a116-43e0-9dea-2ce5a992f01d",
+      "channel": "email",
+      "direction": "inbound",
+      "subject": "Re: iwoca outreach \u2014 not now",
+      "body": "Not a priority for us this quarter \u2014 circle back in Q3. Please remove me from this cadence.",
+      "original_target": "priya.malhotra@iwoca.co.uk",
+      "dispatched_to": null,
+      "sandbox": false,
+      "provider_id": null,
+      "status": "received",
+      "ts": "2026-04-24T13:29:18.611291+00:00"
+    },
+    {
+      "id": "9ba0c467-2932-4e6a-be0c-38d51085b5d7",
+      "tenant_id": "acme-test",
+      "lead_id": "f012eaa0-bfcf-4c1d-a300-4b548c3b68ba",
+      "channel": "email",
+      "direction": "outbound",
+      "subject": "[SANDBOX] \u2192 alex.brightwood@modulrfinance.com  |  Re: Modulr Finance outreach",
+      "body": "Alex \u2014 good timing on your end, and ours. Actively hiring BDRs is exactly when ramp-time starts to feel expensive.\n\nOn pricing: we work on a per-seat model with a minimum team size. Happy to walk through the specifics on a call rather than give you numbers without context \u2014 it'll be more useful that way.\n\nThursday 2pm or Friday 11am UK time \u2014 which works better for a 20-minute intro? I'll send a calendar invite with a short agenda so it's not a blank call.\n\nLooking forward to it.",
+      "original_target": "alex.brightwood@modulrfinance.com",
+      "dispatched_to": "avifszt@gmail.com",
+      "sandbox": true,
+      "provider_id": "19dbfaeb7997bb4b",
+      "status": "sent",
+      "ts": "2026-04-24T13:29:58.119111+00:00"
+    },
+    {
+      "id": "c621335d-22c2-4198-9e7f-480e1b677494",
+      "tenant_id": "acme-test",
+      "lead_id": "99e6aca6-a116-43e0-9dea-2ce5a992f01d",
+      "channel": "email",
+      "direction": "outbound",
+      "subject": "[SANDBOX] \u2192 priya.malhotra@iwoca.com  |  Re: iwoca outreach \u2014 not now",
+      "body": "Hi Priya,\n\nNoted \u2014 you're removed from the current cadence and I won't reach out again this quarter.\n\nI'll check back in early Q3 in case priorities have shifted. If that timing ever changes sooner, feel free to reply here and I'll pick it back up.\n\nThanks for letting me know.\n\n\u2014 Sales OS Team",
+      "original_target": "priya.malhotra@iwoca.com",
+      "dispatched_to": "avifszt@gmail.com",
+      "sandbox": true,
+      "provider_id": "19dbfaf02a3e7e0e",
+      "status": "sent",
+      "ts": "2026-04-24T13:30:11.591501+00:00"
+    },
+    {
+      "id": "1d23dfb7-1d1b-4f82-ba40-c60db57d3121",
+      "tenant_id": "acme-test",
+      "lead_id": "e2aa0d92-46a0-4254-9f8d-98f2485dea28",
+      "channel": "voice",
+      "direction": "outbound",
+      "subject": null,
+      "body": "OPENER (permission-based pattern):\n\"Hi Nicholas, this is [Your Name] from [Your Company]. I know I'm catching you out of the blue \u2014 do you have 27 seconds for me to explain why I'm calling, or should I try you another time?\"\n\nIF THEY SAY GO AHEAD (three beats, \u226445 seconds total):\n1. Context: \"I work with VP Sales leaders at seed-stage B2B fintech companies on building outbound pipeline engines before their Series A.\"\n2. Hook: \"Saw AcmePay is going after the payfac-as-a-service space \u2014 that embedded payments motion typically means a complex sale that needs a tight outbound system early.\"\n3. Question: \"Does building that outbound pipeline infrastructure come up as a priority right now, or is it too early?\"\n\nTHEN STOP AND LISTEN.\n\nIF NOT A GOOD TIME:\n\"Totally fair. What day usually works better for a 15-minute conversation \u2014 Tuesday or Thursday?\"\n\nIF SEND AN EMAIL:\n\"Happy to \u2014 what's the best address and what would be most useful to include?\"\n\nIF VOICEMAIL (\u226420 seconds):\n\"Hi Nicholas, this is [Your Name] from [Your Company]. I work with VP Sales leaders at seed-stage fintechs on outbound pipeline ahead of Series A \u2014 AcmePay's payfac positioning is exactly the space where this matters early. Call me back at [number], or I'll also send a quick email. Thanks.\"\n[Follow up with email after leaving voicemail.]\n\nSANDBOX METADATA: real_target=+15551239999, sandbox_redirect=+919821535682",
+      "original_target": "+15551239999",
+      "dispatched_to": "+919821535682",
+      "sandbox": true,
+      "provider_id": null,
+      "status": "failed",
+      "ts": "2026-04-24T13:34:53.303313+00:00"
+    }
+  ],
+  "chat": {
+    "sessions": [
+      {
+        "id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "os_name": "sales",
+        "title": "Take a VP Sales lead named Nicholas Reynolds, phone +1555\u2026",
+        "created_at": "2026-04-24T13:29:50.447368+00:00",
+        "last_active_at": "2026-04-24T13:35:32.641304+00:00"
+      },
+      {
+        "id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "os_name": "sales",
+        "title": "Reply from Priya Malhotra",
+        "created_at": "2026-04-24T13:29:19.140822+00:00",
+        "last_active_at": "2026-04-24T13:31:28.036328+00:00"
+      },
+      {
+        "id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "os_name": "sales",
+        "title": "Reply from Alex Brightwood",
+        "created_at": "2026-04-24T13:29:00.858304+00:00",
+        "last_active_at": "2026-04-24T13:31:07.591469+00:00"
+      },
+      {
+        "id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "os_name": "sales",
+        "title": "Score my enriched leads. Then send outreach to the top 2.",
+        "created_at": "2026-04-24T13:24:18.311509+00:00",
+        "last_active_at": "2026-04-24T13:27:17.50672+00:00"
+      }
+    ],
+    "messages": [
+      {
+        "id": "e8635035-123a-4d20-a0ee-77d38e008749",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "user",
+        "content": "Score my enriched leads. Then send outreach to the top 2.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:24:23.814792+00:00"
+      },
+      {
+        "id": "98a243da-981a-45aa-ad5f-e55b09064b01",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Scoring your enriched leads first, then sending outreach to the top 2 \u2014 exactly as planned.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:24:37.7586+00:00"
+      },
+      {
+        "id": "d161bf87-d053-4ebf-b165-bdead7196c2e",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:24:40.007999+00:00"
+      },
+      {
+        "id": "014b1361-04f1-4870-a206-011d68ce3990",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:24:43.655395+00:00"
+      },
+      {
+        "id": "d405d5a6-a227-4711-9e96-15226b19a217",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:24:46.523086+00:00"
+      },
+      {
+        "id": "6f742a08-699f-405f-bb52-99c8c6e177d9",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:25:05.056927+00:00"
+      },
+      {
+        "id": "bec07009-661c-4d9f-b2c1-70c81117d881",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Looking through existing leads",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__list_leads",
+            "human_label": "Looking through existing leads"
+          }
+        ],
+        "created_at": "2026-04-24T13:25:05.234338+00:00"
+      },
+      {
+        "id": "0c5c2736-8394-438e-a92c-4269179f6538",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:25:33.00575+00:00"
+      },
+      {
+        "id": "3dd9d03e-6ae9-4e6c-a295-2e58118e757d",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:25:34.467194+00:00"
+      },
+      {
+        "id": "a08c2213-91bd-410b-a36d-1278c7f6eb70",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:25:36.005127+00:00"
+      },
+      {
+        "id": "5327e72f-5888-4708-8625-923a6de388a3",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:25:43.47439+00:00"
+      },
+      {
+        "id": "544f60e5-0563-47d7-a140-a943b2d2c5f2",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Scores are in. Now sending outreach to the top 2 \u2014 Alex Brightwood (91) and Priya Malhotra (77).",
+        "attachments": [],
+        "created_at": "2026-04-24T13:25:59.935959+00:00"
+      },
+      {
+        "id": "01c29d30-66c0-47b6-bc12-1942727f300b",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:04.461406+00:00"
+      },
+      {
+        "id": "ec8ab151-a712-4421-b3b3-5fb5e20a94b5",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:06.888169+00:00"
+      },
+      {
+        "id": "123455de-4312-4b1f-83ab-23265829ef44",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:09.977022+00:00"
+      },
+      {
+        "id": "bfc1ea0e-b02b-460b-b299-9b593288ac4e",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:10.577552+00:00"
+      },
+      {
+        "id": "373d82ff-c716-4557-8c6f-0d8a00153ebe",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:13.970464+00:00"
+      },
+      {
+        "id": "01f44e06-67f4-45d6-bea8-7ed5aaf220c5",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Pick channel",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__pick_channel",
+            "human_label": "Pick channel"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:14.768858+00:00"
+      },
+      {
+        "id": "dc1667c1-ecc5-4277-9457-75a1ae2f487f",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Pick channel",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__pick_channel",
+            "human_label": "Pick channel"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:14.93539+00:00"
+      },
+      {
+        "id": "52a59390-3fe5-4ba5-9ab4-bb93037499da",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Looking through existing leads",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__list_leads",
+            "human_label": "Looking through existing leads"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:20.00955+00:00"
+      },
+      {
+        "id": "caaaa8c5-74bf-47a3-bb33-d878f4aa7f05",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Pick channel",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__pick_channel",
+            "human_label": "Pick channel"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:23.394021+00:00"
+      },
+      {
+        "id": "1eed9bcc-9bf9-4d70-9564-59cc2330d786",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Pick channel",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__pick_channel",
+            "human_label": "Pick channel"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:23.570942+00:00"
+      },
+      {
+        "id": "102c8f5a-cab7-43a0-970d-30b1c73623b3",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Sending email",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_outbound__send_email",
+            "human_label": "Sending email"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:40.995204+00:00"
+      },
+      {
+        "id": "6168b9b2-9f30-4d08-ba95-75f6488e91d3",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Sending email",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_outbound__send_email",
+            "human_label": "Sending email"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:44.140328+00:00"
+      },
+      {
+        "id": "812bbfc7-f48e-4efc-9897-99fbe435bf4a",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:51.858774+00:00"
+      },
+      {
+        "id": "0b118a66-da47-4486-9470-34b977cc93fd",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:26:52.734197+00:00"
+      },
+      {
+        "id": "01dc8075-a272-49f0-815a-e07e4eced799",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:27:00.028501+00:00"
+      },
+      {
+        "id": "c5eb346e-0dfc-4df3-8f8c-43282dee0429",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:27:02.121694+00:00"
+      },
+      {
+        "id": "de72e49a-932d-4635-bcbb-b50634ea0bd8",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Here's your full run summary:\n\n---\n\n## \u2705 Pipeline Run \u2014 2026-04-24\n\n### Scoring (3 leads processed)\n| Rank | Name | Company | Score | Tier |\n|------|------|---------|-------|------|\n| 1 | Alex Brightwood | Modulr Finance | **91** | Tier 1 |\n| 2 | Priya Malhotra | iwoca | **77** | Tier 2 |\n| 3 | Nathan Crowther | Currencycloud | **72** | Tier 2 |\n\n### Outreach (top 2 contacted)\n| Lead | Channel | Subject | Status |\n|------|---------|---------|--------|\n| Alex Brightwood | Email | *BDR ramp at Modulr* | \u2705 Sent |\n| Priya Malhotra | Email | *\u00a33B milestone + scaling outbound* | \u2705 Sent |\n\nBoth emails are personalised to each lead's signals and have 3-touch follow-up cadences auto-scheduled (next touch in +3 business days).\n\n**\u26a0\ufe0f Sandbox active** \u2014 both emails redirected to avifszt@gmail.com; real targets preserved in metadata. Nathan Crowther was not contacted (outside top 2) \u2014 want me to reach out to him as well?",
+        "attachments": [],
+        "created_at": "2026-04-24T13:27:17.252331+00:00"
+      },
+      {
+        "id": "57de33e9-0273-4ee3-a2f6-a9c06e294942",
+        "session_id": "b0eb28c5-4283-4289-b38e-78c07e42ec59",
+        "tenant_id": "acme-test",
+        "role": "system",
+        "content": "done in 3 turns \u00b7 $0.4009",
+        "attachments": [
+          {
+            "kind": "result",
+            "turns": 3,
+            "cost_usd": 0.4008671
+          }
+        ],
+        "created_at": "2026-04-24T13:27:17.419635+00:00"
+      },
+      {
+        "id": "97a85e00-0c97-4b0e-b5c1-58cd259925bb",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "user",
+        "content": "A new inbound email arrived.\nFrom: Alex Brightwood at Modulr Finance\nSubject: Re: Modulr Finance outreach\nLead context: id=f012eaa0-bfcf-4c1d-a300-4b548c3b68ba, current status=contacted, score=91.\n\nReply body:\n---\nThanks \u2014 this actually lands at a good time for us. We're hiring BDRs right now and your note about ramp-time is relevant. How does pricing work? Happy to jump on a call Thursday or Friday.\n---\n\nApply the `reply-handling` skill to classify, then respond per the SDR workflow. Use `send_email` (or matching channel) to dispatch your reply. Then update the lead's status.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:29:07.140117+00:00"
+      },
+      {
+        "id": "7512ce4b-009a-4f5f-840b-60e4f6b135bd",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "user",
+        "content": "A new inbound email arrived.\nFrom: Priya Malhotra at iwoca\nSubject: Re: iwoca outreach \u2014 not now\nLead context: id=99e6aca6-a116-43e0-9dea-2ce5a992f01d, current status=contacted, score=77.\n\nReply body:\n---\nNot a priority for us this quarter \u2014 circle back in Q3. Please remove me from this cadence.\n---\n\nApply the `reply-handling` skill to classify, then respond per the SDR workflow. Use `send_email` (or matching channel) to dispatch your reply. Then update the lead's status.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:29:24.228517+00:00"
+      },
+      {
+        "id": "eeba549c-d348-4dc6-a328-c21c52ff23cf",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Routing this warm inbound reply to the SDR \u2014 qualifying Alex's interest, drafting a response, and updating the lead status.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:29:24.913683+00:00"
+      },
+      {
+        "id": "ea988eed-3d9a-44b7-85de-a0d151efed36",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:32.04059+00:00"
+      },
+      {
+        "id": "4c95149f-116b-4499-9edb-2351f28598c7",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:32.820194+00:00"
+      },
+      {
+        "id": "6c56fb66-70a2-4bf0-bdce-57db4532baf0",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:36.881149+00:00"
+      },
+      {
+        "id": "20803fc6-917b-4889-9a53-d7019d6a11c7",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Routing this to SDR to classify Priya's opt-out, draft a respectful acknowledgment, send the reply, and update her lead status.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:29:38.414015+00:00"
+      },
+      {
+        "id": "f605ea4b-d42b-4618-9aef-c44b68ae5006",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Looking through existing leads",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__list_leads",
+            "human_label": "Looking through existing leads"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:40.448925+00:00"
+      },
+      {
+        "id": "12f18e0a-29a5-4230-91b5-33a1683a364c",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:41.17002+00:00"
+      },
+      {
+        "id": "cb1b95a9-7442-409b-a4d0-5a1369239320",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:48.414233+00:00"
+      },
+      {
+        "id": "9ec1da4d-6815-47a3-8184-4bbd4327596e",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:50.088016+00:00"
+      },
+      {
+        "id": "3f10cfaf-b9e6-44da-9b1d-6ca0f516e535",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Sending email",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_outbound__send_email",
+            "human_label": "Sending email"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:50.622584+00:00"
+      },
+      {
+        "id": "57123e22-4243-4518-8d67-288c214cee71",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "user",
+        "content": "Take a VP Sales lead named Nicholas Reynolds, phone +15551239999, email nick@acmepay.io, location San Francisco, company AcmePay. Source, score, and voice-call him.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:29:56.89939+00:00"
+      },
+      {
+        "id": "204e9c8f-1c57-4f06-b012-30bd9ac9067f",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:59.684785+00:00"
+      },
+      {
+        "id": "74a4a584-2a47-4c5c-83a1-d335493ed9fa",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:29:59.863767+00:00"
+      },
+      {
+        "id": "d1b0f563-ecdb-49b2-b1df-2b84dfb520b9",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:00.743601+00:00"
+      },
+      {
+        "id": "1315eda8-810e-4062-b7d6-b7917a697a79",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:07.118994+00:00"
+      },
+      {
+        "id": "ce614061-344f-44a2-9efe-4f667e1f6cf1",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Sending email",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_outbound__send_email",
+            "human_label": "Sending email"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:09.195368+00:00"
+      },
+      {
+        "id": "b38c01e7-0ade-4353-ad24-55d6943af7c5",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Glob",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Glob",
+            "human_label": "Glob"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:10.639268+00:00"
+      },
+      {
+        "id": "b3d7ff7a-45ce-4917-b888-0078df0ef41d",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:13.76437+00:00"
+      },
+      {
+        "id": "69fe2b4a-2c70-4501-ae98-4262eb50cc7a",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Skipping sourcing since Nicholas is already fully identified \u2014 running **enrichment \u2192 scoring \u2192 voice call** in sequence.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:30:16.172613+00:00"
+      },
+      {
+        "id": "c0ee4994-5da2-45e7-9fc1-769342642cf7",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:17.577405+00:00"
+      },
+      {
+        "id": "a41cd41a-a396-446b-8947-74884cdaddde",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:19.152304+00:00"
+      },
+      {
+        "id": "8f31039d-2512-4b38-80b8-6bc7814932cb",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:19.652847+00:00"
+      },
+      {
+        "id": "1435aa95-9125-4ce3-a97f-c6ba5dc6d709",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:20.676805+00:00"
+      },
+      {
+        "id": "412c2988-3b0d-4ecb-85e9-6dfa04e03069",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:20.892286+00:00"
+      },
+      {
+        "id": "ab30af72-55c3-4ae8-9e05-a647a961ae79",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Glob",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Glob",
+            "human_label": "Glob"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:23.182349+00:00"
+      },
+      {
+        "id": "c4114b10-bfe1-4278-a6fe-8e21234c7639",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:23.798745+00:00"
+      },
+      {
+        "id": "634333ce-0c80-42e1-91d4-1e1a4d1aa693",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:24.066763+00:00"
+      },
+      {
+        "id": "fb22c485-4472-430e-b6a2-379fa490fa48",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Looking through existing leads",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__list_leads",
+            "human_label": "Looking through existing leads"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:24.233136+00:00"
+      },
+      {
+        "id": "6a99a6c2-f153-4202-8e41-37b1ffa0bde6",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:26.267505+00:00"
+      },
+      {
+        "id": "fa48a531-b335-4066-9a03-a0bf28945f47",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:28.039282+00:00"
+      },
+      {
+        "id": "91ee11a0-be81-4750-8f8d-b9f4d76de589",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:28.205895+00:00"
+      },
+      {
+        "id": "0760f077-a4ce-49e9-83d4-333d7d117200",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:30.05249+00:00"
+      },
+      {
+        "id": "0401bf44-c33e-4327-bdff-7a2fcfe9d43b",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:30.225067+00:00"
+      },
+      {
+        "id": "6db530b5-e43b-4860-9e30-a810e54816ef",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:30.799126+00:00"
+      },
+      {
+        "id": "c616750b-b3d4-4365-83e8-e7a704d168d6",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:33.667686+00:00"
+      },
+      {
+        "id": "89e2dd8a-62cb-40b6-9f08-8c4fa38d3bbd",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Composio search tools",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__composio__COMPOSIO_SEARCH_TOOLS",
+            "human_label": "Composio search tools"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:36.866612+00:00"
+      },
+      {
+        "id": "e2c36719-507a-4a3b-9d6b-37a18dc880ac",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:37.310142+00:00"
+      },
+      {
+        "id": "4e9719bd-7695-406f-8592-18c0832ba786",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Saving a new lead",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__save_lead",
+            "human_label": "Saving a new lead"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:38.160302+00:00"
+      },
+      {
+        "id": "bc6f1858-5be3-4b6a-99f6-4b7e2afac4c8",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:38.328446+00:00"
+      },
+      {
+        "id": "ab543552-c0d2-4096-9d27-64b040b4eb21",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Grep",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Grep",
+            "human_label": "Grep"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:41.512308+00:00"
+      },
+      {
+        "id": "75ab50d7-457b-4600-a312-4129f88880df",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:43.576485+00:00"
+      },
+      {
+        "id": "f1931acf-fcf0-4665-b709-8e67de82b56b",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Bash",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Bash",
+            "human_label": "Bash"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:44.880475+00:00"
+      },
+      {
+        "id": "4a64aa97-1965-493d-a4b8-20b9bffe27e2",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Bash",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Bash",
+            "human_label": "Bash"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:47.770888+00:00"
+      },
+      {
+        "id": "da5666f7-f06e-4262-93bc-217d1abe0306",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Composio multi execute tool",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__composio__COMPOSIO_MULTI_EXECUTE_TOOL",
+            "human_label": "Composio multi execute tool"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:49.350577+00:00"
+      },
+      {
+        "id": "a8502a31-f389-4b7d-8afc-2b04126c7765",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Bash",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Bash",
+            "human_label": "Bash"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:51.724817+00:00"
+      },
+      {
+        "id": "2f77a90f-596d-4a85-9c83-e8c029206fc3",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:30:59.822668+00:00"
+      },
+      {
+        "id": "e797b658-947f-4c4e-a768-7d049f4420e6",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:31:01.207855+00:00"
+      },
+      {
+        "id": "6401a2e7-15a2-4629-891a-49b496f3bc5c",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Here's what was done for Alex Brightwood's reply:\n\n---\n\n## \u2705 Inbound Handled \u2014 Modulr Finance (Score: 91)\n\n**Qualification (BANT light)**\n| Signal | Verdict |\n|---|---|\n| Need | \u2705 Confirmed \u2014 ramp-time pain resonates, actively hiring BDRs |\n| Timing | \u2705 Confirmed \u2014 hiring is happening *now* |\n| Authority | \u2705 Likely \u2014 VP Sales title, hiring decision-maker |\n| Budget | \ud83d\udfe1 Partial \u2014 asked about pricing (positive signal, not yet committed) |\n\n**Actions taken:**\n- \ud83d\udce7 **Email dispatched** \u2014 warm reply sent acknowledging the BDR hiring timing, briefly framed pricing (per-seat, better discussed on a call), and proposed **Thursday 2pm or Friday 11am UK** as specific slots\n- \ud83d\udd04 **Status updated** \u2192 `replied` (with `last_reply_class=positive`, BANT qual notes, and `reply_sentiment_score=0.9` written back to the lead record)\n\n**\u26a0\ufe0f One note:** The leads schema doesn't have a `qualified` status value \u2014 `replied` with enriched qual notes was used instead. If you'd like a formal `qualified` status added to the schema, let me know.\n\n**Recommended next step:** When Alex picks a slot \u2192 update to `meeting_booked` and queue an AE for discovery. At score 91 + active BDR hiring, this one's worth a senior rep's time.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:31:06.690566+00:00"
+      },
+      {
+        "id": "e4dc97c2-2248-44fa-bcc6-6372479c33a0",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:31:06.872509+00:00"
+      },
+      {
+        "id": "9c11049b-5b0f-4cfd-9ba0-6fc8f2368ecf",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Composio multi execute tool",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__composio__COMPOSIO_MULTI_EXECUTE_TOOL",
+            "human_label": "Composio multi execute tool"
+          }
+        ],
+        "created_at": "2026-04-24T13:31:07.054482+00:00"
+      },
+      {
+        "id": "72c9d445-5dae-481f-a713-f8a0f3809df9",
+        "session_id": "7a7c8dea-ed2c-4b9d-b07f-cd39cfd32de8",
+        "tenant_id": "acme-test",
+        "role": "system",
+        "content": "done in 2 turns \u00b7 $0.2195",
+        "attachments": [
+          {
+            "kind": "result",
+            "turns": 2,
+            "cost_usd": 0.21953875000000006
+          }
+        ],
+        "created_at": "2026-04-24T13:31:07.454077+00:00"
+      },
+      {
+        "id": "532c18c8-2761-4f42-9216-f294b6ad23fb",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Composio multi execute tool",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__composio__COMPOSIO_MULTI_EXECUTE_TOOL",
+            "human_label": "Composio multi execute tool"
+          }
+        ],
+        "created_at": "2026-04-24T13:31:23.633968+00:00"
+      },
+      {
+        "id": "324f5d57-3700-4a63-8256-8a13c5a50e83",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Here's what was done for Priya's inbound reply:\n\n---\n\n### \u2705 Inbound handled \u2014 Priya Malhotra, iwoca\n\n**Classification**\n- **Intent:** Cadence opt-out + future interest (Q3)\n- **Sentiment:** Mildly negative (-0.2) \u2014 polite pause, not a hard reject\n- **Urgency:** Low \u2014 do not re-contact before **2026-07-01**\n\n**Reply sent** *(sandbox \u2192 avifszt@gmail.com)*\n> Hi Priya, Noted \u2014 you're removed from the current cadence and I won't reach out again this quarter. I'll check back in early Q3 in case priorities have shifted. If that timing changes sooner, feel free to reply here. Thanks for letting me know. \u2014 Sales OS Team\n\n**Lead updated**\n| Field | Value |\n|---|---|\n| Status | `replied` |\n| Cadence opt-out | 2026-04-24 |\n| Re-engage after | 2026-07-01 |\n| Q3 re-engage flag | \u2705 true |\n\n---\n\n**\u26a0\ufe0f One note:** `nurture` isn't a valid status in your leads DB enum \u2014 used `replied` instead, with the Q3 re-engage intent fully captured in enrichment fields. If you'd like a proper `nurture` bucket, the DB enum would need to be extended.\n\nPriya is clear of the active cadence. Score of 77 is preserved \u2014 she's a warm prospect to revisit in Q3.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:31:27.178705+00:00"
+      },
+      {
+        "id": "8a7af35e-e98a-440c-a1fb-cad237c17d4b",
+        "session_id": "7874cacc-2bfe-4a61-a236-3f6dc93bd9fc",
+        "tenant_id": "acme-test",
+        "role": "system",
+        "content": "done in 2 turns \u00b7 $0.2277",
+        "attachments": [
+          {
+            "kind": "result",
+            "turns": 2,
+            "cost_usd": 0.22772230000000002
+          }
+        ],
+        "created_at": "2026-04-24T13:31:27.949227+00:00"
+      },
+      {
+        "id": "6c14673a-0d96-4583-8b11-1336c851b868",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Composio multi execute tool",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__composio__COMPOSIO_MULTI_EXECUTE_TOOL",
+            "human_label": "Composio multi execute tool"
+          }
+        ],
+        "created_at": "2026-04-24T13:31:39.24609+00:00"
+      },
+      {
+        "id": "6ad5d20c-28e9-4f2c-93a4-2904ff44c27f",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Composio multi execute tool",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__composio__COMPOSIO_MULTI_EXECUTE_TOOL",
+            "human_label": "Composio multi execute tool"
+          }
+        ],
+        "created_at": "2026-04-24T13:31:58.606425+00:00"
+      },
+      {
+        "id": "719516ec-34c8-4144-8226-9f13f7bd6c2c",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:32:37.462862+00:00"
+      },
+      {
+        "id": "1653bd96-ee91-49f7-9bf6-75924db1ddac",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:32:45.081864+00:00"
+      },
+      {
+        "id": "d9dc6c46-b839-4d18-a5c0-826109ec2e95",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:32:48.673138+00:00"
+      },
+      {
+        "id": "e0c3a742-6e28-4686-bbcf-5d647d95d9ff",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Nicholas is enriched. Now scoring him against ICP.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:33:03.929887+00:00"
+      },
+      {
+        "id": "f4a74f07-f8bb-4d9d-9061-fa47b00fe2f5",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:33:07.397583+00:00"
+      },
+      {
+        "id": "4e32be24-093a-44d5-aa3d-66b3d2099a9e",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:33:10.427315+00:00"
+      },
+      {
+        "id": "a71e9bc5-a949-4f94-a1b7-95ad3169ef02",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:33:13.747412+00:00"
+      },
+      {
+        "id": "d95f3e69-1e19-493f-a0cc-e4a5fd805dac",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:33:16.718961+00:00"
+      },
+      {
+        "id": "698542f4-c958-49ec-a3f3-8860c443a6f2",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:33:44.279098+00:00"
+      },
+      {
+        "id": "bfc1129e-14ab-4403-b2f1-220574307917",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:33:49.734019+00:00"
+      },
+      {
+        "id": "6061c002-d2b5-401a-9d2b-85a487210724",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Strong 80/100 \u2014 qualified for outreach. Now placing the voice call.",
+        "attachments": [],
+        "created_at": "2026-04-24T13:34:03.153019+00:00"
+      },
+      {
+        "id": "bbb61139-6f18-4c26-91f2-4b61b0d9aca1",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Handing off to specialist",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "Agent",
+            "human_label": "Handing off to specialist"
+          }
+        ],
+        "created_at": "2026-04-24T13:34:06.888881+00:00"
+      },
+      {
+        "id": "d3e04b17-f79b-44cc-a9a1-4aa03dbe7fd3",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:34:09.689917+00:00"
+      },
+      {
+        "id": "e2b5d6ba-31e7-4de1-9f1e-0ddf203bbaae",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Toolsearch",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "ToolSearch",
+            "human_label": "Toolsearch"
+          }
+        ],
+        "created_at": "2026-04-24T13:34:13.820948+00:00"
+      },
+      {
+        "id": "fb9ddd2d-3736-4854-ba98-6308bcdfc0ef",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Recalling what worked before",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__recall",
+            "human_label": "Recalling what worked before"
+          }
+        ],
+        "created_at": "2026-04-24T13:34:17.479849+00:00"
+      },
+      {
+        "id": "21d364cf-e3e9-495b-b0b0-fd8e9ed71d67",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Pick channel",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__pick_channel",
+            "human_label": "Pick channel"
+          }
+        ],
+        "created_at": "2026-04-24T13:34:18.875174+00:00"
+      },
+      {
+        "id": "24800779-f7cc-47c0-86b1-148e2335dcb3",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Placing a call",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_outbound__place_call",
+            "human_label": "Placing a call"
+          }
+        ],
+        "created_at": "2026-04-24T13:34:46.476317+00:00"
+      },
+      {
+        "id": "249538de-ceba-4cf2-99a8-f09f8c630ae7",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Updating a lead's details",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__update_lead",
+            "human_label": "Updating a lead's details"
+          }
+        ],
+        "created_at": "2026-04-24T13:35:02.693622+00:00"
+      },
+      {
+        "id": "5ceebfd8-0e79-474f-863b-8e42a2719435",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "tool",
+        "content": "Remembering this for next time",
+        "attachments": [
+          {
+            "kind": "tool-trace",
+            "tool_name": "mcp__sales_internal__remember",
+            "human_label": "Remembering this for next time"
+          }
+        ],
+        "created_at": "2026-04-24T13:35:08.357287+00:00"
+      },
+      {
+        "id": "fa10be35-bc4f-4190-b3c7-9cb5f6a02f14",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "assistant",
+        "content": "Here's the full run summary for **Nicholas Reynolds**:\n\n---\n\n### \u2705 What was done\n\n| Stage | Result |\n|---|---|\n| **Enriched** | AcmePay profiled \u2014 Seed-stage fintech, 1\u201350 employees, API-first payments/payfac, PCI/SOC compliant |\n| **Scored** | **80 / 100** \u2014 Tier 2 qualified. Exact VP Sales title + strong industry fit; slight cap for Seed stage and no live intent signals |\n| **Voice call** | \u26a0\ufe0f **Failed** \u2014 server-side LiveKit bug: `name 'os' is not defined` in the call backend |\n\n---\n\n### \u26a0\ufe0f Action needed on the voice call\n\nThe call was scripted, compliance-checked, and dialled to the sandbox redirect (+919821535682) \u2014 but LiveKit threw a Python import error on the server. Nicholas's status remains `scored` (not contacted) so a retry is safe.\n\n**To fix:** check the LiveKit integration file (likely `/tools/livekit.py`) for a missing `import os` at the top. Once resolved, I can retry the voice call immediately \u2014 just say the word.\n\nIn the meantime, would you like me to **fall back to email** for Nicholas now so he gets touched today?",
+        "attachments": [],
+        "created_at": "2026-04-24T13:35:32.384654+00:00"
+      },
+      {
+        "id": "6621f520-0424-4499-a5e9-83c4161be9c7",
+        "session_id": "f6db095d-e1b3-4d38-8f79-9b3d4cf06996",
+        "tenant_id": "acme-test",
+        "role": "system",
+        "content": "done in 4 turns \u00b7 $0.6300",
+        "attachments": [
+          {
+            "kind": "result",
+            "turns": 4,
+            "cost_usd": 0.6299620499999998
+          }
+        ],
+        "created_at": "2026-04-24T13:35:32.560602+00:00"
+      }
+    ]
+  },
+  "opportunity_reports": [],
+  "variance_alerts": [],
+  "external_budgets": [
+    {
+      "id": "ffedbe61-3aa6-43e8-b20f-ad47e9c5a969",
+      "tenant_id": "acme-test",
+      "os_name": "sales",
+      "resource_key": "apollo_credits",
+      "period": "month",
+      "period_start": "2026-04-01",
+      "period_end": "2026-04-30",
+      "limit_value": 100.0,
+      "consumed": 0.0,
+      "created_at": "2026-04-24T06:00:12.559931+00:00",
+      "updated_at": "2026-04-24T06:00:12.559931+00:00"
+    },
+    {
+      "id": "5f364a82-7639-400d-9bae-bfb5d7d99445",
+      "tenant_id": "acme-test",
+      "os_name": "sales",
+      "resource_key": "gmail_sends",
+      "period": "day",
+      "period_start": "2026-04-24",
+      "period_end": "2026-04-24",
+      "limit_value": 50.0,
+      "consumed": 4.0,
+      "created_at": "2026-04-24T06:00:12.908456+00:00",
+      "updated_at": "2026-04-24T13:30:12.104271+00:00"
+    },
+    {
+      "id": "878f4a6b-4017-40a9-9eb0-d5197dc5a815",
+      "tenant_id": "acme-test",
+      "os_name": "sales",
+      "resource_key": "twilio_sms",
+      "period": "day",
+      "period_start": "2026-04-24",
+      "period_end": "2026-04-24",
+      "limit_value": 20.0,
+      "consumed": 0.0,
+      "created_at": "2026-04-24T06:00:13.262522+00:00",
+      "updated_at": "2026-04-24T06:00:13.262522+00:00"
+    }
+  ],
+  "goals": [
+    {
+      "id": "46783cde-3011-4ab5-8fe5-543c65cf0446",
+      "tenant_id": "acme-test",
+      "os_name": "sales",
+      "metric_name": "new_leads",
+      "target_value": 50.0,
+      "current_value": 0.0,
+      "period": "month",
+      "period_start": "2026-04-01",
+      "period_end": "2026-04-30",
+      "created_at": "2026-04-24T06:00:13.624069+00:00",
+      "updated_at": "2026-04-24T06:00:13.624069+00:00"
+    }
+  ],
+  "audit_summary": {
+    "total": 73,
+    "recent": [
+      {
+        "ts": "2026-04-24T09:32:58.755309+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:32:57.425466+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:32:51.518851+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:32:49.690458+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:32:41.957372+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      },
+      {
+        "ts": "2026-04-24T09:32:39.029838+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      },
+      {
+        "ts": "2026-04-24T09:32:23.247948+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:32:22.773071+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:31:51.611561+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:31:43.365335+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:31:41.718683+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:31:40.859057+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:31:15.457794+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T09:31:15.106767+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:11:25.697581+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:11:19.219845+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:11:12.573958+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      },
+      {
+        "ts": "2026-04-24T08:10:55.82262+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:10:51.420872+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:10:48.627455+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:10:48.222861+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:10:21.358499+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T08:10:20.941473+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:54:46.20908+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:54:44.06657+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:54:38.21507+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:54:37.403819+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:54:29.943246+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      },
+      {
+        "ts": "2026-04-24T07:54:27.758664+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      },
+      {
+        "ts": "2026-04-24T07:54:07.446076+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:54:07.108758+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:53:41.127096+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:53:33.341804+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:53:32.104678+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:53:30.629718+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:53:11.656275+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:53:11.21169+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:27:37.132793+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:15:52.75903+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "list_leads",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T07:15:33.889429+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:45:31.975782+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:45:24.475425+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:45:17.486285+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:44:07.290664+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:43:57.55135+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "recall",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:04:22.472116+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "remember",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:04:14.113783+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:04:11.92352+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "update_lead",
+        "policy_decision": "allow",
+        "sandbox": false
+      },
+      {
+        "ts": "2026-04-24T06:04:05.771438+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      },
+      {
+        "ts": "2026-04-24T06:04:01.393994+00:00",
+        "agent_name": "sales_orchestrator",
+        "tool_name": "send_email",
+        "policy_decision": "allow",
+        "sandbox": true
+      }
+    ]
+  }
+}

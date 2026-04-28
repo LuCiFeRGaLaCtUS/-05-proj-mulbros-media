@@ -1,0 +1,10 @@
+# Platform branding — operator-controlled. Set your own platform name here.
+# Nothing in the code hardcodes "Torque OS" or similar — whatever you put
+# here is what end-users see.
+
+platform_name: "Your Platform"   # rename when you've picked a brand
+platform_tagline: "Your AI operations layer"
+primary_color: "#5DCAA5"
+logo_url: null
+support_email: null
+copyright_footer: null

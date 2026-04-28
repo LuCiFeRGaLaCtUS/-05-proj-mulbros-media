@@ -35,8 +35,10 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
+    "react-markdown": "^10.1.0",
     "react-router-dom": "^6.30.3",
     "recharts": "^2.10.3",
+    "remark-gfm": "^4.0.1",
     "resend": "^6.12.2",
     "serve-static": "^1.15.0",
     "stytch": "^14.0.0"
