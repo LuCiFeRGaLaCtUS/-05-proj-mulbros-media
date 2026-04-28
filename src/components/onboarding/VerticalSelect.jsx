@@ -127,6 +127,7 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
             return (
               <button
                 key={v.id}
+                data-testid={`vertical-card-${v.id}`}
                 onClick={() => setSelected(v.id)}
                 className={`tile-pop relative flex flex-col gap-3 p-5 rounded-2xl text-left transition-all duration-200 ${
                   isSelected
@@ -190,6 +191,7 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
                 : 'Select your vertical to continue'}
             </p>
             <button
+              data-testid="vertical-skip"
               onClick={onSkip}
               className="text-xs text-zinc-600 hover:text-zinc-600 transition-colors underline"
             >
@@ -197,6 +199,7 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
             </button>
           </div>
           <button
+            data-testid="vertical-continue"
             onClick={() => selected && onSelect(selected)}
             disabled={!selected}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${

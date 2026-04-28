@@ -62,6 +62,7 @@ const QuestionCard = ({ question, selectedOption, onSelect }) => (
         return (
           <button
             key={opt}
+            data-testid={`option-${question.id}-${opt.replace(/\s+/g, '-').toLowerCase()}`}
             onClick={() => onSelect(question.id, opt)}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all duration-150 border ${
               isSelected
@@ -208,6 +209,7 @@ export const ProfileQuestions = ({
           {/* Right side */}
           <div className="flex items-center gap-4">
             <button
+              data-testid="questions-skip"
               onClick={onSkip}
               className="text-xs text-zinc-600 hover:text-zinc-600 transition-colors underline hidden sm:block"
             >
@@ -221,6 +223,7 @@ export const ProfileQuestions = ({
             </span>
 
             <button
+              data-testid="questions-next"
               onClick={handleNext}
               disabled={!canProceed}
               className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
