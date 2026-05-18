@@ -90,22 +90,22 @@ export const Dashboard = ({ onAgentClick, setActivePage, user }) => {
       <SectionLabel label="Targets" sub="progress to goal" />
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <ProgressCard Icon={Film}       iconBg="bg-emerald-100" iconColor="text-emerald-600"
-          title="Last County Streams" value="142,847" pct={71} color={C.emerald} sub="Target: 200K"
+          title="Distribution Reach" value="—" pct={0} color={C.emerald} sub="Connect a project"
           Bg={BgFilmFrame} hoverRing="hover:border-emerald-300" onClick={() => nav('productions')}
           cardBg="linear-gradient(135deg, #ecfdf5 0%, #f4fdf9 45%, #ffffff 75%)" />
 
         <ProgressCard Icon={Music}      iconBg="bg-amber-100"   iconColor="text-amber-600"
-          title="Talise Growth"      value="85,230"  pct={85} color={C.gold}    sub="Target: 100K"
+          title="Audience Growth"    value="—"  pct={0} color={C.gold}    sub="Connect Spotify / socials"
           Bg={BgMusicStaff} hoverRing="hover:border-amber-300" onClick={() => nav('music')}
           cardBg="linear-gradient(135deg, #fffbeb 0%, #fffdf4 45%, #ffffff 75%)" />
 
         <ProgressCard Icon={DollarSign} iconBg="bg-blue-100"    iconColor="text-blue-600"
-          title="Pipeline Value"     value="$65K"    pct={65} color={C.blue}    sub="Target: $100K"
+          title="Pipeline Value"     value="—"    pct={0} color={C.blue}    sub="Add deals to track"
           Bg={BgPipeline} hoverRing="hover:border-blue-300" onClick={() => nav('financing')}
           cardBg="linear-gradient(135deg, #eff6ff 0%, #f4f8ff 45%, #ffffff 75%)" />
 
         <ProgressCard Icon={Users}      iconBg="bg-purple-100"  iconColor="text-purple-600"
-          title="Email Subscribers"  value="847"     pct={85} color={C.purple}  sub="Target: 1,000"
+          title="Email Subscribers"  value="—"     pct={0} color={C.purple}  sub="Connect newsletter"
           Bg={BgEmail} hoverRing="hover:border-purple-300" onClick={() => nav('music')}
           cardBg="linear-gradient(135deg, #f5f3ff 0%, #f9f7ff 45%, #ffffff 75%)" />
       </div>

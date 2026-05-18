@@ -33,6 +33,8 @@ app.use(helmet({
         'wss://*.supabase.co',
         'https://api.stytch.com',
         'https://test.stytch.com',
+        'https://api.spotify.com',
+        'https://accounts.spotify.com',
       ],
       imgSrc:      ["'self'", 'data:', 'https://i.scdn.co', 'https://mosaic.scdn.co'],
     },
@@ -116,16 +118,36 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+// ── Service-role JWT minter (HS256) ─────────────────────────────────────────
+// Used by server for internal Supabase REST calls that need to bypass RLS
+// (profile lookup before user session exists, role gate, auto-create flows).
+// Short-lived (10 min) so a leaked token expires fast.
+const mintServiceJwt = () => {
+  if (!process.env.SUPABASE_JWT_SECRET) return null;
+  const now = Math.floor(Date.now() / 1000);
+  return jwt.sign(
+    { aud: 'authenticated', role: 'service_role', iss: 'mulbros-bridge-svc', iat: now, exp: now + 600 },
+    process.env.SUPABASE_JWT_SECRET,
+    { algorithm: 'HS256' },
+  );
+};
+
 // ── Role-gate middleware ──────────────────────────────────────────────────────
 // Uses user_roles table (Supabase REST) keyed by profile.id (stytch_user_id → profile).
 // Requires requireAuth upstream. Allows request if user's role is in `allowed`.
+// Uses service-role JWT (not anon key) so RLS doesn't block the lookup.
 const requireRole = (allowed) => async (req, res, next) => {
   try {
     const stytchUid = req.stytchUser?.userId;
     if (!stytchUid) return res.status(401).json({ error: { code: 'unauthorized', message: 'Auth required.' } });
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) {
+      console.error('requireRole: SUPABASE_JWT_SECRET missing — cannot mint service JWT.');
+      return res.status(503).json({ error: { code: 'role_check_unavailable', message: 'Role check unavailable.' } });
+    }
     const sbHeaders = {
       apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
-      Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
+      Authorization: `Bearer ${svcJwt}`,
     };
     const pr = await fetch(
       `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=id`,
@@ -203,16 +225,7 @@ const ALLOWED_MODELS = new Set([
 // Mints a Supabase-compatible JWT (HS256, signed with project JWT secret) so
 // authenticated Supabase queries get role=authenticated and auth.uid()=profile.id.
 // This enables RLS policies of the form `user_id = auth.uid()` to work.
-// Mint a service-role JWT (HS256, role=service_role) for internal Supabase ops
-// that bypass RLS — used by server for profile lookup + auto-creation.
-const mintServiceJwt = () => {
-  const now = Math.floor(Date.now() / 1000);
-  return jwt.sign(
-    { aud: 'authenticated', role: 'service_role', iss: 'mulbros-bridge-svc', iat: now, exp: now + 600 },
-    process.env.SUPABASE_JWT_SECRET,
-    { algorithm: 'HS256' },
-  );
-};
+// `mintServiceJwt` is defined above (used by requireRole + this endpoint).
 
 app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
   if (!process.env.SUPABASE_JWT_SECRET) {
@@ -357,6 +370,16 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
     });
     const data = await response.json();
 
+    // Wrap non-OK upstream responses: log details server-side, return generic message
+    if (!response.ok) {
+      console.error('AI proxy upstream error:', response.status, JSON.stringify(data).slice(0, 500));
+      const userFacing = response.status === 401 ? 'AI provider authentication failed.'
+        : response.status === 429 ? 'AI provider rate-limited. Try again in a minute.'
+        : response.status >= 500 ? 'AI provider unavailable. Try again shortly.'
+        : `AI request failed (${response.status}).`;
+      return res.status(response.status).json({ error: { code: 'ai_upstream', message: userFacing } });
+    }
+
     // Normalize Anthropic response to OpenAI shape so the client doesn't need to change
     if (isAnthropic && data.content) {
       return res.status(response.status).json({
@@ -422,7 +445,12 @@ app.post('/api/ai-search', aiLimiter, async (req, res) => {
     });
     const data = await r.json();
     if (!r.ok) {
-      return res.status(r.status).json({ error: { message: data.error?.message || `OpenAI error ${r.status}` } });
+      console.error('AI-search upstream error:', r.status, JSON.stringify(data).slice(0, 500));
+      const userFacing = r.status === 401 ? 'AI provider authentication failed.'
+        : r.status === 429 ? 'AI provider rate-limited. Try again in a minute.'
+        : r.status >= 500 ? 'AI provider unavailable. Try again shortly.'
+        : `AI search request failed (${r.status}).`;
+      return res.status(r.status).json({ error: { code: 'ai_search_upstream', message: userFacing } });
     }
 
     const outputs     = Array.isArray(data.output) ? data.output : [];
@@ -796,7 +824,13 @@ app.post('/api/firecrawl-search', requireAuth, firecrawlPerUser, firecrawlLimite
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      return res.status(response.status).json({ error: { message: err.error || `Firecrawl error ${response.status}` } });
+      console.error('Firecrawl upstream error:', response.status, JSON.stringify(err).slice(0, 500));
+      const userFacing = response.status === 401 ? 'Search authentication failed.'
+        : response.status === 402 ? 'Search quota exceeded.'
+        : response.status === 429 ? 'Search rate-limited. Try again shortly.'
+        : response.status >= 500 ? 'Search provider unavailable.'
+        : `Search failed (${response.status}).`;
+      return res.status(response.status).json({ error: { code: 'firecrawl_upstream', message: userFacing } });
     }
 
     const data = await response.json();
@@ -894,7 +928,12 @@ app.post('/api/apify-reddit', requireAuth, apifyPerUser, apifyLimiter, async (re
 
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      return res.status(response.status).json({ error: { message: err.error?.message || `Apify error ${response.status}` } });
+      console.error('Apify upstream error:', response.status, JSON.stringify(err).slice(0, 500));
+      const userFacing = response.status === 401 ? 'Reddit scraper authentication failed.'
+        : response.status === 429 ? 'Reddit scraper rate-limited. Try again shortly.'
+        : response.status >= 500 ? 'Reddit scraper unavailable.'
+        : `Reddit scrape failed (${response.status}).`;
+      return res.status(response.status).json({ error: { code: 'apify_upstream', message: userFacing } });
     }
 
     const items = await response.json();

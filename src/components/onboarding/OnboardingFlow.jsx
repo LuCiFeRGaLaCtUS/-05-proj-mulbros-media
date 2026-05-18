@@ -19,9 +19,21 @@ const SavingScreen = () => (
   </div>
 );
 
+// ── Admin email allowlist (comma-separated env var) ─────────────────────────
+// VITE_ADMIN_EMAILS="alice@x.com,bob@x.com" — case-insensitive
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '')
+  .split(',')
+  .map(s => s.trim().toLowerCase())
+  .filter(Boolean);
+
+const isAdminEmail = (email) => {
+  if (!email) return false;
+  return ADMIN_EMAILS.includes(email.toLowerCase());
+};
+
 // ── Main flow ──────────────────────────────────────────────────────────────────
 export const OnboardingFlow = () => {
-  const { updateProfile } = useAppContext();
+  const { updateProfile, user } = useAppContext();
 
   // step 1 → vertical picker
   // step 2 → Q1 + Q2
@@ -79,11 +91,37 @@ export const OnboardingFlow = () => {
     }
   };
 
+  // Admin unlock — sets vertical='admin' which Sidebar treats as "show all".
+  // Server-side enforcement is via Supabase RLS (per-row user_id = auth.uid()),
+  // so this is purely a UI affordance for trusted users to see every vertical.
+  const handleAdminUnlock = async () => {
+    setSaving(true);
+    const { error } = await updateProfile({
+      vertical:            'admin',
+      onboarding_complete: true,
+      onboarding_data:     { answers: allAnswers, admin_unlock: true, unlocked_at: new Date().toISOString() },
+    });
+    setSaving(false);
+    if (error) {
+      console.error('onboarding.admin.failed', error);
+      toast.error(`Could not unlock admin: ${error.message || 'unknown error'}`);
+    }
+  };
+
+  const userEmail = user?.emails?.[0]?.email;
+  const showAdmin = isAdminEmail(userEmail);
+
   if (saving) return <SavingScreen />;
 
   // ── Step 1: vertical picker ────────────────────────────────────────────────
   if (step === 1) {
-    return <VerticalSelect onSelect={handleVerticalSelect} onSkip={handleSkip} />;
+    return (
+      <VerticalSelect
+        onSelect={handleVerticalSelect}
+        onSkip={handleSkip}
+        onAdminUnlock={showAdmin ? handleAdminUnlock : null}
+      />
+    );
   }
 
   // ── Step 2: Q1 + Q2 ───────────────────────────────────────────────────────

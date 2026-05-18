@@ -42,9 +42,9 @@ VALID PAGE IDS: dashboard, financing, productions, music, agents, settings`, [])
 
 // ── Quick action config ────────────────────────────────────────────────────────
 const QUICK_ACTIONS = [
-  { label: "Luke's revenue",       icon: DollarSign, prompt: "Luke's revenue" },
-  { label: 'Talise stats',         icon: Star,       prompt: 'Talise stats'   },
-  { label: 'Show campaigns',       icon: Film,       prompt: 'Show campaigns' },
+  { label: 'My revenue',           icon: DollarSign, prompt: 'Show my revenue & pipeline' },
+  { label: 'Audience stats',       icon: Star,       prompt: 'Show my audience growth stats' },
+  { label: 'Show campaigns',       icon: Film,       prompt: 'Show active campaigns' },
   { label: 'Film Financing',       icon: Mic,        prompt: 'Go to Film Financing' },
 ];
 
@@ -94,7 +94,7 @@ export const FloatingChatbot = ({ appState }) => {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Lights. Camera. Action! I'm your MulBros Studio AI.\n\nI can pull up:\n• Luke's revenue & pipeline\n• Talise's streaming numbers\n• Campaign status across all verticals\n• Navigate anywhere in the OS\n\nWhat's on your call sheet?"
+      content: "Lights. Camera. Action! I'm your AI Operator.\n\nI can:\n• Pull up your revenue & pipeline\n• Show your audience growth metrics\n• Surface campaign status across all your verticals\n• Navigate anywhere in the OS\n\nWhat's on your call sheet?"
     }
   ]);
   const [input, setInput]       = useState('');

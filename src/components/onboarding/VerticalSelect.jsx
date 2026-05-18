@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   Clapperboard, Music2, Piano, Drama, ScrollText,
-  Camera, Palette, BookOpen, Building2, ArrowRight, CheckCircle2,
+  Camera, Palette, BookOpen, Building2, ArrowRight, CheckCircle2, ShieldCheck,
 } from 'lucide-react';
 import { VERTICALS } from '../../config/verticals';
 
@@ -59,7 +59,7 @@ const COLOR_CONFIG = {
   },
 };
 
-export const VerticalSelect = ({ onSelect, onSkip }) => {
+export const VerticalSelect = ({ onSelect, onSkip, onAdminUnlock }) => {
   const [selected, setSelected] = useState(null);
 
   return (
@@ -198,19 +198,32 @@ export const VerticalSelect = ({ onSelect, onSkip }) => {
               Skip for now
             </button>
           </div>
-          <button
-            data-testid="vertical-continue"
-            onClick={() => selected && onSelect(selected)}
-            disabled={!selected}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
-              selected
-                ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
-                : 'bg-zinc-200 text-zinc-600 cursor-not-allowed'
-            }`}
-          >
-            Continue
-            <ArrowRight size={16} />
-          </button>
+          <div className="flex items-center gap-3">
+            {onAdminUnlock && (
+              <button
+                data-testid="vertical-admin"
+                onClick={onAdminUnlock}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs bg-zinc-900 text-amber-300 hover:bg-zinc-800 shadow-lg shadow-zinc-900/20 transition-all duration-200 border border-amber-500/30"
+                title="Unlock all verticals (admin allowlist)"
+              >
+                <ShieldCheck size={14} />
+                Admin
+              </button>
+            )}
+            <button
+              data-testid="vertical-continue"
+              onClick={() => selected && onSelect(selected)}
+              disabled={!selected}
+              className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 ${
+                selected
+                  ? 'bg-amber-500 text-white hover:bg-amber-600 shadow-lg shadow-amber-500/20'
+                  : 'bg-zinc-200 text-zinc-600 cursor-not-allowed'
+              }`}
+            >
+              Continue
+              <ArrowRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
