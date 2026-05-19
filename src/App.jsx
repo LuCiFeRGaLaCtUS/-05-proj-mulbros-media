@@ -31,6 +31,7 @@ const CRMView           = lazy(() => import('./components/crm/CRMView').then(m =
 const AgentChat         = lazy(() => import('./components/agents/AgentChat').then(m => ({ default: m.AgentChat })));
 const Settings          = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
 const OnboardingFlow    = lazy(() => import('./components/onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
+const VerticalRouteGuard = lazy(() => import('./components/auth/VerticalRouteGuard').then(m => ({ default: m.VerticalRouteGuard })));
 
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
@@ -279,18 +280,19 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               />
 
               {/* Existing vertical views */}
-              <Route path="/vertical/filmmaker"    element={<FilmFinancingView user={user} />} />
-              <Route path="/vertical/productions"  element={<ProductionsView />} />
-              <Route path="/vertical/musician"     element={<MusicView onAgentClick={handleAgentClick} user={user} />} />
-
-              {/* Future vertical placeholders (built in later days) */}
-              <Route path="/vertical/composer"     element={<ComposerView />} />
-              <Route path="/vertical/actor"        element={<ActorView />} />
-              <Route path="/vertical/screenwriter" element={<ScreenwriterView />} />
-              <Route path="/vertical/crew"         element={<CrewView />} />
-              <Route path="/vertical/artist"       element={<ArtistView />} />
-              <Route path="/vertical/writer"       element={<WriterView />} />
-              <Route path="/vertical/artsorg"      element={<ArtsOrgView />} />
+              {/* Vertical routes — wrapped with VerticalRouteGuard.
+                  Guard redirects users to their own vertical if they hit a mismatched one
+                  (unless admin role or no vertical set). Server-side enforcement still via RLS. */}
+              <Route path="/vertical/filmmaker"    element={<VerticalRouteGuard slug="filmmaker"><FilmFinancingView user={user} /></VerticalRouteGuard>} />
+              <Route path="/vertical/productions"  element={<VerticalRouteGuard slug="productions"><ProductionsView /></VerticalRouteGuard>} />
+              <Route path="/vertical/musician"     element={<VerticalRouteGuard slug="musician"><MusicView onAgentClick={handleAgentClick} user={user} /></VerticalRouteGuard>} />
+              <Route path="/vertical/composer"     element={<VerticalRouteGuard slug="composer"><ComposerView /></VerticalRouteGuard>} />
+              <Route path="/vertical/actor"        element={<VerticalRouteGuard slug="actor"><ActorView /></VerticalRouteGuard>} />
+              <Route path="/vertical/screenwriter" element={<VerticalRouteGuard slug="screenwriter"><ScreenwriterView /></VerticalRouteGuard>} />
+              <Route path="/vertical/crew"         element={<VerticalRouteGuard slug="crew"><CrewView /></VerticalRouteGuard>} />
+              <Route path="/vertical/artist"       element={<VerticalRouteGuard slug="artist"><ArtistView /></VerticalRouteGuard>} />
+              <Route path="/vertical/writer"       element={<VerticalRouteGuard slug="writer"><WriterView /></VerticalRouteGuard>} />
+              <Route path="/vertical/artsorg"      element={<VerticalRouteGuard slug="artsorg"><ArtsOrgView /></VerticalRouteGuard>} />
 
               {/* Back-office */}
               <Route path="/invoices"  element={<Invoices />} />
@@ -319,9 +321,23 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               <Route path="/calendar" element={<CalendarView user={user} />} />
               <Route path="/settings" element={<Settings user={user} />} />
 
+              {/* Talent surface — Sprint 2 build target */}
+              <Route path="/talent/auditions" element={<ComingSoon label="Audition Tracker — Sprint 2" />} />
+              <Route path="/talent/self-tape" element={<ComingSoon label="Self-Tape Coach — Sprint 2" />} />
+              <Route path="/talent/income"    element={<ComingSoon label="Income & Tax Assistant — Sprint 2" />} />
+              <Route path="/talent/intel"     element={<ComingSoon label="Industry Intel — Sprint 2" />} />
+
+              {/* Agency surface — Sprint 3 build target */}
+              <Route path="/agency/roster"      element={<ComingSoon label="Roster Manager — Sprint 3" />} />
+              <Route path="/agency/casting"     element={<ComingSoon label="Casting Feed (Backstage) — Sprint 3" />} />
+              <Route path="/agency/submissions" element={<ComingSoon label="Submission Drafter — Sprint 3" />} />
+              <Route path="/agency/commissions" element={<ComingSoon label="Commission Tracker — Sprint 3" />} />
+
+              {/* Shared — Industry Contacts (replaces sales-CRM schema for talent/agency users) */}
+              <Route path="/industry-contacts" element={<ComingSoon label="Industry Contacts — Sprint 2" />} />
+
               {/* Future pages */}
-              <Route path="/crm"   element={<ComingSoon label="Lead Pipeline — coming Day 21" />} />
-              <Route path="/admin" element={<ComingSoon label="Admin Dashboard — coming Day 31" />} />
+              <Route path="/admin" element={<ComingSoon label="Admin Dashboard — coming Sprint 5" />} />
 
               {/* 404 fallback */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />

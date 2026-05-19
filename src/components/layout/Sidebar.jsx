@@ -5,6 +5,7 @@ import {
   Drama, ScrollText, Camera, Palette, BookOpen, Building2,
   Settings, CalendarDays, Activity, ChevronRight, Shield, Film as FilmIcon,
   Receipt, FileText, DollarSign, Users,
+  Briefcase, UsersRound, Send, Wallet, Mic2, Video, PiggyBank, TrendingUp, Radar,
 } from 'lucide-react';
 import { agents } from '../../config/agents';
 import { VERTICALS } from '../../config/verticals';
@@ -223,6 +224,102 @@ export const Sidebar = ({ profile, onClose }) => {
           onClick={() => go('/dashboard')}
           activeAccent="#f59e0b"
         />
+
+        {/* ── Talent surface (visible if roles includes 'talent' or 'admin') ── */}
+        {(() => {
+          const roles = profile?.roles || [];
+          const isTalent = roles.includes('talent') || roles.includes('admin');
+          if (!isTalent) return null;
+          return (
+            <>
+              <HudDivider label="Talent" />
+              <NavButton
+                label="Auditions"
+                icon={Mic2}
+                isActive={pathname.startsWith('/talent/auditions')}
+                onClick={() => go('/talent/auditions')}
+                activeAccent="#0ea5e9"
+              />
+              <NavButton
+                label="Self-Tape"
+                icon={Video}
+                isActive={pathname.startsWith('/talent/self-tape')}
+                onClick={() => go('/talent/self-tape')}
+                activeAccent="#0ea5e9"
+              />
+              <NavButton
+                label="Income & Tax"
+                icon={PiggyBank}
+                isActive={pathname.startsWith('/talent/income')}
+                onClick={() => go('/talent/income')}
+                activeAccent="#0ea5e9"
+              />
+              <NavButton
+                label="Industry Intel"
+                icon={TrendingUp}
+                isActive={pathname.startsWith('/talent/intel')}
+                onClick={() => go('/talent/intel')}
+                activeAccent="#0ea5e9"
+              />
+            </>
+          );
+        })()}
+
+        {/* ── Agency surface (visible if roles includes 'agency' or 'admin') ── */}
+        {(() => {
+          const roles = profile?.roles || [];
+          const isAgency = roles.includes('agency') || roles.includes('admin');
+          if (!isAgency) return null;
+          return (
+            <>
+              <HudDivider label="Agency" />
+              <NavButton
+                label="Roster"
+                icon={UsersRound}
+                isActive={pathname.startsWith('/agency/roster')}
+                onClick={() => go('/agency/roster')}
+                activeAccent="#8b5cf6"
+              />
+              <NavButton
+                label="Casting Feed"
+                icon={Radar}
+                isActive={pathname.startsWith('/agency/casting')}
+                onClick={() => go('/agency/casting')}
+                activeAccent="#8b5cf6"
+              />
+              <NavButton
+                label="Submissions"
+                icon={Send}
+                isActive={pathname.startsWith('/agency/submissions')}
+                onClick={() => go('/agency/submissions')}
+                activeAccent="#8b5cf6"
+              />
+              <NavButton
+                label="Commissions"
+                icon={Wallet}
+                isActive={pathname.startsWith('/agency/commissions')}
+                onClick={() => go('/agency/commissions')}
+                activeAccent="#8b5cf6"
+              />
+            </>
+          );
+        })()}
+
+        {/* ── Industry Contacts (visible if any role is talent or agency) ── */}
+        {(() => {
+          const roles = profile?.roles || [];
+          const needsContacts = roles.some(r => ['talent', 'agency', 'admin'].includes(r));
+          if (!needsContacts) return null;
+          return (
+            <NavButton
+              label="Industry Contacts"
+              icon={Briefcase}
+              isActive={pathname.startsWith('/industry-contacts')}
+              onClick={() => go('/industry-contacts')}
+              activeAccent="#f59e0b"
+            />
+          );
+        })()}
 
         <HudDivider label="Verticals" />
 

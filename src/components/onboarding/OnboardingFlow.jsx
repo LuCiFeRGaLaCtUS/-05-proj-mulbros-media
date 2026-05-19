@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { RolePicker }        from './RolePicker';
 import { VerticalSelect }    from './VerticalSelect';
 import { ProfileQuestions }  from './ProfileQuestions';
 import { useAppContext }      from '../../App';
 
-const TOTAL_STEPS = 4; // 1=vertical, 2=Q1+Q2, 3=Q3+Q4, 4=done
+const TOTAL_STEPS = 4; // 1=role, 2=vertical, 3=Q1+Q2, 4=Q3+Q4 then save
 
 // ── Saving spinner ─────────────────────────────────────────────────────────────
 const SavingScreen = () => (
@@ -35,13 +36,23 @@ const isAdminEmail = (email) => {
 export const OnboardingFlow = () => {
   const { updateProfile, user } = useAppContext();
 
+  // step 0 → role picker (Creator / Talent / Agency / Both)
   // step 1 → vertical picker
   // step 2 → Q1 + Q2
   // step 3 → Q3 + Q4  (last question page)
-  const [step,             setStep]             = useState(1);
+  const [step,             setStep]             = useState(0);
+  const [selectedRoleId,   setSelectedRoleId]   = useState(null);
+  const [selectedRoles,    setSelectedRoles]    = useState([]);
   const [selectedVertical, setSelectedVertical] = useState(null);
   const [allAnswers,       setAllAnswers]       = useState({});
   const [saving,           setSaving]           = useState(false);
+
+  // Step 0 → 1
+  const handleRoleSelect = ({ roleId, roles }) => {
+    setSelectedRoleId(roleId);
+    setSelectedRoles(roles);
+    setStep(1);
+  };
 
   // Step 1 → 2
   const handleVerticalSelect = (verticalId) => {
@@ -66,8 +77,9 @@ export const OnboardingFlow = () => {
     setSaving(true);
     const { error } = await updateProfile({
       vertical:            selectedVertical,
+      roles:               selectedRoles,
       onboarding_complete: true,
-      onboarding_data:     { answers, skipped_questions: false },
+      onboarding_data:     { answers, role_id: selectedRoleId, skipped_questions: false },
     });
     setSaving(false);
     if (error) {
@@ -81,8 +93,9 @@ export const OnboardingFlow = () => {
     setSaving(true);
     const { error } = await updateProfile({
       vertical:            selectedVertical || null,
+      roles:               selectedRoles,
       onboarding_complete: true,
-      onboarding_data:     { answers: allAnswers, skipped_questions: true },
+      onboarding_data:     { answers: allAnswers, role_id: selectedRoleId, skipped_questions: true },
     });
     setSaving(false);
     if (error) {
@@ -91,15 +104,17 @@ export const OnboardingFlow = () => {
     }
   };
 
-  // Admin unlock — sets vertical='admin' which Sidebar treats as "show all".
+  // Admin unlock — sets vertical='admin' + roles includes 'admin'.
+  // Sidebar treats vertical='admin' as "show all verticals".
   // Server-side enforcement is via Supabase RLS (per-row user_id = auth.uid()),
   // so this is purely a UI affordance for trusted users to see every vertical.
   const handleAdminUnlock = async () => {
     setSaving(true);
     const { error } = await updateProfile({
       vertical:            'admin',
+      roles:               ['admin', 'agency', 'talent'],
       onboarding_complete: true,
-      onboarding_data:     { answers: allAnswers, admin_unlock: true, unlocked_at: new Date().toISOString() },
+      onboarding_data:     { answers: allAnswers, role_id: 'admin', admin_unlock: true, unlocked_at: new Date().toISOString() },
     });
     setSaving(false);
     if (error) {
@@ -112,6 +127,16 @@ export const OnboardingFlow = () => {
   const showAdmin = isAdminEmail(userEmail);
 
   if (saving) return <SavingScreen />;
+
+  // ── Step 0: role picker (Creator / Talent / Agency / Both) ─────────────────
+  if (step === 0) {
+    return (
+      <RolePicker
+        onSelect={handleRoleSelect}
+        onSkip={handleSkip}
+      />
+    );
+  }
 
   // ── Step 1: vertical picker ────────────────────────────────────────────────
   if (step === 1) {
@@ -130,7 +155,7 @@ export const OnboardingFlow = () => {
       <ProfileQuestions
         vertical={selectedVertical}
         pageIndex={0}
-        currentStep={2}
+        currentStep={3}
         totalSteps={TOTAL_STEPS}
         isLastPage={false}
         initialAnswers={allAnswers}
@@ -147,7 +172,7 @@ export const OnboardingFlow = () => {
       <ProfileQuestions
         vertical={selectedVertical}
         pageIndex={1}
-        currentStep={3}
+        currentStep={4}
         totalSteps={TOTAL_STEPS}
         isLastPage={true}
         initialAnswers={allAnswers}

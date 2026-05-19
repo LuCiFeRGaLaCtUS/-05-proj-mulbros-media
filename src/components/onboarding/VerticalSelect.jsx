@@ -83,15 +83,15 @@ export const VerticalSelect = ({ onSelect, onSkip, onAdminUnlock }) => {
           </span>
         </div>
 
-        {/* Step indicator — 4 steps total */}
+        {/* Step indicator — 4 steps total, on step 2 (vertical pick after role pick) */}
         <div className="flex items-center justify-center gap-1.5 mb-6">
-          {/* Step 1 — active */}
-          <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-amber-500/30">
-            1
+          {/* Step 1 — completed */}
+          <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-white text-xs font-bold">
+            ✓
           </div>
-          <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
-          {/* Step 2 */}
-          <div className="w-7 h-7 rounded-full border-2 border-zinc-200 flex items-center justify-center text-zinc-600 text-xs font-bold">
+          <div className="w-10 h-0.5 bg-emerald-500 rounded-full" />
+          {/* Step 2 — active */}
+          <div className="w-7 h-7 rounded-full bg-amber-500 flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-amber-500/30">
             2
           </div>
           <div className="w-10 h-0.5 bg-zinc-200 rounded-full" />
