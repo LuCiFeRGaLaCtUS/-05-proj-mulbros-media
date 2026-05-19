@@ -6,6 +6,7 @@ import {
   Settings, CalendarDays, Activity, ChevronRight, Shield, Film as FilmIcon,
   Receipt, FileText, DollarSign, Users,
   Briefcase, UsersRound, Send, Wallet, Mic2, Video, PiggyBank, TrendingUp, Radar,
+  Mail as MailIcon,
 } from 'lucide-react';
 import { agents } from '../../config/agents';
 import { VERTICALS } from '../../config/verticals';
@@ -259,6 +260,20 @@ export const Sidebar = ({ profile, onClose }) => {
                 icon={TrendingUp}
                 isActive={pathname.startsWith('/talent/intel')}
                 onClick={() => go('/talent/intel')}
+                activeAccent="#0ea5e9"
+              />
+              <NavButton
+                label="Agent Inbox"
+                icon={MailIcon}
+                isActive={pathname.startsWith('/talent/inbox')}
+                onClick={() => go('/talent/inbox')}
+                activeAccent="#0ea5e9"
+              />
+              <NavButton
+                label="Contract Reader"
+                icon={ScrollText}
+                isActive={pathname.startsWith('/talent/contracts')}
+                onClick={() => go('/talent/contracts')}
                 activeAccent="#0ea5e9"
               />
             </>
