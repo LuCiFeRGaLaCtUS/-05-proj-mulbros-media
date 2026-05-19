@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, AlertTriangle, Bot, TrendingUp, DollarSign } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { Wallet, AlertTriangle, Bot, TrendingUp, DollarSign, Link2, Loader2 } from 'lucide-react';
 import { useAppContext } from '../../../App';
 import { useCommissions } from '../../../hooks/useCommissions';
+import { stripeConnectOnboard } from '../../../utils/integrations';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -66,10 +68,29 @@ export const CommissionsView = () => {
   const { profile } = useAppContext();
   const navigate = useNavigate();
   const { commissions, totals, aging, overdueCount, updateCommission, deleteCommission } = useCommissions(profile?.id);
+  const [connecting, setConnecting] = useState(false);
 
   const handleOpenAgent = () => {
     sessionStorage.setItem('agentchat.preselectedAgent', 'agency-commission-tracker');
     navigate('/agents');
+  };
+
+  const handleStripeConnect = async () => {
+    setConnecting(true);
+    try {
+      const { mode, onboarding_url, message } = await stripeConnectOnboard({
+        email: profile?.email,
+      });
+      if (mode === 'mock' || !onboarding_url) {
+        toast(message || 'Stripe Connect not configured yet.', { icon: 'ℹ️', duration: 5000 });
+        return;
+      }
+      window.location.href = onboarding_url;
+    } catch (err) {
+      toast.error(err.userMessage || err.message || 'Stripe onboarding failed.');
+    } finally {
+      setConnecting(false);
+    }
   };
 
   return (
@@ -82,11 +103,19 @@ export const CommissionsView = () => {
           </div>
           <p className="text-sm text-zinc-500">Receivables aging · overdue · collected commissions across bookings</p>
         </div>
-        <button onClick={handleOpenAgent}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 text-amber-300 text-sm font-semibold hover:bg-zinc-800 border border-amber-500/20">
-          <Bot size={14} />
-          Ask Commission Tracker
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleStripeConnect}
+            disabled={connecting}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-indigo-400 hover:text-indigo-600">
+            {connecting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+            Connect Stripe
+          </button>
+          <button onClick={handleOpenAgent}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900 text-amber-300 text-sm font-semibold hover:bg-zinc-800 border border-amber-500/20">
+            <Bot size={14} />
+            Ask Commission Tracker
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
-import { Mic2, Plus, Trash2, X, Calendar, ChevronRight, ExternalLink, Bot } from 'lucide-react';
+import { Mic2, Plus, Trash2, X, Calendar, ChevronRight, ExternalLink, Bot, MessageSquare, Loader2 } from 'lucide-react';
 import { useAppContext } from '../../../App';
 import { useAuditions, AUDITION_STAGES, AUDITION_STAGE_LABELS } from '../../../hooks/useAuditions';
 import { useNavigate } from 'react-router-dom';
+import { twilioSendSms } from '../../../utils/integrations';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -221,6 +222,7 @@ export const AuditionsView = () => {
   const navigate = useNavigate();
   const { auditions, counts, callbackRate, addAudition, moveAudition, deleteAudition } = useAuditions(profile?.id);
   const [showAdd, setShowAdd] = useState(false);
+  const [smsLoading, setSmsLoading] = useState(false);
 
   const handleStatusChange = (id, from, to) => {
     moveAudition(id, from, to);
@@ -237,6 +239,37 @@ export const AuditionsView = () => {
     navigate('/agents');
   };
 
+  const handleSendReminders = async () => {
+    const phone = prompt('Your mobile number (E.164 format, e.g. +14155551234) to receive audition reminders:');
+    if (!phone) return;
+    const upcoming = AUDITION_STAGES.flatMap(s => auditions[s] || [])
+      .filter(a => a.audition_at && new Date(a.audition_at) > new Date())
+      .sort((a, b) => new Date(a.audition_at) - new Date(b.audition_at))
+      .slice(0, 5);
+    if (upcoming.length === 0) {
+      toast('No upcoming auditions scheduled.', { icon: 'ℹ️' });
+      return;
+    }
+    const lines = upcoming.map(a => {
+      const when = new Date(a.audition_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      return `${when} · ${a.project_title}${a.role_name ? ' (' + a.role_name + ')' : ''}`;
+    });
+    const message = `MulBros — upcoming auditions:\n${lines.join('\n')}`;
+    setSmsLoading(true);
+    try {
+      const { mode, sid, message: respMsg } = await twilioSendSms({ to: phone, message });
+      if (mode === 'mock') {
+        toast(respMsg || 'Twilio not configured. Set TWILIO_* env vars to enable.', { icon: 'ℹ️', duration: 5000 });
+      } else {
+        toast.success(`SMS sent (${sid?.slice(0, 8)}…)`);
+      }
+    } catch (err) {
+      toast.error(err.userMessage || err.message || 'SMS send failed.');
+    } finally {
+      setSmsLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -249,6 +282,12 @@ export const AuditionsView = () => {
           <p className="text-sm text-zinc-500">Track every audition · status pipeline · callback rate</p>
         </div>
         <div className="flex items-center gap-2">
+          <button onClick={handleSendReminders}
+            disabled={smsLoading}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-sky-400 hover:text-sky-600">
+            {smsLoading ? <Loader2 size={14} className="animate-spin" /> : <MessageSquare size={14} />}
+            SMS Reminders
+          </button>
           <button onClick={handleOpenAgent}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-sky-400 hover:text-sky-600">
             <Bot size={14} />

@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { PiggyBank, DollarSign, Receipt, Calculator } from 'lucide-react';
+import toast from 'react-hot-toast';
+import { PiggyBank, DollarSign, Receipt, Calculator, Link2, Loader2 } from 'lucide-react';
 import { TalentAgentShell } from './TalentAgentShell';
+import { plaidCreateLinkToken } from '../../../utils/integrations';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -21,6 +23,25 @@ const QuickStat = ({ label, value, accent = 'text-zinc-900' }) => (
 export const IncomeView = () => {
   const [income, setIncome] = useState('');
   const [source, setSource] = useState('1099 indie feature');
+  const [linking, setLinking] = useState(false);
+
+  const handleConnectBank = async () => {
+    setLinking(true);
+    try {
+      const { mode, link_token, message } = await plaidCreateLinkToken();
+      if (mode === 'mock' || !link_token) {
+        toast(message || 'Plaid not configured yet.', { icon: 'ℹ️', duration: 5000 });
+        return;
+      }
+      // Real flow: open Plaid Link with link_token (requires plaid-link-js SDK on client).
+      // For Sprint 4 we just show the token retrieved — full Plaid Link SDK integration ships Sprint 5.
+      toast.success(`Plaid link token ready (${link_token.slice(0, 16)}…). Plaid Link SDK wiring lands Sprint 5.`);
+    } catch (err) {
+      toast.error(err.userMessage || err.message || 'Plaid link failed.');
+    } finally {
+      setLinking(false);
+    }
+  };
 
   const handleAsk = () => {
     if (!income.trim()) return;
@@ -46,12 +67,21 @@ export const IncomeView = () => {
         'Flag mixed-use expenses needing documentation',
       ]}
       comingSoon={[
-        'Plaid bank sync — auto-categorize transactions (Sprint 4)',
-        'Stripe Connect — track agency commission deductions',
-        'Quarterly tax filing reminders',
+        'Plaid Link SDK on client — full bank-connect flow (Sprint 5)',
+        'Auto-categorize transactions to W-2 / 1099 / residual / royalty',
+        'Quarterly tax filing reminders via Twilio SMS',
         'Export-ready 1099 packet for CPA',
       ]}
     >
+      <div className="flex justify-end">
+        <button onClick={handleConnectBank}
+          disabled={linking}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-emerald-400 hover:text-emerald-600">
+          {linking ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+          Connect Bank (Plaid)
+        </button>
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <QuickStat label="YTD Income" value="—" />
         <QuickStat label="Deductibles" value="—" accent="text-amber-600" />

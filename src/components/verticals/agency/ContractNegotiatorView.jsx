@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import { ScrollText, FileText, AlertTriangle, Loader2 } from 'lucide-react';
+import { ScrollText, FileText, AlertTriangle, Loader2, Send } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AgencyAgentShell } from './AgencyAgentShell';
 import { callAI, getApiKey } from '../../../utils/ai';
 import { getAgentById } from '../../../config/agents';
+import { docusignSendEnvelope } from '../../../utils/integrations';
+import { supabase } from '../../../lib/supabase';
+import { useAppContext } from '../../../App';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -11,10 +14,51 @@ const CARD_STYLE = {
 };
 
 export const ContractNegotiatorView = () => {
+  const { profile } = useAppContext();
   const [contractText, setContractText] = useState('');
   const [projectType, setProjectType] = useState('streaming feature');
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [sendForm, setSendForm] = useState({ signer_name: '', signer_email: '', subject: '' });
+  const [sending, setSending] = useState(false);
+
+  const handleSendForSignature = async (e) => {
+    e?.preventDefault();
+    if (!sendForm.signer_email || !sendForm.signer_name || !contractText.trim()) {
+      toast.error('Signer name + email + contract text required.');
+      return;
+    }
+    setSending(true);
+    try {
+      const { mode, envelope_id, message } = await docusignSendEnvelope({
+        signer_email: sendForm.signer_email,
+        signer_name:  sendForm.signer_name,
+        subject:      sendForm.subject || 'Contract for signature',
+        contract_html: `<html><body><pre style="font-family:sans-serif;white-space:pre-wrap;">${contractText.replace(/</g, '&lt;')}</pre></body></html>`,
+      });
+      if (mode === 'mock' || !envelope_id) {
+        toast(message || 'DocuSign not configured yet.', { icon: 'ℹ️', duration: 5000 });
+        return;
+      }
+      // Persist envelope ref
+      await supabase.from('docusign_envelopes').insert({
+        user_id:      profile?.id,
+        envelope_id,
+        signer_email: sendForm.signer_email,
+        signer_name:  sendForm.signer_name,
+        subject:      sendForm.subject || 'Contract for signature',
+        status:       'sent',
+      });
+      toast.success(`Envelope ${envelope_id.slice(0, 8)}… sent to ${sendForm.signer_email}`);
+      setShowSendModal(false);
+      setSendForm({ signer_name: '', signer_email: '', subject: '' });
+    } catch (err) {
+      toast.error(err.userMessage || err.message || 'DocuSign send failed.');
+    } finally {
+      setSending(false);
+    }
+  };
 
   const handleNegotiate = async () => {
     if (!contractText.trim() || contractText.length < 50) {
@@ -86,19 +130,69 @@ export const ContractNegotiatorView = () => {
           placeholder="Paste the contract here (12K char max). PDF upload coming Sprint 4."
           rows={8}
           className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm font-mono outline-none focus:border-violet-400 mb-3" />
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <div className="text-[11px] text-zinc-500">{contractText.length.toLocaleString()} / 12,000 chars</div>
-          <button onClick={handleNegotiate}
-            disabled={loading || !contractText.trim() || contractText.length < 50}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold ${
-              loading || !contractText.trim() || contractText.length < 50
-                ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
-                : 'bg-violet-500 text-white hover:bg-violet-600'
-            }`}>
-            {loading ? <><Loader2 size={14} className="animate-spin" /> Analyzing…</> : 'Review + Negotiate'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setShowSendModal(true)}
+              disabled={!contractText.trim() || contractText.length < 50}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border ${
+                contractText.trim() && contractText.length >= 50
+                  ? 'bg-white border-zinc-200 text-zinc-700 hover:border-indigo-400 hover:text-indigo-600'
+                  : 'bg-zinc-100 border-zinc-200 text-zinc-400 cursor-not-allowed'
+              }`}>
+              <Send size={14} /> Send via DocuSign
+            </button>
+            <button onClick={handleNegotiate}
+              disabled={loading || !contractText.trim() || contractText.length < 50}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold ${
+                loading || !contractText.trim() || contractText.length < 50
+                  ? 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+                  : 'bg-violet-500 text-white hover:bg-violet-600'
+              }`}>
+              {loading ? <><Loader2 size={14} className="animate-spin" /> Analyzing…</> : 'Review + Negotiate'}
+            </button>
+          </div>
         </div>
       </div>
+
+      {showSendModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full">
+            <div className="flex items-center justify-between p-5 border-b border-zinc-200">
+              <div className="font-bold text-zinc-900">Send Contract for Signature</div>
+              <button onClick={() => setShowSendModal(false)} className="text-zinc-400 hover:text-zinc-700">×</button>
+            </div>
+            <form onSubmit={handleSendForSignature} className="p-5 space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Signer Name *</label>
+                <input required type="text" value={sendForm.signer_name} onChange={(e) => setSendForm({ ...sendForm, signer_name: e.target.value })}
+                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Signer Email *</label>
+                <input required type="email" value={sendForm.signer_email} onChange={(e) => setSendForm({ ...sendForm, signer_email: e.target.value })}
+                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-400" />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-zinc-700 block mb-1">Subject</label>
+                <input type="text" value={sendForm.subject} onChange={(e) => setSendForm({ ...sendForm, subject: e.target.value })}
+                  placeholder="Contract for signature"
+                  className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-violet-400" />
+              </div>
+              <div className="text-xs text-zinc-500 bg-zinc-50 rounded-lg p-3">
+                DocuSign: set <code className="font-mono">DOCUSIGN_ACCOUNT_ID</code> + <code className="font-mono">DOCUSIGN_ACCESS_TOKEN</code> in Render to enable real sending. Without env vars, this returns a mock success.
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <button type="button" onClick={() => setShowSendModal(false)} className="px-4 py-2 rounded-lg border border-zinc-200 text-sm font-medium text-zinc-700 hover:bg-zinc-50">Cancel</button>
+                <button type="submit" disabled={sending}
+                  className="px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold hover:bg-indigo-600 disabled:opacity-50 flex items-center gap-2">
+                  {sending ? <><Loader2 size={14} className="animate-spin" /> Sending…</> : <><Send size={14} /> Send Envelope</>}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {summary && (
         <div className="bg-white rounded-2xl p-5" style={CARD_STYLE}>

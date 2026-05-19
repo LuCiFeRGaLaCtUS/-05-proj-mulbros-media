@@ -1040,6 +1040,295 @@ app.post('/api/email', requireAuth, emailPerUser, emailLimiter, async (req, res)
   }
 });
 
+// ═════════════════════════════════════════════════════════════════════════════
+// Sprint 4 — Integrations (Mux · Stripe Connect · DocuSign · Plaid · Twilio)
+// All endpoints support mock mode (no env vars set → return mock response).
+// Real mode activates when env vars present. Logs source-of-truth.
+// ═════════════════════════════════════════════════════════════════════════════
+
+const integrationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: { message: 'Too many integration requests. Try again in a minute.' } },
+});
+
+// ── 4.1 Mux: direct video upload URL ──────────────────────────────────────────
+// Returns a one-shot upload URL for client to PUT raw video. After upload completes
+// Mux webhook updates playback_id (Sprint 5: wire webhook). Mock mode returns a
+// fake upload URL that 404s on use — UI will show "Mux not configured" state.
+app.post('/api/integrations/mux/upload-url', requireAuth, integrationLimiter, async (req, res) => {
+  const tokenId     = process.env.MUX_TOKEN_ID;
+  const tokenSecret = process.env.MUX_TOKEN_SECRET;
+
+  if (!tokenId || !tokenSecret) {
+    return res.json({
+      mode: 'mock',
+      message: 'Mux not configured — set MUX_TOKEN_ID + MUX_TOKEN_SECRET to enable real uploads.',
+      upload_url: null,
+      asset_id: null,
+    });
+  }
+
+  try {
+    const auth = Buffer.from(`${tokenId}:${tokenSecret}`).toString('base64');
+    const r = await fetch('https://api.mux.com/video/v1/uploads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Basic ${auth}` },
+      body: JSON.stringify({
+        cors_origin: '*',
+        new_asset_settings: {
+          playback_policy: ['signed'],
+          mp4_support: 'standard',
+        },
+      }),
+    });
+    if (!r.ok) {
+      console.error('Mux upload-url failed:', r.status);
+      return res.status(r.status).json({ error: { code: 'mux_upstream', message: 'Mux unavailable.' } });
+    }
+    const data = await r.json();
+    return res.json({
+      mode: 'live',
+      upload_url: data.data?.url,
+      upload_id: data.data?.id,
+    });
+  } catch (err) {
+    console.error('Mux error:', err.message);
+    return res.status(500).json({ error: { message: 'Mux request failed.' } });
+  }
+});
+
+// ── 4.2 Stripe Connect: onboarding link + transfer ────────────────────────────
+// Creates an Express-type connected account + AccountLink for talent/agency
+// onboarding. Real flow: client opens returned URL → Stripe-hosted onboarding →
+// returns to /settings. Mock mode returns a placeholder URL.
+app.post('/api/integrations/stripe/connect/onboard', requireAuth, integrationLimiter, async (req, res) => {
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+
+  if (!stripeKey) {
+    return res.json({
+      mode: 'mock',
+      message: 'Stripe Connect not configured — set STRIPE_SECRET_KEY (test mode OK) to enable payouts.',
+      onboarding_url: null,
+    });
+  }
+
+  const { return_url = `${process.env.VITE_APP_URL || 'http://localhost:5173'}/settings`, refresh_url } = req.body || {};
+
+  try {
+    // 1. Create connected account
+    const acctR = await fetch('https://api.stripe.com/v1/accounts', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${stripeKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        type:         'express',
+        country:      'US',
+        email:        req.body?.email || '',
+        capabilities: '',
+      }).toString() + '&capabilities[card_payments][requested]=true&capabilities[transfers][requested]=true',
+    });
+    if (!acctR.ok) {
+      const err = await acctR.json().catch(() => ({}));
+      console.error('Stripe account create failed:', acctR.status, err);
+      return res.status(acctR.status).json({ error: { code: 'stripe_upstream', message: 'Stripe account creation failed.' } });
+    }
+    const acct = await acctR.json();
+
+    // 2. Create onboarding link
+    const linkR = await fetch('https://api.stripe.com/v1/account_links', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${stripeKey}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        account:     acct.id,
+        refresh_url: refresh_url || return_url,
+        return_url:  return_url,
+        type:        'account_onboarding',
+      }).toString(),
+    });
+    if (!linkR.ok) {
+      const err = await linkR.json().catch(() => ({}));
+      console.error('Stripe link create failed:', linkR.status, err);
+      return res.status(linkR.status).json({ error: { code: 'stripe_upstream', message: 'Stripe onboarding link failed.' } });
+    }
+    const link = await linkR.json();
+
+    return res.json({
+      mode: 'live',
+      onboarding_url: link.url,
+      account_id:     acct.id,
+      expires_at:     link.expires_at,
+    });
+  } catch (err) {
+    console.error('Stripe Connect error:', err.message);
+    return res.status(500).json({ error: { message: 'Stripe request failed.' } });
+  }
+});
+
+// ── 4.3 DocuSign: send envelope from template-less HTML ───────────────────────
+// JWT auth flow assumed. Mock mode returns fake envelope_id.
+app.post('/api/integrations/docusign/envelope', requireAuth, integrationLimiter, async (req, res) => {
+  const dsAccountId    = process.env.DOCUSIGN_ACCOUNT_ID;
+  const dsAccessToken  = process.env.DOCUSIGN_ACCESS_TOKEN;  // bearer token from OAuth/JWT
+  const dsBaseUrl      = process.env.DOCUSIGN_BASE_URL || 'https://demo.docusign.net/restapi';
+
+  if (!dsAccountId || !dsAccessToken) {
+    return res.json({
+      mode: 'mock',
+      message: 'DocuSign not configured — set DOCUSIGN_ACCOUNT_ID + DOCUSIGN_ACCESS_TOKEN to enable signing flow.',
+      envelope_id: null,
+    });
+  }
+
+  const { contract_html, contract_pdf_base64, signer_email, signer_name, subject = 'Contract for signature' } = req.body || {};
+  if (!signer_email || !signer_name) {
+    return res.status(400).json({ error: { message: 'signer_email + signer_name required.' } });
+  }
+
+  const documentBase64 = contract_pdf_base64 || Buffer.from(contract_html || '<html><body>Empty contract</body></html>').toString('base64');
+
+  try {
+    const r = await fetch(`${dsBaseUrl}/v2.1/accounts/${dsAccountId}/envelopes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${dsAccessToken}` },
+      body: JSON.stringify({
+        emailSubject: subject,
+        status:       'sent',
+        documents: [{
+          documentBase64,
+          name:         subject,
+          fileExtension: contract_pdf_base64 ? 'pdf' : 'html',
+          documentId:   '1',
+        }],
+        recipients: {
+          signers: [{
+            email:     signer_email,
+            name:      signer_name,
+            recipientId: '1',
+            routingOrder: '1',
+            tabs: {
+              signHereTabs: [{ documentId: '1', pageNumber: '1', xPosition: '100', yPosition: '700' }],
+            },
+          }],
+        },
+      }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      console.error('DocuSign envelope failed:', r.status, err);
+      return res.status(r.status).json({ error: { code: 'docusign_upstream', message: 'DocuSign envelope creation failed.' } });
+    }
+    const data = await r.json();
+    return res.json({ mode: 'live', envelope_id: data.envelopeId, status: data.status });
+  } catch (err) {
+    console.error('DocuSign error:', err.message);
+    return res.status(500).json({ error: { message: 'DocuSign request failed.' } });
+  }
+});
+
+// ── 4.4 Plaid: create link token for client Link SDK ──────────────────────────
+// Real flow: server creates link_token → client uses Plaid Link → returns
+// public_token → server exchanges for access_token (separate endpoint).
+app.post('/api/integrations/plaid/link-token', requireAuth, integrationLimiter, async (req, res) => {
+  const clientId = process.env.PLAID_CLIENT_ID;
+  const secret   = process.env.PLAID_SECRET;
+  const env      = process.env.PLAID_ENV || 'sandbox';
+
+  if (!clientId || !secret) {
+    return res.json({
+      mode: 'mock',
+      message: 'Plaid not configured — set PLAID_CLIENT_ID + PLAID_SECRET (sandbox OK) to enable bank sync.',
+      link_token: null,
+    });
+  }
+
+  const baseUrl = env === 'production' ? 'https://production.plaid.com'
+                : env === 'development' ? 'https://development.plaid.com'
+                : 'https://sandbox.plaid.com';
+
+  try {
+    const r = await fetch(`${baseUrl}/link/token/create`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id:    clientId,
+        secret,
+        user:         { client_user_id: req.stytchUser?.userId || 'unknown' },
+        client_name:  'MulBros Media OS',
+        products:     ['transactions'],
+        country_codes: ['US'],
+        language:     'en',
+      }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      console.error('Plaid link-token failed:', r.status, err);
+      return res.status(r.status).json({ error: { code: 'plaid_upstream', message: 'Plaid link token failed.' } });
+    }
+    const data = await r.json();
+    return res.json({ mode: 'live', link_token: data.link_token, expiration: data.expiration });
+  } catch (err) {
+    console.error('Plaid error:', err.message);
+    return res.status(500).json({ error: { message: 'Plaid request failed.' } });
+  }
+});
+
+// ── 4.5 Twilio SMS: send booking/audition reminder ────────────────────────────
+app.post('/api/integrations/twilio/sms', requireAuth, integrationLimiter, async (req, res) => {
+  const sid  = process.env.TWILIO_ACCOUNT_SID;
+  const auth = process.env.TWILIO_AUTH_TOKEN;
+  const from = process.env.TWILIO_FROM_NUMBER;
+
+  const { to, message } = req.body || {};
+  if (!to || !message) {
+    return res.status(400).json({ error: { message: 'to + message required.' } });
+  }
+  if (message.length > 1600) {
+    return res.status(400).json({ error: { message: 'Message too long (1600 char max).' } });
+  }
+
+  if (!sid || !auth || !from) {
+    return res.json({
+      mode: 'mock',
+      message: 'Twilio not configured — set TWILIO_ACCOUNT_SID + TWILIO_AUTH_TOKEN + TWILIO_FROM_NUMBER to enable SMS.',
+      sid: null,
+    });
+  }
+
+  try {
+    const credentials = Buffer.from(`${sid}:${auth}`).toString('base64');
+    const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${credentials}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        To:   to,
+        From: from,
+        Body: message.slice(0, 1600),
+      }).toString(),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      console.error('Twilio SMS failed:', r.status, err);
+      return res.status(r.status).json({ error: { code: 'twilio_upstream', message: 'Twilio SMS failed.' } });
+    }
+    const data = await r.json();
+    return res.json({ mode: 'live', sid: data.sid, status: data.status });
+  } catch (err) {
+    console.error('Twilio error:', err.message);
+    return res.status(500).json({ error: { message: 'Twilio request failed.' } });
+  }
+});
+
 // ── Static SPA ────────────────────────────────────────────────────────────────
 app.use(express.static(join(__dirname, 'dist')));
 app.get('*', (req, res) => {
