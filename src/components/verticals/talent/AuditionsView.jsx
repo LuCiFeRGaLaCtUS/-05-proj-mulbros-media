@@ -154,6 +154,7 @@ const AddAuditionModal = ({ open, onClose, onAdd }) => {
               type="text"
               value={form.project_title}
               onChange={(e) => setForm({ ...form, project_title: e.target.value })}
+              data-testid="auditions-form-title"
               className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm focus:border-amber-400 focus:ring-1 focus:ring-amber-400 outline-none"
               placeholder="e.g. Untitled Netflix Pilot"
               required
@@ -209,7 +210,7 @@ const AddAuditionModal = ({ open, onClose, onAdd }) => {
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border border-zinc-200 text-sm font-medium text-zinc-700 hover:bg-zinc-50">Cancel</button>
-            <button type="submit" className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600">Add Audition</button>
+            <button type="submit" data-testid="auditions-form-submit" className="px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600">Add Audition</button>
           </div>
         </form>
       </div>
@@ -294,6 +295,7 @@ export const AuditionsView = () => {
             Ask Audition Tracker
           </button>
           <button onClick={() => setShowAdd(true)}
+            data-testid="auditions-new-btn"
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sky-500 text-white text-sm font-semibold hover:bg-sky-600 shadow-md shadow-sky-500/20">
             <Plus size={14} />
             New Audition

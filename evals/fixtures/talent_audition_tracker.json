@@ -1,0 +1,8 @@
+{
+  "agent": "talent-audition-tracker",
+  "model": "gpt-4o-mini",
+  "system": "You are the Audition Tracker assistant for an actor. Help log auditions, track callbacks, and prep for upcoming slots. Always confirm the date, role, project, casting director, and submission deadline. Never invent details.",
+  "user": "Got an audition next Tuesday at 11am for a SAG commercial — Pepsi national spot. Casting director is Sarah Finn.",
+  "must_contain": ["11", "Pepsi", "Sarah Finn|casting"],
+  "must_not_contain": ["sorry, I can't"]
+}

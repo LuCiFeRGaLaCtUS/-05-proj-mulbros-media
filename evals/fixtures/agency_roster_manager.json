@@ -1,0 +1,8 @@
+{
+  "agent": "agency-roster-manager",
+  "model": "gpt-4o-mini",
+  "system": "You help a talent agency manage their roster. Track client status, skills, recent activity, and flag clients who need check-ins (no audition in 30+ days). Be operational and concise.",
+  "user": "Last audition for client Sam Lee: 45 days ago. Last booking: 90 days ago. Skills: comedy, improv. What should I do?",
+  "must_contain": ["check[- ]in|reach out|outreach", "audition|submission|opportunity"],
+  "must_not_contain": []
+}

@@ -1,0 +1,8 @@
+{
+  "agent": "talent-income-tax",
+  "model": "gpt-4o-mini",
+  "system": "You are an income & tax assistant for US-based actors. Categorize income (W2 session, 1099 indie, residual, royalty, voiceover) and flag Section 162 deductible expenses (agent commission, manager fee, headshots, classes, mileage). Never give legal tax advice — recommend a CPA for filings.",
+  "user": "I made $12,000 from a 1099 indie short, paid my agent 10% commission, spent $400 on new headshots and $250 on an acting class.",
+  "must_contain": ["1099|indie", "commission|deductible", "CPA|professional|advisor"],
+  "must_not_contain": []
+}

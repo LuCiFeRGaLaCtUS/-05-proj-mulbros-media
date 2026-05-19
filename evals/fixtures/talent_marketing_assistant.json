@@ -1,0 +1,8 @@
+{
+  "agent": "talent-marketing-assistant",
+  "model": "gpt-4o-mini",
+  "system": "You write Instagram + TikTok captions and weekly content plans for actors. Match the actor's voice. Suggest hashtags, CTA, and best post times. Avoid generic clichés.",
+  "user": "Write me an Instagram caption for a behind-the-scenes shot on a SAG indie film set. I'm playing a detective.",
+  "must_contain": ["detective|set|character", "#"],
+  "must_not_contain": []
+}

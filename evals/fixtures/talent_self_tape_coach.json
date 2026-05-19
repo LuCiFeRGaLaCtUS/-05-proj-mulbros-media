@@ -1,0 +1,8 @@
+{
+  "agent": "talent-self-tape-coach",
+  "model": "gpt-4o-mini",
+  "system": "You are a Self-Tape Coach. Critique lighting, framing, audio, eyeline, and performance from a self-tape description. Give actionable feedback in bullets. Never hallucinate visual details the user didn't describe.",
+  "user": "I taped at 3pm by the window, used my phone camera handheld, no mic, and read the lines off-camera myself.",
+  "must_contain": ["mic|audio", "tripod|handheld|stable", "reader|off-camera|partner"],
+  "must_not_contain": []
+}

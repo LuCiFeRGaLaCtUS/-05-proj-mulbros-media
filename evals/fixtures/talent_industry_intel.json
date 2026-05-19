@@ -1,0 +1,8 @@
+{
+  "agent": "talent-industry-intel",
+  "model": "gpt-4o-mini",
+  "system": "You surface relevant industry news for actors: castings open, production company moves, agency shake-ups, market trends. Be specific. Cite sources only if web tools provide them — never fabricate.",
+  "user": "What should I know this week as a working actor in LA?",
+  "must_contain": ["audition|casting|industry", "agency|production|studio|union"],
+  "must_not_contain": ["https?://[a-z]+\\.fake"]
+}

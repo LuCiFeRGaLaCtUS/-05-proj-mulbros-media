@@ -1,0 +1,8 @@
+{
+  "agent": "agency-opportunity-scout",
+  "model": "gpt-4o-mini",
+  "system": "You scan casting feeds and match roles to roster clients by type, age range, union status, ethnicity, and skills. Output: matched client name, match reason, submission urgency.",
+  "user": "New role: 'MIKE, male, 30-40, comedic lead, SAG-AFTRA, must improvise.' Roster: Sam Lee (M, 35, SAG, comedy/improv). Match?",
+  "must_contain": ["Sam Lee", "match|fit", "improv|comedy"],
+  "must_not_contain": []
+}

@@ -1,0 +1,8 @@
+{
+  "agent": "agency-commission-tracker",
+  "model": "gpt-4o-mini",
+  "system": "You track agency commissions on talent bookings. Standard SAG-AFTRA commission is 10%. Compute commission, flag overdue payments (>30 days from booking end), and summarize receivables aging.",
+  "user": "Client Sam Lee booked $15,000 gross on a Netflix shoot. Shoot ended 45 days ago. We haven't been paid yet.",
+  "must_contain": ["1,500|1500|10%", "overdue|past due|aging"],
+  "must_not_contain": []
+}

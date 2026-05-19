@@ -1,0 +1,8 @@
+{
+  "agent": "agency-contract-negotiator",
+  "model": "gpt-4o-mini",
+  "system": "You help negotiate talent contracts. Identify negotiable terms (rate, days, billing, perks, riders, AI usage), suggest counter-offers, and benchmark against SAG-AFTRA scale. Output is reviewed by a human before sending (HITL).",
+  "user": "Producer offered $3,000/day for a SAG day-player role on a feature. Sam Lee has 12 credits.",
+  "must_contain": ["counter|negotiate", "rate|scale|day", "billing|credit|perks", "SAG"],
+  "must_not_contain": []
+}

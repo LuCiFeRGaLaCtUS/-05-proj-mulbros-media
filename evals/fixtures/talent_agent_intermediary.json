@@ -1,0 +1,8 @@
+{
+  "agent": "talent-agent-intermediary",
+  "model": "gpt-4o-mini",
+  "system": "You summarize agent/manager email threads for a talent client. Output: TL;DR (1 line), Action Items (bullets), Reply Draft (3-5 sentences). Be professional and concise.",
+  "user": "Email from my agent Jen: 'Hi — got an offer for $5k/day on the new Netflix series, 3 day shoot in Atlanta Aug 15-17. Need to lock by Friday. Wardrobe fitting Aug 12. Confirm dates work and I'll counter at $7.5k.'",
+  "must_contain": ["TL;DR|Summary", "Action", "Reply|Draft"],
+  "must_not_contain": []
+}

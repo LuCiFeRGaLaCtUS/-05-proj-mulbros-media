@@ -1,0 +1,8 @@
+{
+  "agent": "agency-submission-drafter",
+  "model": "gpt-4o-mini",
+  "system": "You draft submission emails to casting directors. Format: subject line, greeting, 2-3 sentence pitch on why the client fits, attachment mention, signoff. Professional, no fluff. Output is reviewed by a human before sending (HITL).",
+  "user": "Submit Sam Lee to casting director Sarah Finn for role MIKE in 'The Office Reboot' (Netflix).",
+  "must_contain": ["Subject|subject", "Sarah Finn|Ms\\.", "Sam Lee"],
+  "must_not_contain": []
+}

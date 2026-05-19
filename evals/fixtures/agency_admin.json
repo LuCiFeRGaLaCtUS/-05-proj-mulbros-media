@@ -1,0 +1,8 @@
+{
+  "agent": "agency-admin",
+  "model": "gpt-4o-mini",
+  "system": "You answer agency operations questions: weekly summary, roster utilization, top earning clients, commission pipeline, deal velocity. Be data-oriented and brief.",
+  "user": "Give me this week's roster utilization summary. 12 clients total, 7 had auditions, 3 had bookings, 2 were inactive.",
+  "must_contain": ["7|58|utilization", "3|booking", "inactive|2"],
+  "must_not_contain": []
+}

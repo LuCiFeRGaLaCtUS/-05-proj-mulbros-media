@@ -7,6 +7,33 @@ import basicAuth from 'express-basic-auth';
 import { Resend } from 'resend';
 import * as stytch from 'stytch';
 import jwt from 'jsonwebtoken';
+import * as Sentry from '@sentry/node';
+import crypto from 'crypto';
+
+// ── Sentry init — must run before Express creates handlers ────────────────────
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn:         process.env.SENTRY_DSN,
+    environment: process.env.NODE_ENV || 'development',
+    release:     process.env.APP_VERSION || 'dev',
+    tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+    beforeSend(event) {
+      // Scrub auth headers from outbound events
+      if (event.request?.headers) {
+        const h = event.request.headers;
+        delete h.Authorization;
+        delete h.authorization;
+        delete h['x-stytch-session-jwt'];
+        delete h['x-stytch-session-token'];
+        delete h.cookie;
+      }
+      return event;
+    },
+  });
+  console.log('[Sentry] initialized — server-side error tracking active');
+} else {
+  console.warn('[Sentry] DSN not set — server-side error tracking disabled');
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -130,6 +157,79 @@ const mintServiceJwt = () => {
     process.env.SUPABASE_JWT_SECRET,
     { algorithm: 'HS256' },
   );
+};
+
+// ── Cost ledger helper ────────────────────────────────────────────────────────
+// Logs per-request spend to cost_ledger table. Fire-and-forget — never blocks
+// the user response. Uses service JWT to write across RLS.
+const PROVIDER_PRICING = {
+  // USD per 1K tokens (May 2026 approximations — update as providers change rates)
+  'gpt-4o':         { in: 0.0025, out: 0.01 },
+  'gpt-4o-mini':    { in: 0.00015, out: 0.0006 },
+  'claude-opus-4-5':    { in: 0.015, out: 0.075 },
+  'claude-sonnet-4-5':  { in: 0.003, out: 0.015 },
+  'claude-haiku-4-5':   { in: 0.0008, out: 0.004 },
+};
+
+const estimateAiCost = (model, tokensIn = 0, tokensOut = 0) => {
+  const p = PROVIDER_PRICING[model];
+  if (!p) return 0;
+  return ((tokensIn / 1000) * p.in) + ((tokensOut / 1000) * p.out);
+};
+
+const logCostFireAndForget = async ({ userId, endpoint, provider, model, tokens_in = 0, tokens_out = 0, usd_cost = 0, metadata = {} }) => {
+  if (!process.env.SUPABASE_JWT_SECRET) return;
+  try {
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return;
+    await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/cost_ledger`, {
+      method: 'POST',
+      headers: {
+        apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+        Authorization: `Bearer ${svcJwt}`,
+        'Content-Type': 'application/json',
+        Prefer:        'return=minimal',
+      },
+      body: JSON.stringify({
+        user_id:    userId || null,
+        endpoint,
+        provider,
+        model:      model || null,
+        tokens_in,
+        tokens_out,
+        usd_cost,
+        metadata,
+      }),
+    });
+  } catch (err) {
+    // Never let cost-logging crash a real request — Sentry it
+    if (process.env.SENTRY_DSN) {
+      try { Sentry.captureException(err, { tags: { component: 'cost_ledger' } }); } catch { /* noop */ }
+    }
+    console.warn('[cost_ledger] log failed:', err.message);
+  }
+};
+
+// Cache stytch_user_id → profile.id so cost logging doesn't hit Supabase every request.
+const stytchToProfileCache = new Map();
+const resolveProfileIdFromStytch = async (stytchUid) => {
+  if (!stytchUid) return null;
+  if (stytchToProfileCache.has(stytchUid)) return stytchToProfileCache.get(stytchUid);
+  if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) return null;
+  try {
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return null;
+    const r = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=id`,
+      { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` } },
+    );
+    const rows = await r.json();
+    const pid = rows[0]?.id || null;
+    if (pid) stytchToProfileCache.set(stytchUid, pid);
+    return pid;
+  } catch {
+    return null;
+  }
 };
 
 // ── Role-gate middleware ──────────────────────────────────────────────────────
@@ -380,6 +480,22 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       return res.status(response.status).json({ error: { code: 'ai_upstream', message: userFacing } });
     }
 
+    // Parse token usage for cost ledger (fire-and-forget)
+    const tokensIn  = isAnthropic ? (data.usage?.input_tokens  || 0) : (data.usage?.prompt_tokens     || 0);
+    const tokensOut = isAnthropic ? (data.usage?.output_tokens || 0) : (data.usage?.completion_tokens || 0);
+    const usdCost   = estimateAiCost(model, tokensIn, tokensOut);
+    resolveProfileIdFromStytch(req.stytchUser?.userId).then(profileId => {
+      logCostFireAndForget({
+        userId:   profileId,
+        endpoint: '/api/ai',
+        provider: isAnthropic ? 'anthropic' : 'openai',
+        model,
+        tokens_in:  tokensIn,
+        tokens_out: tokensOut,
+        usd_cost:   usdCost,
+      });
+    });
+
     // Normalize Anthropic response to OpenAI shape so the client doesn't need to change
     if (isAnthropic && data.content) {
       return res.status(response.status).json({
@@ -460,6 +576,23 @@ app.post('/api/ai-search', aiLimiter, async (req, res) => {
       .flatMap(c => Array.isArray(c.annotations) ? c.annotations : [])
       .filter(a => a.type === 'url_citation')
       .map(a => ({ url: a.url, title: a.title || a.url, start: a.start_index, end: a.end_index }));
+
+    // Cost ledger (fire-and-forget)
+    const tokensIn  = data.usage?.input_tokens  || 0;
+    const tokensOut = data.usage?.output_tokens || 0;
+    const usdCost   = estimateAiCost(model, tokensIn, tokensOut);
+    resolveProfileIdFromStytch(req.stytchUser?.userId).then(profileId => {
+      logCostFireAndForget({
+        userId:   profileId,
+        endpoint: '/api/ai-search',
+        provider: 'openai',
+        model,
+        tokens_in:  tokensIn,
+        tokens_out: tokensOut,
+        usd_cost:   usdCost,
+        metadata:   { tool: 'web_search_preview' },
+      });
+    });
 
     res.json({ text, citations, source: 'openai-web-search' });
   } catch (err) {
@@ -855,6 +988,17 @@ app.post('/api/firecrawl-search', requireAuth, firecrawlPerUser, firecrawlLimite
       };
     });
 
+    // Cost ledger — Firecrawl charges ~$0.005 per search result (May 2026 rate)
+    resolveProfileIdFromStytch(req.stytchUser?.userId).then(profileId => {
+      logCostFireAndForget({
+        userId:   profileId,
+        endpoint: '/api/firecrawl-search',
+        provider: 'firecrawl',
+        usd_cost: posts.length * 0.005,
+        metadata: { query: query.trim(), result_count: posts.length },
+      });
+    });
+
     res.json({ posts, query: query.trim(), count: posts.length, source: 'firecrawl' });
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -951,6 +1095,17 @@ app.post('/api/apify-reddit', requireAuth, apifyPerUser, apifyLimiter, async (re
                      : 'recent',
     }));
 
+    // Cost ledger — Apify Reddit scraper ~$0.02 per actor run (residential proxy)
+    resolveProfileIdFromStytch(req.stytchUser?.userId).then(profileId => {
+      logCostFireAndForget({
+        userId:   profileId,
+        endpoint: '/api/apify-reddit',
+        provider: 'apify',
+        usd_cost: 0.02,
+        metadata: { query: query.trim(), result_count: posts.length, actor: slug },
+      });
+    });
+
     res.json({ posts, query: query.trim(), count: posts.length, source: 'apify' });
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -1032,6 +1187,17 @@ app.post('/api/email', requireAuth, emailPerUser, emailLimiter, async (req, res)
       console.error('Resend error:', error);
       return res.status(502).json({ error: error.message });
     }
+
+    // Cost ledger — Resend ~$0.0004 per email (May 2026)
+    resolveProfileIdFromStytch(req.stytchUser?.userId).then(profileId => {
+      logCostFireAndForget({
+        userId:   profileId,
+        endpoint: '/api/email',
+        provider: 'resend',
+        usd_cost: recipients.length * 0.0004,
+        metadata: { recipient_count: recipients.length, subject: subject.slice(0, 100) },
+      });
+    });
 
     res.json({ success: true, id: data?.id });
   } catch (err) {
@@ -1329,6 +1495,354 @@ app.post('/api/integrations/twilio/sms', requireAuth, integrationLimiter, async 
   }
 });
 
+// ═════════════════════════════════════════════════════════════════════════════
+// Sprint 5 — Webhooks (Mux · DocuSign) + Plaid exchange
+// ═════════════════════════════════════════════════════════════════════════════
+
+// Helper — service-role PATCH against any table (bypasses RLS).
+const supabaseServicePatch = async (table, filter, patch) => {
+  if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) return false;
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return false;
+  try {
+    const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/${table}?${filter}`, {
+      method: 'PATCH',
+      headers: {
+        apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+        Authorization: `Bearer ${svcJwt}`,
+        'Content-Type': 'application/json',
+        Prefer:        'return=minimal',
+      },
+      body: JSON.stringify(patch),
+    });
+    return r.ok;
+  } catch (err) {
+    console.error(`[supabaseServicePatch] ${table} failed:`, err.message);
+    return false;
+  }
+};
+
+// Helper — service-role POST insert (bypasses RLS).
+const supabaseServiceInsert = async (table, rows) => {
+  if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) return false;
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return false;
+  try {
+    const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+        Authorization: `Bearer ${svcJwt}`,
+        'Content-Type': 'application/json',
+        Prefer:        'return=minimal,resolution=merge-duplicates',
+      },
+      body: JSON.stringify(Array.isArray(rows) ? rows : [rows]),
+    });
+    return r.ok;
+  } catch (err) {
+    console.error(`[supabaseServiceInsert] ${table} failed:`, err.message);
+    return false;
+  }
+};
+
+// ── 5.3 Mux webhook: fired on upload + asset state changes ────────────────────
+// Mux signs each request: `mux-signature: t=<ts>,v1=<hmac>`.
+// HMAC is SHA256 of `${t}.${rawBody}` with MUX_WEBHOOK_SECRET.
+// Events handled:
+//   video.upload.asset_created → set mux_asset_id, status='processing'
+//   video.asset.ready          → set mux_playback_id, duration, status='ready'
+//   video.asset.errored        → status='errored'
+app.post('/api/webhooks/mux', express.raw({ type: 'application/json' }), async (req, res) => {
+  const secret = process.env.MUX_WEBHOOK_SECRET;
+  const raw    = req.body instanceof Buffer ? req.body.toString('utf8') : '';
+
+  // Verify signature when secret is configured.
+  if (secret) {
+    const sigHdr = req.headers['mux-signature'] || '';
+    const parts  = String(sigHdr).split(',').reduce((acc, p) => {
+      const [k, v] = p.split('=');
+      if (k && v) acc[k.trim()] = v.trim();
+      return acc;
+    }, {});
+    const t  = parts.t;
+    const v1 = parts.v1;
+    if (!t || !v1) {
+      return res.status(400).json({ error: { message: 'Missing mux-signature.' } });
+    }
+    const expected = crypto.createHmac('sha256', secret).update(`${t}.${raw}`).digest('hex');
+    const a = Buffer.from(expected, 'hex');
+    const b = Buffer.from(v1, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return res.status(401).json({ error: { message: 'Invalid mux-signature.' } });
+    }
+  } else {
+    console.warn('[mux-webhook] MUX_WEBHOOK_SECRET not set — accepting unverified payload (dev mode).');
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(raw || '{}');
+  } catch {
+    return res.status(400).json({ error: { message: 'Invalid JSON.' } });
+  }
+  const { type, data } = payload || {};
+  if (!type || !data) return res.status(200).json({ ok: true }); // ack and ignore
+
+  try {
+    if (type === 'video.upload.asset_created') {
+      const uploadId = data.id || data.upload_id;
+      const assetId  = data.asset_id;
+      if (uploadId && assetId) {
+        await supabaseServicePatch(
+          'self_tapes',
+          `mux_upload_id=eq.${encodeURIComponent(uploadId)}`,
+          { mux_asset_id: assetId, status: 'processing', updated_at: new Date().toISOString() },
+        );
+      }
+    } else if (type === 'video.asset.ready') {
+      const assetId    = data.id;
+      const playbackId = Array.isArray(data.playback_ids) ? data.playback_ids[0]?.id : null;
+      const duration   = data.duration ? Math.round(data.duration) : null;
+      if (assetId) {
+        await supabaseServicePatch(
+          'self_tapes',
+          `mux_asset_id=eq.${encodeURIComponent(assetId)}`,
+          {
+            ...(playbackId ? { mux_playback_id: playbackId } : {}),
+            ...(duration   ? { duration_seconds: duration } : {}),
+            status:     'ready',
+            updated_at: new Date().toISOString(),
+          },
+        );
+      }
+    } else if (type === 'video.asset.errored') {
+      const assetId = data.id;
+      if (assetId) {
+        await supabaseServicePatch(
+          'self_tapes',
+          `mux_asset_id=eq.${encodeURIComponent(assetId)}`,
+          { status: 'errored', updated_at: new Date().toISOString() },
+        );
+      }
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[mux-webhook] handler failed:', err.message);
+    res.status(500).json({ error: { message: 'Webhook handler failed.' } });
+  }
+});
+
+// ── 5.4 DocuSign Connect webhook: envelope status changes ─────────────────────
+// DocuSign Connect can POST JSON or XML; we accept JSON Connect 2.0 format.
+// Optional HMAC verification via `X-DocuSign-Signature-1` header
+// (HMAC SHA256 of raw body with DOCUSIGN_HMAC_KEY, base64-encoded).
+const DS_STATUS_MAP = {
+  sent:      'sent',
+  delivered: 'delivered',
+  signed:    'signed',
+  completed: 'completed',
+  declined:  'declined',
+  voided:    'voided',
+  // viewed via recipient event
+};
+app.post('/api/webhooks/docusign', express.raw({ type: '*/*' }), async (req, res) => {
+  const hmacKey = process.env.DOCUSIGN_HMAC_KEY;
+  const raw     = req.body instanceof Buffer ? req.body.toString('utf8') : '';
+
+  if (hmacKey) {
+    const provided = req.headers['x-docusign-signature-1'] || '';
+    const expected = crypto.createHmac('sha256', hmacKey).update(raw).digest('base64');
+    const a = Buffer.from(expected, 'utf8');
+    const b = Buffer.from(String(provided), 'utf8');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
+      return res.status(401).json({ error: { message: 'Invalid DocuSign signature.' } });
+    }
+  } else {
+    console.warn('[docusign-webhook] DOCUSIGN_HMAC_KEY not set — accepting unverified payload (dev mode).');
+  }
+
+  let payload;
+  try {
+    payload = JSON.parse(raw || '{}');
+  } catch {
+    // XML payloads not supported in this scaffold — ack & ignore so DocuSign doesn't retry forever
+    console.warn('[docusign-webhook] non-JSON payload received; ignoring.');
+    return res.json({ ok: true });
+  }
+
+  // Connect 2.0 shape: { event, data: { envelopeId, envelopeSummary: { status, ... } } }
+  const envelopeId = payload?.data?.envelopeId
+                  || payload?.envelopeId
+                  || payload?.data?.envelopeSummary?.envelopeId;
+  const rawStatus  = payload?.data?.envelopeSummary?.status
+                  || payload?.status
+                  || payload?.event
+                  || '';
+  const mapped = DS_STATUS_MAP[String(rawStatus).toLowerCase()] || null;
+
+  if (!envelopeId || !mapped) {
+    return res.json({ ok: true }); // ack — nothing actionable
+  }
+
+  try {
+    const patch = {
+      status: mapped,
+      ...(mapped === 'signed' || mapped === 'completed'
+        ? { signed_at: new Date().toISOString() }
+        : {}),
+    };
+    await supabaseServicePatch(
+      'docusign_envelopes',
+      `envelope_id=eq.${encodeURIComponent(envelopeId)}`,
+      patch,
+    );
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[docusign-webhook] handler failed:', err.message);
+    res.status(500).json({ error: { message: 'Webhook handler failed.' } });
+  }
+});
+
+// ── 5.5 Plaid: exchange public_token → access_token + sync transactions ───────
+// Step 1 of two: client returns public_token from Link SDK → server exchanges
+// for access_token + item_id, persists in user_integrations(service='plaid').
+app.post('/api/integrations/plaid/exchange', requireAuth, integrationLimiter, async (req, res) => {
+  const clientId = process.env.PLAID_CLIENT_ID;
+  const secret   = process.env.PLAID_SECRET;
+  const env      = process.env.PLAID_ENV || 'sandbox';
+
+  if (!clientId || !secret) {
+    return res.json({ mode: 'mock', message: 'Plaid not configured.' });
+  }
+
+  const { public_token } = req.body || {};
+  if (!public_token) {
+    return res.status(400).json({ error: { message: 'public_token required.' } });
+  }
+
+  const baseUrl = env === 'production' ? 'https://production.plaid.com'
+                : env === 'development' ? 'https://development.plaid.com'
+                : 'https://sandbox.plaid.com';
+
+  try {
+    const r = await fetch(`${baseUrl}/item/public_token/exchange`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ client_id: clientId, secret, public_token }),
+    });
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      console.error('Plaid exchange failed:', r.status, err);
+      return res.status(r.status).json({ error: { code: 'plaid_upstream', message: 'Plaid token exchange failed.' } });
+    }
+    const data      = await r.json();
+    const profileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+    if (!profileId) {
+      return res.status(403).json({ error: { message: 'Profile not found.' } });
+    }
+    await supabaseServiceInsert('user_integrations', {
+      user_id:       profileId,
+      service:       'plaid',
+      access_token:  data.access_token,
+      metadata:      { item_id: data.item_id, env },
+    });
+    return res.json({ mode: 'live', item_id: data.item_id });
+  } catch (err) {
+    console.error('Plaid exchange error:', err.message);
+    return res.status(500).json({ error: { message: 'Plaid exchange failed.' } });
+  }
+});
+
+// Step 2: pull recent transactions → insert into income_records with auto category.
+// Lightweight categorizer: amount > 0 income source → '1099_indie' default.
+const categorizePlaidTxn = (txn) => {
+  const name = (txn.name || '').toLowerCase();
+  if (/residual|royalty/.test(name)) return 'residual';
+  if (/voiceover|vo /.test(name))    return 'voiceover';
+  if (/sag|aftra|union/.test(name))  return 'w2_session';
+  return '1099_indie';
+};
+app.post('/api/integrations/plaid/sync-transactions', requireAuth, integrationLimiter, async (req, res) => {
+  const clientId = process.env.PLAID_CLIENT_ID;
+  const secret   = process.env.PLAID_SECRET;
+  const env      = process.env.PLAID_ENV || 'sandbox';
+
+  if (!clientId || !secret) {
+    return res.json({ mode: 'mock', synced: 0 });
+  }
+
+  const profileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+  if (!profileId) {
+    return res.status(403).json({ error: { message: 'Profile not found.' } });
+  }
+
+  // Fetch stored access_token from user_integrations
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) {
+    return res.status(503).json({ error: { message: 'Service auth unavailable.' } });
+  }
+  const baseUrl = env === 'production' ? 'https://production.plaid.com'
+                : env === 'development' ? 'https://development.plaid.com'
+                : 'https://sandbox.plaid.com';
+
+  try {
+    const tokR = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/user_integrations?user_id=eq.${profileId}&service=eq.plaid&select=access_token`,
+      { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` } },
+    );
+    const rows = await tokR.json();
+    const accessToken = rows[0]?.access_token;
+    if (!accessToken) {
+      return res.status(404).json({ error: { message: 'No Plaid account linked. Run Link flow first.' } });
+    }
+
+    // Pull last 30 days of transactions
+    const end   = new Date().toISOString().slice(0, 10);
+    const start = new Date(Date.now() - 30 * 86400_000).toISOString().slice(0, 10);
+    const txR = await fetch(`${baseUrl}/transactions/get`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        client_id:    clientId,
+        secret,
+        access_token: accessToken,
+        start_date:   start,
+        end_date:     end,
+        options:      { count: 100, offset: 0 },
+      }),
+    });
+    if (!txR.ok) {
+      const err = await txR.json().catch(() => ({}));
+      console.error('Plaid txns failed:', txR.status, err);
+      return res.status(txR.status).json({ error: { code: 'plaid_upstream', message: 'Plaid transactions failed.' } });
+    }
+    const txData = await txR.json();
+    const txns   = Array.isArray(txData.transactions) ? txData.transactions : [];
+
+    // Income = negative amount in Plaid's convention (money flowing in)
+    const incomeRows = txns
+      .filter(t => t.amount < 0 && !t.pending)
+      .map(t => ({
+        user_id:              profileId,
+        source:               t.merchant_name || t.name || 'Plaid txn',
+        amount:               Math.abs(t.amount),
+        currency:             t.iso_currency_code || 'USD',
+        received_at:          t.date,
+        tax_year:             new Date(t.date).getFullYear(),
+        category:             categorizePlaidTxn(t),
+        plaid_transaction_id: t.transaction_id,
+      }));
+
+    if (incomeRows.length > 0) {
+      await supabaseServiceInsert('income_records', incomeRows);
+    }
+    return res.json({ mode: 'live', synced: incomeRows.length, scanned: txns.length });
+  } catch (err) {
+    console.error('Plaid sync error:', err.message);
+    return res.status(500).json({ error: { message: 'Plaid sync failed.' } });
+  }
+});
+
 // ── Static SPA ────────────────────────────────────────────────────────────────
 app.use(express.static(join(__dirname, 'dist')));
 app.get('*', (req, res) => {
@@ -1342,6 +1856,15 @@ app.get('*', (req, res) => {
 app.use((err, req, res, _next) => {
   console.error('[api]', req.method, req.path, err.message || err);
   const status = err.status || err.statusCode || 500;
+  // Forward 5xx to Sentry (skip 4xx — those are client errors, noise)
+  if (status >= 500 && process.env.SENTRY_DSN) {
+    try {
+      Sentry.captureException(err, {
+        tags: { route: req.path, method: req.method },
+        extra: { stytch_user_id: req.stytchUser?.userId },
+      });
+    } catch { /* noop */ }
+  }
   const code   = err.code   || (status >= 500 ? 'internal_error' : 'bad_request');
   res.status(status).json({
     error: {

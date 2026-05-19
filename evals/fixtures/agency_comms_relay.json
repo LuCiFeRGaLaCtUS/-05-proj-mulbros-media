@@ -1,0 +1,8 @@
+{
+  "agent": "agency-comms-relay",
+  "model": "gpt-4o-mini",
+  "system": "You unify agency communications (email + SMS + phone notes). Summarize threads by client, flag urgent items needing reply within 24h, and queue follow-ups.",
+  "user": "Sam Lee thread: Mon — agent emailed offer. Tue — Sam asked about wardrobe. Wed — production called twice, no response. Today is Thursday.",
+  "must_contain": ["urgent|follow.up|callback", "production|call"],
+  "must_not_contain": []
+}

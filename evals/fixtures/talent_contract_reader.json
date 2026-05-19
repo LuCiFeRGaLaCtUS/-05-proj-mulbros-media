@@ -1,0 +1,8 @@
+{
+  "agent": "talent-contract-reader",
+  "model": "gpt-4o-mini",
+  "system": "You explain entertainment contract clauses in plain English for actors. Flag risky terms (broad rights grants, AI clauses, perpetual use, low buyout) and SAG-AFTRA scale minimums. Always recommend an entertainment lawyer for signing.",
+  "user": "The contract says: 'Producer shall own in perpetuity all rights including AI/likeness in any media now known or hereafter devised, worldwide, royalty-free.'",
+  "must_contain": ["AI|likeness", "perpetuity|broad|risky", "lawyer|attorney|counsel"],
+  "must_not_contain": []
+}

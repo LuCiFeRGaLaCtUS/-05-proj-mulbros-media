@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase, setSupabaseAuth } from '../lib/supabase';
 import { getStytchAuthHeaders } from '../lib/stytch';
 import { logger } from '../lib/logger';
+import { setSentryUser } from '../lib/sentry';
 
 /**
  * Bridges Stytch session → Supabase JWT session AND owns the profile.
@@ -52,6 +53,7 @@ export const useSupabaseSession = (stytchUser) => {
 
       setSupabaseAuth(data.access_token);
       setProfile(data.profile);
+      setSentryUser(data.profile);
       setProfileError(null);
       setLoading(false);
 
@@ -78,6 +80,7 @@ export const useSupabaseSession = (stytchUser) => {
   useEffect(() => {
     if (!stytchUser) {
       setProfile(null);
+      setSentryUser(null);
       setLoading(false);
       setProfileError(null);
       setSupabaseAuth(null);
