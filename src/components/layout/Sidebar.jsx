@@ -316,6 +316,27 @@ export const Sidebar = ({ profile, onClose }) => {
                 onClick={() => go('/agency/commissions')}
                 activeAccent="#8b5cf6"
               />
+              <NavButton
+                label="Contracts"
+                icon={ScrollText}
+                isActive={pathname.startsWith('/agency/contracts')}
+                onClick={() => go('/agency/contracts')}
+                activeAccent="#8b5cf6"
+              />
+              <NavButton
+                label="Comms Relay"
+                icon={MailIcon}
+                isActive={pathname.startsWith('/agency/comms')}
+                onClick={() => go('/agency/comms')}
+                activeAccent="#8b5cf6"
+              />
+              <NavButton
+                label="Admin"
+                icon={Activity}
+                isActive={pathname.startsWith('/agency/admin')}
+                onClick={() => go('/agency/admin')}
+                activeAccent="#8b5cf6"
+              />
             </>
           );
         })()}

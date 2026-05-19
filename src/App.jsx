@@ -42,6 +42,15 @@ const IndustryIntelView   = lazy(() => import('./components/verticals/talent/Ind
 const ContractReaderView  = lazy(() => import('./components/verticals/talent/ContractReaderView').then(m => ({ default: m.ContractReaderView })));
 const IndustryContactsView = lazy(() => import('./components/industry/IndustryContactsView').then(m => ({ default: m.IndustryContactsView })));
 
+// Agency skill pack (Sprint 3)
+const RosterView             = lazy(() => import('./components/verticals/agency/RosterView').then(m => ({ default: m.RosterView })));
+const CommissionsView        = lazy(() => import('./components/verticals/agency/CommissionsView').then(m => ({ default: m.CommissionsView })));
+const SubmissionsView        = lazy(() => import('./components/verticals/agency/SubmissionsView').then(m => ({ default: m.SubmissionsView })));
+const CastingFeedView        = lazy(() => import('./components/verticals/agency/CastingFeedView').then(m => ({ default: m.CastingFeedView })));
+const ContractNegotiatorView = lazy(() => import('./components/verticals/agency/ContractNegotiatorView').then(m => ({ default: m.ContractNegotiatorView })));
+const CommsRelayView         = lazy(() => import('./components/verticals/agency/CommsRelayView').then(m => ({ default: m.CommsRelayView })));
+const AgencyAdminView        = lazy(() => import('./components/verticals/agency/AgencyAdminView').then(m => ({ default: m.AgencyAdminView })));
+
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
@@ -338,11 +347,14 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               <Route path="/talent/intel"      element={<IndustryIntelView />} />
               <Route path="/talent/contracts"  element={<ContractReaderView />} />
 
-              {/* Agency surface — Sprint 3 build target */}
-              <Route path="/agency/roster"      element={<ComingSoon label="Roster Manager — Sprint 3" />} />
-              <Route path="/agency/casting"     element={<ComingSoon label="Casting Feed (Backstage) — Sprint 3" />} />
-              <Route path="/agency/submissions" element={<ComingSoon label="Submission Drafter — Sprint 3" />} />
-              <Route path="/agency/commissions" element={<ComingSoon label="Commission Tracker — Sprint 3" />} />
+              {/* Agency skill pack (Sprint 3 — shipped) */}
+              <Route path="/agency/roster"       element={<RosterView />} />
+              <Route path="/agency/casting"      element={<CastingFeedView />} />
+              <Route path="/agency/submissions"  element={<SubmissionsView />} />
+              <Route path="/agency/commissions"  element={<CommissionsView />} />
+              <Route path="/agency/contracts"    element={<ContractNegotiatorView />} />
+              <Route path="/agency/comms"        element={<CommsRelayView />} />
+              <Route path="/agency/admin"        element={<AgencyAdminView />} />
 
               {/* Shared — Industry Contacts (Sprint 2 shipped) */}
               <Route path="/industry-contacts" element={<IndustryContactsView />} />
