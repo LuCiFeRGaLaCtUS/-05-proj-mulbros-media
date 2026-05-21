@@ -269,6 +269,34 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
         {/* Notification Bell — realtime, Supabase-backed */}
         <NotificationBell />
 
+        {/* Top role badge — always visible so admin status is obvious */}
+        {(() => {
+          const roles = profile?.roles || [];
+          const top = roles.includes('super_admin') ? 'super_admin'
+                    : roles.includes('admin')       ? 'admin'
+                    : roles.includes('agency')      ? 'agency'
+                    : roles.includes('talent')      ? 'talent'
+                    : null;
+          if (!top) return null;
+          const colors = {
+            super_admin: { bg: 'rgba(220,38,38,0.10)',  text: '#991b1b', border: 'rgba(220,38,38,0.22)' },
+            admin:       { bg: 'rgba(245,158,11,0.10)', text: '#92400e', border: 'rgba(245,158,11,0.22)' },
+            agency:      { bg: 'rgba(139,92,246,0.10)', text: '#6d28d9', border: 'rgba(139,92,246,0.22)' },
+            talent:      { bg: 'rgba(14,165,233,0.10)', text: '#0369a1', border: 'rgba(14,165,233,0.22)' },
+          }[top];
+          return (
+            <button
+              onClick={() => top === 'super_admin' || top === 'admin' ? navigate('/admin') : navigate('/settings')}
+              aria-label={`Your role: ${top}`}
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-black tracking-[0.18em] uppercase transition-all"
+              style={{ background: colors.bg, color: colors.text, border: `1px solid ${colors.border}` }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full" style={{ background: colors.text, boxShadow: `0 0 6px ${colors.text}` }} />
+              {top.replace('_', ' ')}
+            </button>
+          );
+        })()}
+
         {/* Profile Avatar */}
         <div className="relative" ref={profileRef}>
           <button
@@ -307,8 +335,22 @@ export const TopBar = ({ onMenuClick, user, signOut, setPreselectedAgent }) => {
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-bold text-zinc-900 truncate">{displayName}</div>
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <span className="chip" style={{ background: 'rgba(245,158,11,0.08)', color: '#92400e', border: '1px solid rgba(245,158,11,0.15)', fontSize: '11px' }}>ADMIN</span>
+                    <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                      {(profile?.roles || []).length === 0 ? (
+                        <span className="chip" style={{ background: 'rgba(0,0,0,0.05)', color: '#52525b', border: '1px solid rgba(0,0,0,0.08)', fontSize: '11px' }}>MEMBER</span>
+                      ) : (
+                        (profile?.roles || []).map(r => (
+                          <span key={r} className="chip"
+                            style={{
+                              background: r === 'super_admin' ? 'rgba(220,38,38,0.10)' : 'rgba(245,158,11,0.08)',
+                              color:      r === 'super_admin' ? '#991b1b' : '#92400e',
+                              border:     r === 'super_admin' ? '1px solid rgba(220,38,38,0.20)' : '1px solid rgba(245,158,11,0.15)',
+                              fontSize: '11px',
+                            }}>
+                            {r.replace('_', ' ').toUpperCase()}
+                          </span>
+                        ))
+                      )}
                     </div>
                   </div>
                 </div>
