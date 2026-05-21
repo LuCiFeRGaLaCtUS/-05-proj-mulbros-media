@@ -1843,6 +1843,79 @@ app.post('/api/integrations/plaid/sync-transactions', requireAuth, integrationLi
   }
 });
 
+// ═════════════════════════════════════════════════════════════════════════════
+// Platform Admin — overview API (super_admin / admin only)
+// Returns aggregate cost spend + user counts + role breakdown for admin UI.
+// All reads go via service JWT to bypass RLS owner_select policies.
+// ═════════════════════════════════════════════════════════════════════════════
+app.get('/api/admin/overview', requireAuth, requireRole(['super_admin', 'admin']), async (_req, res) => {
+  if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) {
+    return res.status(503).json({ error: { message: 'Admin API unavailable — Supabase env missing.' } });
+  }
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) {
+    return res.status(503).json({ error: { message: 'Service JWT mint failed.' } });
+  }
+  const sbHeaders = {
+    apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+    Authorization: `Bearer ${svcJwt}`,
+  };
+  const baseUrl = process.env.VITE_SUPABASE_URL;
+
+  try {
+    // Fire 4 reads in parallel
+    const [profCountR, roleRowsR, costRowsR, recentCostR] = await Promise.all([
+      fetch(`${baseUrl}/rest/v1/profiles?select=id`, { headers: { ...sbHeaders, Prefer: 'count=exact' } }),
+      fetch(`${baseUrl}/rest/v1/user_roles?select=user_id,role`, { headers: sbHeaders }),
+      fetch(`${baseUrl}/rest/v1/cost_ledger?created_at=gte.${new Date(Date.now() - 24 * 3600_000).toISOString()}&select=provider,usd_cost,tokens_in,tokens_out`, { headers: sbHeaders }),
+      fetch(`${baseUrl}/rest/v1/cost_ledger?select=user_id,endpoint,provider,model,usd_cost,created_at&order=created_at.desc&limit=20`, { headers: sbHeaders }),
+    ]);
+
+    const profileCount = Number(profCountR.headers.get('content-range')?.split('/')[1] || '0');
+    const roleRows     = await roleRowsR.json();
+    const costRows     = await costRowsR.json();
+    const recentRows   = await recentCostR.json();
+
+    // Role breakdown
+    const roleBreakdown = roleRows.reduce((acc, r) => {
+      acc[r.role] = (acc[r.role] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Cost today by provider
+    const costByProvider = costRows.reduce((acc, r) => {
+      const p = r.provider;
+      if (!acc[p]) acc[p] = { provider: p, usd: 0, requests: 0, tokens_in: 0, tokens_out: 0 };
+      acc[p].usd        += Number(r.usd_cost || 0);
+      acc[p].tokens_in  += Number(r.tokens_in || 0);
+      acc[p].tokens_out += Number(r.tokens_out || 0);
+      acc[p].requests   += 1;
+      return acc;
+    }, {});
+
+    const totalUsd24h = Object.values(costByProvider).reduce((sum, p) => sum + p.usd, 0);
+
+    return res.json({
+      profile_count:    profileCount,
+      role_breakdown:   roleBreakdown,
+      cost_24h:         {
+        total_usd:    Number(totalUsd24h.toFixed(4)),
+        by_provider:  Object.values(costByProvider).map(p => ({
+          provider:   p.provider,
+          usd:        Number(p.usd.toFixed(4)),
+          requests:   p.requests,
+          tokens_in:  p.tokens_in,
+          tokens_out: p.tokens_out,
+        })),
+      },
+      recent_calls:     recentRows,
+    });
+  } catch (err) {
+    console.error('admin/overview failed:', err.message);
+    return res.status(500).json({ error: { message: 'Admin overview failed.' } });
+  }
+});
+
 // ── Static SPA ────────────────────────────────────────────────────────────────
 app.use(express.static(join(__dirname, 'dist')));
 app.get('*', (req, res) => {

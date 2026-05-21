@@ -357,6 +357,25 @@ export const Sidebar = ({ profile, onClose }) => {
           );
         })()}
 
+        {/* ── Platform Admin (super_admin / admin only) ── */}
+        {(() => {
+          const roles = profile?.roles || [];
+          const isPlatformAdmin = roles.includes('super_admin') || roles.includes('admin');
+          if (!isPlatformAdmin) return null;
+          return (
+            <>
+              <HudDivider label="Platform" />
+              <NavButton
+                label="Platform Admin"
+                icon={Shield}
+                isActive={pathname === '/admin' || pathname.startsWith('/admin/')}
+                onClick={() => go('/admin')}
+                activeAccent="#f59e0b"
+              />
+            </>
+          );
+        })()}
+
         <HudDivider label="Verticals" />
 
         {(() => {

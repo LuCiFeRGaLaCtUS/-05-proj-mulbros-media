@@ -50,6 +50,7 @@ const CastingFeedView        = lazy(() => import('./components/verticals/agency/
 const ContractNegotiatorView = lazy(() => import('./components/verticals/agency/ContractNegotiatorView').then(m => ({ default: m.ContractNegotiatorView })));
 const CommsRelayView         = lazy(() => import('./components/verticals/agency/CommsRelayView').then(m => ({ default: m.CommsRelayView })));
 const AgencyAdminView        = lazy(() => import('./components/verticals/agency/AgencyAdminView').then(m => ({ default: m.AgencyAdminView })));
+const PlatformAdminView      = lazy(() => import('./components/admin/PlatformAdminView').then(m => ({ default: m.PlatformAdminView })));
 
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
@@ -359,8 +360,8 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               {/* Shared — Industry Contacts (Sprint 2 shipped) */}
               <Route path="/industry-contacts" element={<IndustryContactsView />} />
 
-              {/* Future pages */}
-              <Route path="/admin" element={<ComingSoon label="Admin Dashboard — coming Sprint 5" />} />
+              {/* Platform Admin — super_admin/admin only (server enforces via requireRole) */}
+              <Route path="/admin" element={<PlatformAdminView />} />
 
               {/* 404 fallback */}
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
