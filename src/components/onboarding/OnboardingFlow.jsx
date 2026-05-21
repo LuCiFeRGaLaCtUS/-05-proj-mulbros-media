@@ -75,9 +75,11 @@ export const OnboardingFlow = () => {
 
   const handleComplete = async (answers) => {
     setSaving(true);
+    // Preserve existing roles when user didn't pick (e.g. admin re-runs onboarding).
+    const rolesPatch = selectedRoles.length > 0 ? { roles: selectedRoles } : {};
     const { error } = await updateProfile({
       vertical:            selectedVertical,
-      roles:               selectedRoles,
+      ...rolesPatch,
       onboarding_complete: true,
       onboarding_data:     { answers, role_id: selectedRoleId, skipped_questions: false },
     });
@@ -91,9 +93,11 @@ export const OnboardingFlow = () => {
 
   const handleSkip = async () => {
     setSaving(true);
+    // Preserve existing roles when skipping (don't wipe pre-granted admin/super_admin).
+    const rolesPatch = selectedRoles.length > 0 ? { roles: selectedRoles } : {};
     const { error } = await updateProfile({
       vertical:            selectedVertical || null,
-      roles:               selectedRoles,
+      ...rolesPatch,
       onboarding_complete: true,
       onboarding_data:     { answers: allAnswers, role_id: selectedRoleId, skipped_questions: true },
     });

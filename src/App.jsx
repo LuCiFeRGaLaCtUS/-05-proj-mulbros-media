@@ -285,6 +285,8 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
             <Routes>
               {/* Root */}
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              {/* Already-onboarded users hitting /onboarding (e.g. direct URL) bounce to dashboard. */}
+              <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
 
               {/* Core */}
               <Route
