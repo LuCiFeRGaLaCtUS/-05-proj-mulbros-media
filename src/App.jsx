@@ -1,10 +1,10 @@
 import React, { useState, useEffect, lazy, Suspense, createContext, useContext } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Mail } from 'lucide-react';
 import { useStytch } from '@stytch/react';
 import { Layout } from './components/layout/Layout';
-import { FloatingChatbot } from './components/chatbot/FloatingChatbot';
+// FloatingChatbot removed Sprint 6 — merged into ChatBar in ChatShell.
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { useTheme } from './utils/useTheme';
 import { useAuth } from './hooks/useAuth';
@@ -51,6 +51,11 @@ const ContractNegotiatorView = lazy(() => import('./components/verticals/agency/
 const CommsRelayView         = lazy(() => import('./components/verticals/agency/CommsRelayView').then(m => ({ default: m.CommsRelayView })));
 const AgencyAdminView        = lazy(() => import('./components/verticals/agency/AgencyAdminView').then(m => ({ default: m.AgencyAdminView })));
 const PlatformAdminView      = lazy(() => import('./components/admin/PlatformAdminView').then(m => ({ default: m.PlatformAdminView })));
+
+// Sprint 6 chat-first shell
+const ChatShell              = lazy(() => import('./components/shell/ChatShell').then(m => ({ default: m.ChatShell })));
+const ChatHome               = lazy(() => import('./components/shell/ChatHome').then(m => ({ default: m.ChatHome })));
+const ChatThread             = lazy(() => import('./components/shell/ChatThread').then(m => ({ default: m.ChatThread })));
 
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
@@ -272,19 +277,33 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
     navigate,
   };
 
+  // LegacyShell — wraps non-chat routes in the original TopBar + Sidebar layout.
+  // Uses <Outlet /> so React Router can nest the existing routes inside.
+  const LegacyShell = () => (
+    <Layout
+      profile={profile}
+      user={user}
+      signOut={signOut}
+      setPreselectedAgent={setPreselectedAgent}
+    >
+      <Outlet />
+    </Layout>
+  );
+
   return (
     <AppContext.Provider value={contextValue}>
-      <Layout
-        profile={profile}
-        user={user}
-        signOut={signOut}
-        setPreselectedAgent={setPreselectedAgent}
-      >
-        <ErrorBoundary>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              {/* Root */}
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <ErrorBoundary>
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Sprint 6 chat-first shell — / and /chat/:id */}
+            <Route element={<ChatShell />}>
+              <Route path="/"                  element={<ChatHome />} />
+              <Route path="/chat"              element={<ChatThread />} />
+              <Route path="/chat/:sessionId"   element={<ChatThread />} />
+            </Route>
+
+            {/* Everything else stays under the legacy TopBar+Sidebar layout */}
+            <Route element={<LegacyShell />}>
               {/* Already-onboarded users hitting /onboarding (e.g. direct URL) bounce to dashboard. */}
               <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
 
@@ -365,21 +384,13 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               {/* Platform Admin — super_admin/admin only (server enforces via requireRole) */}
               <Route path="/admin" element={<PlatformAdminView />} />
 
-              {/* 404 fallback */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </Suspense>
-        </ErrorBoundary>
+              {/* 404 fallback inside LegacyShell */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
 
-        <FloatingChatbot
-          appState={{
-            activePage:         'router',
-            setActivePage:      legacySetActivePage,
-            preselectedAgent,
-            setPreselectedAgent,
-          }}
-        />
-      </Layout>
       <ThemedToaster />
     </AppContext.Provider>
   );

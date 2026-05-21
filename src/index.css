@@ -46,6 +46,74 @@
   --text-brand:     #d97706;
 }
 
+/* ══════════════════════════════════════════════════════════════════════════════
+   SIMARA THEME — Chat-first FSZT palette (default Sprint 6+)
+   ══════════════════════════════════════════════════════════════════════════════ */
+[data-theme="simara"] {
+  /* Surfaces */
+  --simara-bg:          #F5F6F8;
+  --simara-surface:     #FFFFFF;
+  --simara-beige:       #F3F1EC;
+  --simara-line:        #E0E0E0;
+  --simara-line-2:      #F0F0F0;
+  /* Ink + accents */
+  --simara-ink:         #0B1D3A;
+  --simara-muted:       #888888;
+  --simara-teal:        #0F6E56;
+  --simara-teal-2:      #5DCAA5;
+  --simara-teal-tint:   rgba(15,110,86,0.08);
+  --simara-teal-tint-2: rgba(15,110,86,0.18);
+  --simara-coral:       #E24B4A;
+  --simara-coral-tint:  rgba(226,75,74,0.15);
+  /* Typography */
+  --font-display:       'Inter Tight', 'Inter', system-ui, sans-serif;
+  --font-sans:          'Inter', system-ui, sans-serif;
+  /* Shadows */
+  --simara-shadow-card:  0 1px 3px rgba(11,29,58,0.04);
+  --simara-shadow-hover: 0 8px 24px rgba(11,29,58,0.08);
+  --simara-shadow-heavy: 0 12px 28px rgba(11,29,58,0.14);
+  /* Override global text + bg under Simara */
+  --surface-0:      var(--simara-bg);
+  --surface-1:      var(--simara-surface);
+  --text-primary:   var(--simara-ink);
+  --text-secondary: rgba(11,29,58,0.62);
+  --text-muted:     var(--simara-muted);
+}
+
+[data-theme="simara"] body {
+  background-color: var(--simara-bg);
+  color: var(--simara-ink);
+}
+
+/* Suppress film-grain overlay under Simara theme */
+[data-theme="simara"] body::before { opacity: 0; }
+
+[data-theme="simara"] ::selection      { background: var(--simara-teal-tint-2); color: var(--simara-teal); }
+[data-theme="simara"] ::-moz-selection { background: var(--simara-teal-tint-2); color: var(--simara-teal); }
+
+[data-theme="simara"] :focus-visible {
+  outline: 2px solid var(--simara-teal);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Simara animations */
+@keyframes pulse-teal {
+  0%   { transform: scale(0.85); opacity: 0.45; }
+  60%  { transform: scale(1.35); opacity: 0;    }
+  100% { transform: scale(1.35); opacity: 0;    }
+}
+@keyframes dot-pulse {
+  0%, 100% { transform: scale(1);   opacity: 0.7; }
+  50%      { transform: scale(1.4); opacity: 1;   }
+}
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+[data-theme="simara"] .animate-fade-up { animation: fade-up 0.4s ease-out both; }
+
 html, body, #root {
   height: 100%;
   font-family: var(--font-sans);
