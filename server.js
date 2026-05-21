@@ -343,7 +343,7 @@ app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
       Authorization: `Bearer ${svcJwt}`,
     };
     const pr = await fetch(
-      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=id,email`,
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=*`,
       { headers: sbHeaders },
     );
     const profilesArr = await pr.json();
