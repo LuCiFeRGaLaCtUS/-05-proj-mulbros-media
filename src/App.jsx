@@ -57,6 +57,9 @@ const ChatShell              = lazy(() => import('./components/shell/ChatShell')
 const ChatHome               = lazy(() => import('./components/shell/ChatHome').then(m => ({ default: m.ChatHome })));
 const ChatThread             = lazy(() => import('./components/shell/ChatThread').then(m => ({ default: m.ChatThread })));
 
+// Sprint 6.5 — Integrations
+const IntegrationsView       = lazy(() => import('./components/integrations/IntegrationsView').then(m => ({ default: m.IntegrationsView })));
+
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
@@ -383,6 +386,9 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
 
               {/* Platform Admin — super_admin/admin only (server enforces via requireRole) */}
               <Route path="/admin" element={<PlatformAdminView />} />
+
+              {/* Sprint 6.5 — Integrations */}
+              <Route path="/integrations" element={<IntegrationsView />} />
 
               {/* 404 fallback inside LegacyShell */}
               <Route path="*" element={<Navigate to="/" replace />} />

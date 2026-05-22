@@ -191,7 +191,7 @@ export const ChatShell = () => {
           <NavItem icon={LayoutGrid}    label="Dashboard"    active={isActive('/dashboard')}   onClick={() => navigate('/dashboard')} collapsed={collapsed} />
           <NavItem icon={FolderOpen}    label="Projects"     active={isActive('/crm')}         onClick={() => navigate('/crm')}       collapsed={collapsed} />
           <NavItem icon={Sparkles}      label="Artifacts"    active={isActive('/calendar')}    onClick={() => navigate('/calendar')}  collapsed={collapsed} />
-          <NavItem icon={Plug}          label="Integrations" active={isActive('/settings')}    onClick={() => navigate('/settings')}  collapsed={collapsed} />
+          <NavItem icon={Plug}          label="Integrations" active={isActive('/integrations')} onClick={() => navigate('/integrations')} collapsed={collapsed} />
 
           {/* Talent surface */}
           {isTalent && (
