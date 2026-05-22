@@ -282,31 +282,19 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
 
   // LegacyShell — wraps non-chat routes in the original TopBar + Sidebar layout.
   // Uses <Outlet /> so React Router can nest the existing routes inside.
-  const LegacyShell = () => (
-    <Layout
-      profile={profile}
-      user={user}
-      signOut={signOut}
-      setPreselectedAgent={setPreselectedAgent}
-    >
-      <Outlet />
-    </Layout>
-  );
+  // Old LegacyShell (TopBar + Sidebar) retired Sprint 6.5 — ChatShell wraps
+  // every authenticated route now. Kept in repo only via git history.
 
   return (
     <AppContext.Provider value={contextValue}>
       <ErrorBoundary>
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Sprint 6 chat-first shell — / and /chat/:id */}
+            {/* All authenticated routes live under ChatShell (sidebar + outlet) */}
             <Route element={<ChatShell />}>
               <Route path="/"                  element={<ChatHome />} />
               <Route path="/chat"              element={<ChatThread />} />
               <Route path="/chat/:sessionId"   element={<ChatThread />} />
-            </Route>
-
-            {/* Everything else stays under the legacy TopBar+Sidebar layout */}
-            <Route element={<LegacyShell />}>
               {/* Already-onboarded users hitting /onboarding (e.g. direct URL) bounce to ChatHome. */}
               <Route path="/onboarding" element={<Navigate to="/" replace />} />
 

@@ -311,7 +311,12 @@ export const ChatShell = () => {
       </aside>
 
       {/* ── Main content ───────────────────────────────────────────────── */}
-      <main style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <main style={{
+        flex: 1, minWidth: 0,
+        display: 'flex', flexDirection: 'column',
+        overflow: 'auto',
+        background: '#F5F6F8',
+      }}>
         <Outlet />
       </main>
     </div>
