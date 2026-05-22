@@ -5,3 +5,5 @@ dist
 *.log
 .env
 .claude/
+*.git-commit-msg.txt
+.git-commit-msg.txt
