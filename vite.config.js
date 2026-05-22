@@ -450,7 +450,11 @@ export default defineConfig(({ mode }) => {
       }
     },
 
-    base: './',
+    // Absolute base — SPA with deep routes (/vertical/filmmaker, /chat/:id, etc.)
+    // resolved asset URLs against current path with `./`, hitting SPA catchall
+    // and returning index.html with text/html for .js files. Use '/' so every
+    // asset URL is anchored to root.
+    base: '/',
 
     build: {
       outDir:               'dist',
