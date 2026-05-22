@@ -40,10 +40,10 @@ export const WelcomeMark = ({ onGoToAgents }) => {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
-          MulBros Media
+          AI Operator
         </h2>
         <p className="text-zinc-600 text-sm leading-relaxed max-w-xs">
-          Your AI-powered Hollywood OS is live.<br />
+          Your AI Operator is live.<br />
           <span className="text-amber-600 font-semibold">{activeCount} agents</span> active ·{' '}
           <span className="text-blue-600 font-semibold">$214K</span> pipeline ·{' '}
           <span className="text-emerald-600 font-semibold">3 verticals</span>

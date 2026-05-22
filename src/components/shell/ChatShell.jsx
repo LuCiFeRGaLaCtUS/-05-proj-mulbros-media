@@ -128,15 +128,25 @@ export const ChatShell = () => {
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               <MOAvatar size={28} state="idle" />
-              <span style={{
-                fontWeight:   700,
-                fontSize:     14,
-                color:        '#0B1D3A',
-                fontFamily:   "'Inter Tight', sans-serif",
-                letterSpacing: '-0.01em',
-              }}>
-                {persona.name || 'MO'}
-              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.05 }}>
+                <span style={{
+                  fontWeight:   700,
+                  fontSize:     14,
+                  color:        '#0B1D3A',
+                  fontFamily:   "'Inter Tight', sans-serif",
+                  letterSpacing: '-0.01em',
+                }}>
+                  {persona.name || 'MO'}
+                </span>
+                <span style={{
+                  fontSize: 9, color: '#0F6E56',
+                  textTransform: 'uppercase', letterSpacing: '0.18em',
+                  fontWeight: 500, fontFamily: 'DM Mono, monospace',
+                  marginTop: 1,
+                }}>
+                  AI Operator
+                </span>
+              </div>
             </div>
           )}
           <button

@@ -1,0 +1,33 @@
+feat(sprint-6.5): Phase A.6.1 — FSZT v2 login screen + AI Operator rebrand
+
+New LoginPage matches FSZT Remix v2 auth-screen layout:
+- Split layout: navy gradient brand panel (left, hidden on mobile) +
+  white form panel (520px, right)
+- Channel toggle: Email | Phone tabs in form header
+- Email tab: Stytch passwords backend (signin + signup + forgot password
+  reset link). Identical flows to previous LoginPage, restyled.
+- Phone tab: Stytch SMS OTP (otps.sms.loginOrCreate +
+  otps.authenticate). Country picker, formatted phone input, 6-digit
+  OTP grid (50x60 cells, DM Mono), resend timer.
+- Brand panel: AI Operator headline + description + 3 stats from BRAND
+  constant. Ambient teal orbs + faint white grid.
+- BrandLogo: node-network SVG mark (4 outer dots + center) with
+  navy/teal palette.
+- ResetPasswordPage preserved (App.jsx imports it).
+
+Brand rename:
+- src/lib/brand.js — single source of truth for product name + tagline +
+  description + stats
+- index.html title: "Mulbros Marketing OS" -> "AI Operator"
+- RolePicker sidebar header: "MulBros Media OS" -> "AI Operator"
+- WelcomeMark dashboard greeting: "MulBros Media" -> "AI Operator"
+- ChatShell sidebar: added "AI Operator" eyebrow under MO avatar
+
+Untouched per scope:
+- Agent system prompts in src/config/agents.js (21 prompts reference
+  MulBros — that's the company brand, not the product)
+- PDF export templates (film incentive report header)
+- Individual agent system prompts in vertical views
+
+Build green. 16/16 unit tests pass. Onboarding routes still wired —
+arghya (onboarding_complete=true) lands at / ChatHome as before.

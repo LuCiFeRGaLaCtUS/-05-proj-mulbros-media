@@ -70,7 +70,7 @@ export const RolePicker = ({ onSelect, onSkip }) => {
           >
             M
           </div>
-          <span className="text-zinc-900 font-bold text-sm tracking-tight">MulBros Media OS</span>
+          <span className="text-zinc-900 font-bold text-sm tracking-tight">AI Operator</span>
         </div>
 
         <h1 className="text-3xl md:text-4xl font-bold text-zinc-900 mb-3" style={{ fontFamily: 'var(--font-display)' }}>
