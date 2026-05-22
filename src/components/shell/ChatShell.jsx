@@ -188,7 +188,7 @@ export const ChatShell = () => {
         <div style={{ flex: 1, overflowY: 'auto', padding: collapsed ? '0 8px' : '0 8px' }}>
           {/* Primary nav */}
           <NavItem icon={MessageSquare} label="Chats"        active={pathname === '/' || pathname.startsWith('/chat')} onClick={() => navigate('/')}         collapsed={collapsed} />
-          <NavItem icon={LayoutGrid}    label="Dashboard"    active={isActive('/dashboard')}   onClick={() => navigate('/dashboard')} collapsed={collapsed} />
+          {/* Dashboard nav points at ChatHome (/) — legacy Dashboard now at /legacy-dashboard */}
           <NavItem icon={FolderOpen}    label="Projects"     active={isActive('/crm')}         onClick={() => navigate('/crm')}       collapsed={collapsed} />
           <NavItem icon={Sparkles}      label="Artifacts"    active={isActive('/calendar')}    onClick={() => navigate('/calendar')}  collapsed={collapsed} />
           <NavItem icon={Plug}          label="Integrations" active={isActive('/integrations')} onClick={() => navigate('/integrations')} collapsed={collapsed} />

@@ -307,12 +307,17 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
 
             {/* Everything else stays under the legacy TopBar+Sidebar layout */}
             <Route element={<LegacyShell />}>
-              {/* Already-onboarded users hitting /onboarding (e.g. direct URL) bounce to dashboard. */}
-              <Route path="/onboarding" element={<Navigate to="/dashboard" replace />} />
+              {/* Already-onboarded users hitting /onboarding (e.g. direct URL) bounce to ChatHome. */}
+              <Route path="/onboarding" element={<Navigate to="/" replace />} />
 
-              {/* Core */}
+              {/* /dashboard legacy URL — bounce to chat-first ChatHome.
+                  The old Dashboard component is dormant; reintroduce under
+                  a different path (/legacy-dashboard) if specifically needed. */}
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+
+              {/* Legacy Dashboard kept at /legacy-dashboard for emergency access. */}
               <Route
-                path="/dashboard"
+                path="/legacy-dashboard"
                 element={
                   <Dashboard
                     user={user}
