@@ -8,6 +8,10 @@ import { useCommissions } from '../../hooks/useCommissions';
 import { useChatSessions } from '../../hooks/useChatSessions';
 import { MOAvatar } from './MOAvatar';
 import { ChatBar } from './ChatBar';
+import { ObservationBar } from './cards/ObservationBar';
+import { FunnelCard } from './cards/FunnelCard';
+import { ChurnCard } from './cards/ChurnCard';
+import { getDashboardDay } from '../../lib/dashboardDay';
 
 const usd = (n) => `$${Number(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
 
@@ -100,6 +104,7 @@ export const ChatHome = () => {
   const roles = profile?.roles || [];
   const isTalent = roles.includes('talent') || roles.includes('admin') || roles.includes('super_admin');
   const isAgency = roles.includes('agency') || roles.includes('admin') || roles.includes('super_admin');
+  const day = getDashboardDay(profile);
 
   return (
     <div style={{
@@ -108,36 +113,24 @@ export const ChatHome = () => {
       overflow: 'auto',
       background: '#F5F6F8',
     }}>
-      {/* Observation bar */}
-      <div style={{
-        height: 48,
-        padding: '0 24px',
-        borderBottom: '1px solid #E0E0E0',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: '#FFFFFF',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <MOAvatar size={20} state="idle" />
-          <span style={{ fontSize: 12, color: '#0B1D3A', fontWeight: 500 }}>
-            {personaName} is observing
-          </span>
-          <span style={{ fontSize: 11, color: '#888', fontFamily: 'DM Mono, monospace', letterSpacing: '0.1em' }}>
-            · READY
-          </span>
-        </div>
-      </div>
+      {/* (Top status strip replaced by ObservationBar below — see Hero) */}
 
       {/* Hero */}
       <div style={{
         flex: 1, minHeight: 0,
         display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        padding: '40px 24px',
-        maxWidth: 880,
+        padding: '24px 24px 40px',
+        maxWidth: 980,
         margin: '0 auto',
         width: '100%',
       }}>
+        <ObservationBar />
+
+        <div style={{
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', textAlign: 'center',
+          paddingTop: 12,
+        }}>
         <MOAvatar size={96} state="idle" />
         <h1 style={{
           fontFamily: "'Inter Tight', sans-serif",
@@ -225,6 +218,18 @@ export const ChatHome = () => {
           {!isTalent && !isAgency && (
             <MiniStat label="Welcome" value="MO" icon={Sparkles} accent="#0F6E56" />
           )}
+        </div>
+        </div>{/* /centered hero block */}
+
+        {/* Dashboard cards row — day-locked progression */}
+        <div style={{
+          marginTop: 28,
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: 16,
+        }}>
+          <FunnelCard locked={day < 2} />
+          <ChurnCard  locked={day < 3} />
         </div>
       </div>
     </div>
