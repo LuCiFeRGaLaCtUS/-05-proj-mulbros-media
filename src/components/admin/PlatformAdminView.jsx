@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { Shield, DollarSign, Users, Activity, Loader2, RefreshCw, AlertCircle } from 'lucide-react';
+import { Shield, DollarSign, Users, Activity, Loader2, RefreshCw, AlertCircle, Check, X, UserCheck } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { getStytchAuthHeaders } from '../../lib/stytch';
 import { useAppContext } from '../../App';
 
@@ -65,6 +66,43 @@ export const PlatformAdminView = () => {
   const roles = profile?.roles || [];
   const isSuper = roles.includes('super_admin');
 
+  // ── Pending admin requests (super_admin only) ──
+  const [requests, setRequests] = useState([]);
+  const [reqLoading, setReqLoading] = useState(false);
+  const [actingId, setActingId] = useState(null);
+
+  const loadRequests = useCallback(async () => {
+    if (!isSuper) return;
+    setReqLoading(true);
+    try {
+      const r = await fetch('/api/admin/requests', { headers: { ...getStytchAuthHeaders() } });
+      if (r.ok) {
+        const body = await r.json();
+        setRequests(body.requests || []);
+      }
+    } catch { /* noop */ }
+    setReqLoading(false);
+  }, [isSuper]);
+
+  useEffect(() => { loadRequests(); }, [loadRequests]);
+
+  const review = async (profileId, action) => {
+    setActingId(profileId);
+    try {
+      const r = await fetch(`/api/admin/requests/${profileId}/${action}`, {
+        method: 'POST',
+        headers: { ...getStytchAuthHeaders() },
+      });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      toast.success(action === 'approve' ? 'Admin access granted.' : 'Request denied.');
+      setRequests(prev => prev.filter(req => req.id !== profileId));
+      load(); // refresh overview counts
+    } catch (err) {
+      toast.error(`Could not ${action}: ${err.message}`);
+    }
+    setActingId(null);
+  };
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -97,6 +135,59 @@ export const PlatformAdminView = () => {
       {error && (
         <div className="flex items-center gap-2 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-sm text-rose-700">
           <AlertCircle size={16} /> {error}
+        </div>
+      )}
+
+      {/* Pending Admin Requests — super_admin only */}
+      {isSuper && (
+        <div className="bg-white rounded-2xl p-5" style={CARD_STYLE}>
+          <div className="flex items-center gap-2 mb-3">
+            <UserCheck size={16} className="text-amber-600" />
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500" style={{ fontFamily: 'var(--font-mono)' }}>
+              Pending Admin Requests
+            </span>
+            {requests.length > 0 && (
+              <span className="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full">
+                {requests.length}
+              </span>
+            )}
+          </div>
+          {reqLoading ? (
+            <div className="text-sm text-zinc-400 flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Loading…</div>
+          ) : requests.length === 0 ? (
+            <div className="text-sm text-zinc-400">No pending requests.</div>
+          ) : (
+            <div className="space-y-2">
+              {requests.map(req => (
+                <div key={req.id} className="flex items-center justify-between gap-3 py-2 border-b border-zinc-50 last:border-0">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-zinc-900 truncate">{req.display_name || req.email}</div>
+                    <div className="text-xs text-zinc-500 truncate">
+                      {req.email}{req.vertical ? ` · ${req.vertical}` : ''}
+                      {req.admin_requested_at ? ` · ${new Date(req.admin_requested_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => review(req.id, 'approve')}
+                      disabled={actingId === req.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-semibold hover:bg-emerald-600 disabled:opacity-50"
+                    >
+                      {actingId === req.id ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => review(req.id, 'deny')}
+                      disabled={actingId === req.id}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-zinc-200 text-zinc-600 text-xs font-semibold hover:border-rose-300 hover:text-rose-600 disabled:opacity-50"
+                    >
+                      <X size={12} /> Deny
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { getStytchAuthHeaders } from '../../lib/stytch';
 import {
   Plus, MessageSquare, LayoutGrid, FolderOpen, Sparkles, Plug,
   Settings as SettingsIcon, LogOut, ChevronLeft, ChevronRight,
@@ -79,11 +80,24 @@ export const ChatShell = () => {
   const { sessions, createSession, deleteSession } = useChatSessions(profile?.id);
 
   const [collapsed, setCollapsed] = useState(false);
+  const [pendingAdmin, setPendingAdmin] = useState(0);
 
   const roles      = profile?.roles || [];
   const isTalent   = roles.includes('talent') || roles.includes('admin') || roles.includes('super_admin');
   const isAgency   = roles.includes('agency') || roles.includes('admin') || roles.includes('super_admin');
   const isPlatformAdmin = roles.includes('admin') || roles.includes('super_admin');
+  const isSuper    = roles.includes('super_admin');
+
+  // Pending admin-request count for the sidebar badge (super_admin only).
+  useEffect(() => {
+    if (!isSuper) return;
+    let cancelled = false;
+    fetch('/api/admin/overview', { headers: { ...getStytchAuthHeaders() } })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (!cancelled && d) setPendingAdmin(d.pending_admin_requests || 0); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [isSuper, location.pathname]);
 
   const pathname = location.pathname;
   const isActive = (path) => pathname === path || pathname.startsWith(path + '/');
@@ -253,7 +267,25 @@ export const ChatShell = () => {
           {isPlatformAdmin && (
             <>
               <SectionLabel collapsed={collapsed}>Platform</SectionLabel>
-              <NavItem icon={Shield} label="Platform Admin" active={isActive('/admin')} onClick={() => navigate('/admin')} collapsed={collapsed} />
+              <div style={{ position: 'relative' }}>
+                <NavItem icon={Shield} label="Platform Admin" active={isActive('/admin')} onClick={() => navigate('/admin')} collapsed={collapsed} />
+                {pendingAdmin > 0 && (
+                  <span style={{
+                    position: 'absolute',
+                    top: collapsed ? 4 : '50%',
+                    right: collapsed ? 4 : 12,
+                    transform: collapsed ? 'none' : 'translateY(-50%)',
+                    minWidth: 18, height: 18, padding: '0 5px',
+                    borderRadius: 999, background: '#E24B4A', color: '#fff',
+                    fontSize: 10, fontWeight: 700,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'DM Mono, monospace',
+                    pointerEvents: 'none',
+                  }}>
+                    {pendingAdmin}
+                  </span>
+                )}
+              </div>
             </>
           )}
 

@@ -6,8 +6,77 @@ import { TeamManager } from './TeamManager';
 import { ProfileTab } from './ProfileTab';
 import { useUserSettings } from '../../hooks/useUserSettings';
 import { useAppContext } from '../../App';
+import { getStytchAuthHeaders } from '../../lib/stytch';
+import { Loader2, ShieldCheck } from 'lucide-react';
 
-const tabs = ['Profile', 'General', 'API Keys', 'Integrations', 'Team', 'Notifications'];
+const tabs = ['Profile', 'General', 'API Keys', 'Integrations', 'Team', 'Notifications', 'Access'];
+
+// ── Admin access request section ──────────────────────────────────────────────
+const AccessTab = ({ profile }) => {
+  const roles = profile?.roles || [];
+  const isAdmin = roles.includes('admin') || roles.includes('super_admin');
+  const [status, setStatus] = useState(profile?.admin_request_status || 'none');
+  const [busy, setBusy] = useState(false);
+
+  const request = async () => {
+    setBusy(true);
+    try {
+      const r = await fetch('/api/admin/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getStytchAuthHeaders() },
+      });
+      const body = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(body?.error?.message || `HTTP ${r.status}`);
+      setStatus(body.status || 'pending');
+      toast.success(body.status === 'approved' ? 'You already have admin access.' : 'Request submitted for review.');
+    } catch (err) {
+      toast.error(`Could not submit: ${err.message}`);
+    }
+    setBusy(false);
+  };
+
+  return (
+    <div className="bg-white rounded-2xl p-6 border border-zinc-200 max-w-xl">
+      <div className="flex items-center gap-2 mb-2">
+        <ShieldCheck size={18} className="text-amber-600" />
+        <h3 className="text-base font-bold text-zinc-900">Admin Access</h3>
+      </div>
+
+      {isAdmin ? (
+        <p className="text-sm text-emerald-600 font-medium">You have admin access.</p>
+      ) : status === 'pending' ? (
+        <div className="space-y-2">
+          <p className="text-sm text-zinc-500">Your admin request is pending review by a super admin.</p>
+          <span className="inline-block text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 px-3 py-1 rounded-full">
+            Pending review
+          </span>
+        </div>
+      ) : status === 'approved' ? (
+        <p className="text-sm text-emerald-600 font-medium">Approved — sign out and back in to load admin tools.</p>
+      ) : status === 'denied' ? (
+        <div className="space-y-3">
+          <p className="text-sm text-zinc-500">Your previous request was denied. You can request again.</p>
+          <button onClick={request} disabled={busy}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 disabled:opacity-50">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+            Request admin access again
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-zinc-500">
+            Request elevated admin access. A super admin reviews and approves. You keep your normal access while pending.
+          </p>
+          <button onClick={request} disabled={busy}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-amber-500 text-white text-sm font-semibold hover:bg-amber-600 disabled:opacity-50">
+            {busy ? <Loader2 size={14} className="animate-spin" /> : <ShieldCheck size={14} />}
+            Request admin access
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const Settings = ({ user }) => {
   const { profile } = useAppContext();
@@ -79,6 +148,7 @@ export const Settings = ({ user }) => {
       {activeTab === 'api-keys'      && <APIKeyManager />}
       {activeTab === 'integrations'  && <IntegrationToggles />}
       {activeTab === 'team'          && <TeamManager />}
+      {activeTab === 'access'        && <AccessTab profile={profile} />}
 
       {/* Notifications */}
       {activeTab === 'notifications' && (
@@ -116,7 +186,7 @@ export const Settings = ({ user }) => {
         </div>
       )}
 
-      {activeTab !== 'profile' && activeTab !== 'api-keys' && activeTab !== 'integrations' && activeTab !== 'team' && (
+      {activeTab !== 'profile' && activeTab !== 'api-keys' && activeTab !== 'integrations' && activeTab !== 'team' && activeTab !== 'access' && (
         <div className="flex justify-end">
           <button
             onClick={handleSave}

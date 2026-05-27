@@ -1863,15 +1863,17 @@ app.get('/api/admin/overview', requireAuth, requireRole(['super_admin', 'admin']
   const baseUrl = process.env.VITE_SUPABASE_URL;
 
   try {
-    // Fire 4 reads in parallel
-    const [profCountR, roleRowsR, costRowsR, recentCostR] = await Promise.all([
+    // Fire 5 reads in parallel
+    const [profCountR, roleRowsR, costRowsR, recentCostR, pendingR] = await Promise.all([
       fetch(`${baseUrl}/rest/v1/profiles?select=id`, { headers: { ...sbHeaders, Prefer: 'count=exact' } }),
       fetch(`${baseUrl}/rest/v1/user_roles?select=user_id,role`, { headers: sbHeaders }),
       fetch(`${baseUrl}/rest/v1/cost_ledger?created_at=gte.${new Date(Date.now() - 24 * 3600_000).toISOString()}&select=provider,usd_cost,tokens_in,tokens_out`, { headers: sbHeaders }),
       fetch(`${baseUrl}/rest/v1/cost_ledger?select=user_id,endpoint,provider,model,usd_cost,created_at&order=created_at.desc&limit=20`, { headers: sbHeaders }),
+      fetch(`${baseUrl}/rest/v1/profiles?admin_request_status=eq.pending&select=id`, { headers: { ...sbHeaders, Prefer: 'count=exact' } }),
     ]);
 
     const profileCount = Number(profCountR.headers.get('content-range')?.split('/')[1] || '0');
+    const pendingCount = Number(pendingR.headers.get('content-range')?.split('/')[1] || '0');
     const roleRows     = await roleRowsR.json();
     const costRows     = await costRowsR.json();
     const recentRows   = await recentCostR.json();
@@ -1909,10 +1911,135 @@ app.get('/api/admin/overview', requireAuth, requireRole(['super_admin', 'admin']
         })),
       },
       recent_calls:     recentRows,
+      pending_admin_requests: pendingCount,
     });
   } catch (err) {
     console.error('admin/overview failed:', err.message);
     return res.status(500).json({ error: { message: 'Admin overview failed.' } });
+  }
+});
+
+// ── Admin access request flow ─────────────────────────────────────────────────
+// A signed-in user requests admin from Settings. super_admin reviews + approves.
+// Uses service JWT for all writes (bypasses RLS cleanly).
+
+// User submits a request → set their own profile.admin_request_status='pending'.
+app.post('/api/admin/request', requireAuth, async (req, res) => {
+  if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) {
+    return res.status(503).json({ error: { message: 'Admin API unavailable.' } });
+  }
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return res.status(503).json({ error: { message: 'Service JWT mint failed.' } });
+  const sbHeaders = { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` };
+  const baseUrl   = process.env.VITE_SUPABASE_URL;
+
+  try {
+    const profileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+    if (!profileId) return res.status(403).json({ error: { message: 'No profile.' } });
+
+    // Already admin? short-circuit
+    const rr = await fetch(`${baseUrl}/rest/v1/user_roles?user_id=eq.${profileId}&select=role`, { headers: sbHeaders });
+    const roleRows = await rr.json();
+    if (['admin', 'super_admin'].includes(roleRows[0]?.role)) {
+      return res.json({ status: 'approved', message: 'You already have admin access.' });
+    }
+
+    const patch = await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ admin_request_status: 'pending', admin_requested_at: new Date().toISOString() }),
+    });
+    if (!patch.ok) {
+      console.error('admin/request patch failed:', patch.status);
+      return res.status(500).json({ error: { message: 'Could not submit request.' } });
+    }
+    return res.json({ status: 'pending' });
+  } catch (err) {
+    console.error('admin/request failed:', err.message);
+    return res.status(500).json({ error: { message: 'Request failed.' } });
+  }
+});
+
+// super_admin lists pending requests.
+app.get('/api/admin/requests', requireAuth, requireRole(['super_admin']), async (_req, res) => {
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return res.status(503).json({ error: { message: 'Service JWT mint failed.' } });
+  const sbHeaders = { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` };
+  const baseUrl   = process.env.VITE_SUPABASE_URL;
+  try {
+    const r = await fetch(
+      `${baseUrl}/rest/v1/profiles?admin_request_status=eq.pending&select=id,email,display_name,vertical,admin_requested_at&order=admin_requested_at.asc`,
+      { headers: sbHeaders },
+    );
+    const rows = await r.json();
+    return res.json({ requests: Array.isArray(rows) ? rows : [] });
+  } catch (err) {
+    console.error('admin/requests failed:', err.message);
+    return res.status(500).json({ error: { message: 'Could not load requests.' } });
+  }
+});
+
+// super_admin approves → grant admin role + flag approved.
+app.post('/api/admin/requests/:profileId/approve', requireAuth, requireRole(['super_admin']), async (req, res) => {
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return res.status(503).json({ error: { message: 'Service JWT mint failed.' } });
+  const sbHeaders = { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` };
+  const baseUrl   = process.env.VITE_SUPABASE_URL;
+  const { profileId } = req.params;
+
+  try {
+    // 1. Upsert user_roles → admin (idempotent on user_id PK)
+    await fetch(`${baseUrl}/rest/v1/user_roles?user_id=eq.${profileId}`, {
+      method: 'DELETE', headers: sbHeaders,
+    });
+    await fetch(`${baseUrl}/rest/v1/user_roles`, {
+      method: 'POST',
+      headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({ user_id: profileId, role: 'admin' }),
+    });
+
+    // 2. Append 'admin' to profiles.roles + flag approved
+    const cur = await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}&select=roles`, { headers: sbHeaders });
+    const curRows = await cur.json();
+    const roles = new Set([...(curRows[0]?.roles || []), 'admin']);
+    await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        roles: [...roles],
+        admin_request_status: 'approved',
+        admin_reviewed_at: new Date().toISOString(),
+        admin_reviewed_by: req.profileId || null,
+      }),
+    });
+    return res.json({ status: 'approved' });
+  } catch (err) {
+    console.error('admin/approve failed:', err.message);
+    return res.status(500).json({ error: { message: 'Approve failed.' } });
+  }
+});
+
+// super_admin denies.
+app.post('/api/admin/requests/:profileId/deny', requireAuth, requireRole(['super_admin']), async (req, res) => {
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return res.status(503).json({ error: { message: 'Service JWT mint failed.' } });
+  const sbHeaders = { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` };
+  const baseUrl   = process.env.VITE_SUPABASE_URL;
+  const { profileId } = req.params;
+  try {
+    await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+      method: 'PATCH',
+      headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
+      body: JSON.stringify({
+        admin_request_status: 'denied',
+        admin_reviewed_at: new Date().toISOString(),
+        admin_reviewed_by: req.profileId || null,
+      }),
+    });
+    return res.json({ status: 'denied' });
+  } catch (err) {
+    console.error('admin/deny failed:', err.message);
+    return res.status(500).json({ error: { message: 'Deny failed.' } });
   }
 });
 
