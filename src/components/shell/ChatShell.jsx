@@ -373,7 +373,21 @@ export const ChatShell = () => {
         overflow: 'auto',
         background: '#F5F6F8',
       }}>
-        <Outlet />
+        {/* Chat-native views (ChatHome, ChatThread, Integrations) own their
+            padding/layout — render full-bleed. Legacy views (verticals,
+            talent/agency, settings, admin) lost the old Layout p-6 wrapper,
+            so pad them here to avoid jamming against the top/left edge. */}
+        {(() => {
+          const fullBleed =
+            pathname === '/' ||
+            pathname.startsWith('/chat') ||
+            pathname.startsWith('/integrations');
+          return (
+            <div style={{ minHeight: '100%', padding: fullBleed ? 0 : '24px 28px' }}>
+              <Outlet />
+            </div>
+          );
+        })()}
       </main>
     </div>
   );
