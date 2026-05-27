@@ -14,8 +14,12 @@ import {
 import { useAppContext } from '../../App';
 import { useCrewApplications, CREW_STAGES } from '../../hooks/useCrewApplications';
 import {
-  crewJobsMock, CREW_ROLES, UNION_STATUSES, PROJECT_TYPES, BUDGET_TIERS,
+  CREW_ROLES, UNION_STATUSES, PROJECT_TYPES, BUDGET_TIERS,
 } from '../../config/crewJobsMock';
+
+// Live job-board feed (Backstage / ProductionHUB) not yet connected.
+// Render honest empty state — no fabricated listings.
+const crewJobsMock = [];
 import { callAIFast } from '../../utils/ai';
 import { getAgentById } from '../../config/agents';
 import { TiltCard } from '../ui/TiltCard';

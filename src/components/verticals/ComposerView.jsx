@@ -14,9 +14,12 @@ import {
 import { useAppContext } from '../../App';
 import { useComposerProjects } from '../../hooks/useComposerProjects';
 import {
-  composerOpportunitiesMock, COMPOSER_GENRES, COMPOSER_PLATFORMS, COMPOSER_BUDGETS,
+  COMPOSER_GENRES, COMPOSER_PLATFORMS, COMPOSER_BUDGETS,
   COMPOSER_PROJECT_STAGES,
 } from '../../config/composerOpportunitiesMock';
+
+// Live sync-opportunity feed not yet connected — honest empty state, no mock.
+const composerOpportunitiesMock = [];
 import { callAIFast } from '../../utils/ai';
 import { getAgentById } from '../../config/agents';
 import { TiltCard } from '../ui/TiltCard';

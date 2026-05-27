@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { activities, campaigns } from '../../config/mockData';
 import { Film, BarChart2, CheckCircle2, Clock } from 'lucide-react';
 import { TiltCard } from '../ui/TiltCard';
 
@@ -11,50 +10,10 @@ const EmeraldBg = () => (
   </>
 );
 
-const activeProductions = [
-  {
-    title: 'Saltwater',
-    director: 'Nina Choi',
-    budget: '$900K',
-    country: 'Massachusetts, US',
-    phase: 'In Production',
-    phaseColor: 'amber',
-    budgetSpent: 62,
-    qualifiedSpend: 74,
-    milestone: 'Week 3 of principal photography',
-    cashFlow: 'On track',
-    qualifiedAmount: '$418K of $560K',
-    daysLeft: 18,
-  },
-  {
-    title: 'Echo Valley',
-    director: 'Tom Brennan',
-    budget: '$2.8M',
-    country: 'New Mexico, US',
-    phase: 'Pre-Production',
-    phaseColor: 'blue',
-    budgetSpent: 12,
-    qualifiedSpend: 18,
-    milestone: 'Location scouts complete, crew locked',
-    cashFlow: 'On track',
-    qualifiedAmount: '$84K of $1.68M',
-    daysLeft: 45,
-  },
-];
-
-const distributed = [
-  {
-    title: 'Last County',
-    director: 'Barret Mulholland',
-    budget: '$1.2M',
-    platforms: ['Hulu', 'Prime', 'YouTube'],
-    streams: '142,847',
-    streamGrowth: '+12.4%',
-    festivalNote: 'Blood in the Snow Film Festival — premiered 2024',
-    pressNote: '"A triumph of genre-blending brilliance" — Film Threat',
-    taxStatus: 'Tax rebate filed · Saved $180K',
-  },
-];
+// Real data sources for production tracking/distribution are not yet wired.
+// Render honest empty states instead of fabricated productions.
+const activeProductions = [];
+const distributed = [];
 
 const phaseColorMap = {
   amber:   { badge: 'bg-amber-50 text-amber-700 border border-amber-200', bar: 'bg-amber-500' },
@@ -63,13 +22,13 @@ const phaseColorMap = {
 };
 
 const kpis = [
-  { label: 'Active Productions',      value: '2',      sub: 'Currently tracking'           },
-  { label: 'Total Budget Tracked',    value: '$3.7M',  sub: 'Saltwater + Echo Valley'      },
-  { label: 'Qualified Spend to Date', value: '$502K',  sub: 'Incentive-eligible'            },
-  { label: 'Films Distributed',       value: '1',      sub: 'Last County — 142K streams'   },
+  { label: 'Active Productions',      value: '—', sub: 'None tracked yet'      },
+  { label: 'Total Budget Tracked',    value: '—', sub: 'No productions'        },
+  { label: 'Qualified Spend to Date', value: '—', sub: 'No spend logged'       },
+  { label: 'Films Distributed',       value: '—', sub: 'None distributed yet'  },
 ];
 
-const productionActivities = activities.filter(a => ['film', 'financing'].includes(a.vertical));
+const productionActivities = [];
 
 const ProgressBar = ({ pct, color = 'bg-emerald-500' }) => (
   <div className="w-full bg-zinc-100 rounded-full h-1.5">
@@ -223,6 +182,13 @@ export const ProductionsView = () => {
       {/* ── Distribution ─────────────────────────────────────────────────────── */}
       {activeTab === 'Distribution' && (
         <div className="space-y-4">
+          {distributed.length === 0 && (
+            <div className="bg-white rounded-2xl p-8 text-center border border-zinc-200">
+              <Film size={28} className="text-zinc-300 mx-auto mb-2" />
+              <div className="text-sm font-semibold text-zinc-700">No distributed films yet</div>
+              <div className="text-xs text-zinc-500 mt-1">Distribution metrics appear here once a film is released and streaming analytics are connected.</div>
+            </div>
+          )}
           {distributed.map(f => (
             <div key={f.title} className="relative tile-pop bg-white rounded-2xl p-6 overflow-hidden"
               style={{ border: '1px solid rgba(16,185,129,0.12)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
@@ -296,6 +262,9 @@ export const ProductionsView = () => {
               <h3 className="text-sm font-semibold text-zinc-900">Recent Agent Activity</h3>
             </div>
             <div className="divide-y divide-zinc-100">
+              {productionActivities.length === 0 && (
+                <div className="px-5 py-8 text-center text-sm text-zinc-500">No agent activity yet.</div>
+              )}
               {productionActivities.map((a, i) => (
                 <div key={i} className="flex gap-3 px-5 py-3 hover:bg-zinc-50 transition-colors">
                   <span className="flex-shrink-0 mt-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />

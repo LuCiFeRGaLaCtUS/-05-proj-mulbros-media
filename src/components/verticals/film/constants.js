@@ -1,8 +1,6 @@
 // Shared constants + mock data for the Film Financing vertical.
 // Extracted from FilmFinancingView.jsx for maintainability.
 
-import { activities } from '../../../config/mockData';
-
 export const STAGES = [
   { key: 'discovery',   label: 'Discovery',   color: 'zinc' },
   { key: 'contacted',   label: 'Contacted',   color: 'blue' },
@@ -223,4 +221,5 @@ export const MOCK_BENCHMARK = {
   nextStep: 'Book a 30-min consultation to get your full qualified-spend analysis and state filing roadmap.'
 };
 
-export const financingActivities = activities.filter(a => a.vertical === 'financing');
+// Real agent-activity log not yet wired — render empty state, no mock.
+export const financingActivities = [];

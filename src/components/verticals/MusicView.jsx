@@ -11,7 +11,6 @@ import {
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
-import { activities } from '../../config/mockData';
 import { useMusicPipeline } from '../../hooks/useMusicPipeline';
 import { useSpotifyIntegration } from '../../hooks/useSpotifyIntegration';
 import { useAppContext } from '../../App';
@@ -29,7 +28,8 @@ const AmberBg = () => (
   </>
 );
 
-const musicActivities = activities.filter(a => ['music', 'composer'].includes(a.vertical));
+// Real agent-activity log not yet wired — empty until live, no mock.
+const musicActivities = [];
 
 // ── Goal → recommended tools (per spec) ──────────────────────────────────────
 const TOOL_BY_GOAL = {
