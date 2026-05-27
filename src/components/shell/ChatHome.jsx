@@ -225,8 +225,8 @@ export const ChatHome = () => {
           gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
           gap: 16,
         }}>
-          <FunnelCard locked={day < 2} />
-          <ChurnCard  locked={day < 3} />
+          <FunnelCard counts={auditionCounts} locked={day < 2} />
+          <ChurnCard  noResponse={auditionCounts?.no_response || 0} overdue={overdueCount || 0} locked={day < 3} />
         </div>
       </div>
     </div>
