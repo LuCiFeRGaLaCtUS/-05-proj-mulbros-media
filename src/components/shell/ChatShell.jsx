@@ -378,12 +378,19 @@ export const ChatShell = () => {
             talent/agency, settings, admin) lost the old Layout p-6 wrapper,
             so pad them here to avoid jamming against the top/left edge. */}
         {(() => {
+          // Chat thread needs a full-height flex column so its messages area
+          // (flex:1) expands and the composer pins to the bottom. ChatHome +
+          // Integrations own their scroll. Legacy views get padding + natural flow.
+          const isThread = pathname.startsWith('/chat');
           const fullBleed =
             pathname === '/' ||
-            pathname.startsWith('/chat') ||
+            isThread ||
             pathname.startsWith('/integrations');
+          const wrapStyle = isThread
+            ? { flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column' }
+            : { minHeight: '100%', padding: fullBleed ? 0 : '24px 28px' };
           return (
-            <div style={{ minHeight: '100%', padding: fullBleed ? 0 : '24px 28px' }}>
+            <div style={wrapStyle}>
               <Outlet />
             </div>
           );
