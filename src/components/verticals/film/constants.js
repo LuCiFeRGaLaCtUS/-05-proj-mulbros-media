@@ -20,10 +20,10 @@ export const stageColorMap = {
 };
 
 export const kpis = [
-  { label: 'Leads Scraped',       value: '312',    sub: 'This quarter' },
-  { label: 'Qualified Leads',     value: '47',     sub: '+11 this month' },
-  { label: 'Pipeline Value',      value: '$1.9M',  sub: 'Active deal value' },
-  { label: 'Incentives Modeled',  value: '$2.1M',  sub: 'Savings identified' },
+  { label: 'Leads Scraped',       value: '—',  sub: 'No scans run yet' },
+  { label: 'Qualified Leads',     value: '—',  sub: 'Run a scan to populate' },
+  { label: 'Pipeline Value',      value: '—',  sub: 'No active deals' },
+  { label: 'Incentives Modeled',  value: '—',  sub: 'Run benchmark to populate' },
 ];
 
 export const SOURCE_GROUPS = [

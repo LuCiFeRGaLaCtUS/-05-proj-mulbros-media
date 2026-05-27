@@ -80,7 +80,7 @@ export const ChatHome = () => {
   const { persona } = usePersona();
   const { counts: auditionCounts, callbackRate } = useAuditions(profile?.id);
   const { totals: commissionTotals, overdueCount } = useCommissions(profile?.id);
-  const { createSession } = useChatSessions(profile?.id);
+  const { createSession } = useChatSessions(profile?.id, { skipLoad: true });
   const [sending, setSending] = useState(false);
 
   const firstName = user?.name?.first_name

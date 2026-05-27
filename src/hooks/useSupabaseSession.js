@@ -21,6 +21,9 @@ export const useSupabaseSession = (stytchUser) => {
   const [profileError, setProfileError] = useState(null);
 
   const refreshTimerRef = useRef(null);
+  // Guards against duplicate in-flight token mints when the effect re-runs
+  // (fetchAndSet identity change / re-render) before the first resolves.
+  const inFlightRef     = useRef(false);
   // Stable ref to latest fetchAndSet — used by the refresh timer so it
   // always calls the current closure without being a dep of useCallback.
   const fetchAndSetRef  = useRef(null);
@@ -48,6 +51,11 @@ export const useSupabaseSession = (stytchUser) => {
         clearTimeout(timer);
       }
     };
+
+    // Skip if a mint is already running — avoids the duplicate
+    // /api/auth/supabase-token POST seen on initial load.
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
 
     try {
       let res;
@@ -90,6 +98,8 @@ export const useSupabaseSession = (stytchUser) => {
       logger.error('useSupabaseSession.exception', err);
       setProfileError('Session bridge error.');
       setLoading(false);
+    } finally {
+      inFlightRef.current = false;
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stytchUser?.user_id, stytchUser?.emails]);

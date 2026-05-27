@@ -3,9 +3,16 @@ import toast from 'react-hot-toast';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
 
-export const useChatSessions = (userId) => {
+/**
+ * @param {string} userId
+ * @param {{ skipLoad?: boolean }} [opts] — pass skipLoad:true when the caller
+ *   only needs create/touch (e.g. ChatHome, ChatThread) and shouldn't fire a
+ *   redundant chat_sessions list fetch. The sidebar (ChatShell) owns the list.
+ */
+export const useChatSessions = (userId, opts = {}) => {
+  const { skipLoad = false } = opts;
   const [sessions, setSessions] = useState([]);
-  const [loading, setLoading]   = useState(true);
+  const [loading, setLoading]   = useState(!skipLoad);
 
   const reload = useCallback(async () => {
     if (!userId) { setSessions([]); setLoading(false); return; }
@@ -25,7 +32,7 @@ export const useChatSessions = (userId) => {
     setLoading(false);
   }, [userId]);
 
-  useEffect(() => { reload(); }, [reload]);
+  useEffect(() => { if (!skipLoad) reload(); }, [reload, skipLoad]);
 
   const createSession = useCallback(async (title = 'New chat') => {
     if (!userId) return null;

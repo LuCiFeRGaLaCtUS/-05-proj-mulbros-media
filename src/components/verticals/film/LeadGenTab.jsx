@@ -252,6 +252,11 @@ export const LeadGenTab = ({ onAddToPipeline }) => {
       {/* Results */}
       {scanned && !scanning && (
         <div className="space-y-4">
+          {/* Sample-data notice — these leads are illustrative until live sources are connected */}
+          <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+            <AlertCircle size={13} />
+            Sample data — connect lead sources in Integrations to go live.
+          </div>
           {/* Stats bar */}
           <div
             className="relative flex items-center gap-4 bg-white rounded-xl px-5 py-3 flex-wrap overflow-hidden"

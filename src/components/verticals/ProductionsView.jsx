@@ -107,9 +107,6 @@ export const ProductionsView = () => {
               AI-assisted production tracking — budget vs. actuals, qualified spend, milestones — and data-driven distribution planning.
             </p>
           </div>
-          <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg font-medium">
-            Vertical B
-          </span>
         </div>
       </TiltCard>
 

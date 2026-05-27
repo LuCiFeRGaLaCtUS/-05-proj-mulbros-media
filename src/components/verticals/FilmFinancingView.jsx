@@ -53,9 +53,6 @@ export const FilmFinancingView = ({ user }) => {
               AI-driven lead discovery → tax incentive modeling → production planning → qualified spend tracking → tax filing
             </p>
           </div>
-          <span className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-lg font-medium">
-            Vertical A
-          </span>
         </div>
       </TiltCard>
 

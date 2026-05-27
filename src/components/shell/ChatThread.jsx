@@ -23,7 +23,7 @@ export const ChatThread = () => {
   const { profile } = useAppContext();
   const { persona, setState: setPersonaState } = usePersona();
 
-  const { createSession, touchSession } = useChatSessions(profile?.id);
+  const { createSession, touchSession } = useChatSessions(profile?.id, { skipLoad: true });
   const { messages, appendMessage } = useSessionMessages(profile?.id, sessionId);
 
   const [sending, setSending] = useState(false);
