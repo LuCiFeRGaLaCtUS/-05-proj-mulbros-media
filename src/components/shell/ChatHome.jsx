@@ -108,16 +108,13 @@ export const ChatHome = () => {
 
   return (
     <div style={{
-      flex: 1, minHeight: 0,
-      display: 'flex', flexDirection: 'column',
-      overflow: 'auto',
+      minHeight: '100%',
       background: '#F5F6F8',
     }}>
       {/* (Top status strip replaced by ObservationBar below — see Hero) */}
 
-      {/* Hero */}
+      {/* Hero — main column (ChatShell <main> owns the scroll) */}
       <div style={{
-        flex: 1, minHeight: 0,
         display: 'flex', flexDirection: 'column',
         padding: '24px 24px 40px',
         maxWidth: 980,
