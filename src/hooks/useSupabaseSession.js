@@ -29,14 +29,35 @@ export const useSupabaseSession = (stytchUser) => {
   const profileRef      = useRef(null);
 
   const fetchAndSet = useCallback(async () => {
+    // POST with 8s timeout; retry once on timeout/network failure before
+    // surfacing an error. Prevents infinite FullScreenLoader if the
+    // token-mint endpoint stalls.
+    const postOnce = async () => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      try {
+        const headers = { 'Content-Type': 'application/json', ...getStytchAuthHeaders() };
+        const email   = stytchUser?.emails?.[0]?.email ?? null;
+        return await fetch('/api/auth/supabase-token', {
+          method: 'POST',
+          headers,
+          body:   JSON.stringify({ email }),
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+    };
+
     try {
-      const headers = { 'Content-Type': 'application/json', ...getStytchAuthHeaders() };
-      const email   = stytchUser?.emails?.[0]?.email ?? null;
-      const res = await fetch('/api/auth/supabase-token', {
-        method: 'POST',
-        headers,
-        body:   JSON.stringify({ email }),
-      });
+      let res;
+      try {
+        res = await postOnce();
+      } catch (firstErr) {
+        logger.warn?.('useSupabaseSession.fetch.retry', { reason: firstErr?.name || 'error' });
+        await new Promise(r => setTimeout(r, 1500));
+        res = await postOnce();
+      }
       if (!res.ok) {
         const body = await res.text();
         logger.error('useSupabaseSession.fetch.failed', { status: res.status, body });

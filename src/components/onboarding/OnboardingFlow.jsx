@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { RolePicker }        from './RolePicker';
@@ -46,6 +46,8 @@ export const OnboardingFlow = () => {
   const [selectedVertical, setSelectedVertical] = useState(null);
   const [allAnswers,       setAllAnswers]       = useState({});
   const [saving,           setSaving]           = useState(false);
+  const [saveError,        setSaveError]        = useState(null);
+  const lastSaveRef = useRef(null);
 
   // Step 0 → 1
   const handleRoleSelect = ({ roleId, roles }) => {
@@ -74,7 +76,9 @@ export const OnboardingFlow = () => {
   };
 
   const handleComplete = async (answers) => {
+    lastSaveRef.current = () => handleComplete(answers);
     setSaving(true);
+    setSaveError(null);
     // Preserve existing roles when user didn't pick (e.g. admin re-runs onboarding).
     const rolesPatch = selectedRoles.length > 0 ? { roles: selectedRoles } : {};
     const { error } = await updateProfile({
@@ -86,13 +90,16 @@ export const OnboardingFlow = () => {
     setSaving(false);
     if (error) {
       console.error('onboarding.complete.failed', error);
+      setSaveError(error.message || 'Could not save your profile.');
       toast.error(`Could not save profile: ${error.message || 'unknown error'}`);
     }
     // On success App.jsx gate lifts automatically — profile.onboarding_complete is true
   };
 
   const handleSkip = async () => {
+    lastSaveRef.current = () => handleSkip();
     setSaving(true);
+    setSaveError(null);
     // Preserve existing roles when skipping (don't wipe pre-granted admin/super_admin).
     const rolesPatch = selectedRoles.length > 0 ? { roles: selectedRoles } : {};
     const { error } = await updateProfile({
@@ -104,6 +111,7 @@ export const OnboardingFlow = () => {
     setSaving(false);
     if (error) {
       console.error('onboarding.skip.failed', error);
+      setSaveError(error.message || 'Could not save your profile.');
       toast.error(`Could not skip onboarding: ${error.message || 'unknown error'}`);
     }
   };
@@ -131,6 +139,31 @@ export const OnboardingFlow = () => {
   const showAdmin = isAdminEmail(userEmail);
 
   if (saving) return <SavingScreen />;
+
+  if (saveError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: '#F5F6F8' }}>
+        <div className="text-center max-w-sm">
+          <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ background: 'rgba(226,75,74,0.10)', border: '1px solid rgba(226,75,74,0.25)' }}>
+            <span style={{ fontSize: 24 }}>⚠️</span>
+          </div>
+          <h2 style={{ fontFamily: "'Inter Tight', sans-serif", fontSize: '1.4rem', fontWeight: 700, color: '#0B1D3A', marginBottom: 8 }}>
+            Couldn't save your setup
+          </h2>
+          <p style={{ fontSize: '0.875rem', color: '#888', lineHeight: 1.6, marginBottom: 20 }}>
+            {saveError}
+          </p>
+          <button
+            onClick={() => lastSaveRef.current?.()}
+            style={{ background: '#0F6E56', color: '#fff', fontWeight: 600, padding: '10px 24px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Step 0: role picker (Creator / Talent / Agency / Both) ─────────────────
   if (step === 0) {
