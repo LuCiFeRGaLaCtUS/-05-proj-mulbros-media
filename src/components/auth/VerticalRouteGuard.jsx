@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../../App';
 import { VERTICALS } from '../../config/verticals';
+import { getPersona, VERTICALS_BY_PERSONA } from '../../config/personas';
 
 /**
  * Soft route guard for /vertical/:slug routes.
@@ -34,12 +35,16 @@ export const VerticalRouteGuard = ({ slug, children }) => {
     const requestedValid = VERTICALS.some(v => v.id === requested);
     if (!requestedValid) return; // unknown slug — let React Router 404 handle
 
-    // Mismatch → redirect with toast
-    if (requested !== userVertical && requested !== 'productions') {
-      const userVerticalLabel = VERTICALS.find(v => v.id === userVertical)?.label || userVertical;
-      toast(`Switched to your workspace — ${userVerticalLabel}`, { icon: '🔒', duration: 3000 });
-      navigate(`/vertical/${userVertical}`, { replace: true });
-    }
+    // Allow the user's whole persona group (e.g. director persona can visit
+    // filmmaker + productions + crew + screenwriter).
+    const persona = getPersona(profile);
+    const allowed = VERTICALS_BY_PERSONA[persona] || [userVertical];
+    if (allowed.includes(requested)) return;
+
+    // Outside persona group → redirect to user's own vertical with toast
+    const userVerticalLabel = VERTICALS.find(v => v.id === userVertical)?.label || userVertical;
+    toast(`Switched to your workspace — ${userVerticalLabel}`, { icon: '🔒', duration: 3000 });
+    navigate(`/vertical/${userVertical}`, { replace: true });
   }, [requested, profile, navigate]);
 
   return children;

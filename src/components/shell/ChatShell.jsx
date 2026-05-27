@@ -10,6 +10,7 @@ import { useStytch } from '@stytch/react';
 import { useAppContext } from '../../App';
 import { useChatSessions } from '../../hooks/useChatSessions';
 import { usePersona } from '../../lib/personaState';
+import { getPersona, NAV_BY_PERSONA } from '../../config/personas';
 import { MOAvatar } from './MOAvatar';
 
 /**
@@ -193,8 +194,11 @@ export const ChatShell = () => {
           <NavItem icon={Sparkles}      label="Artifacts"    active={isActive('/calendar')}    onClick={() => navigate('/calendar')}  collapsed={collapsed} />
           <NavItem icon={Plug}          label="Integrations" active={isActive('/integrations')} onClick={() => navigate('/integrations')} collapsed={collapsed} />
 
-          {/* Talent surface */}
-          {isTalent && (
+          {/* Talent surface — persona-filtered for non-admins.
+              Admin/super_admin see the full talent list (all sub-views).
+              A normal talent user sees ONLY their persona's nav:
+              actor → acting, director → directing, musician → music. */}
+          {isTalent && isPlatformAdmin && (
             <>
               <SectionLabel collapsed={collapsed}>Talent</SectionLabel>
               <NavItem icon={Mic2}        label="Auditions"     active={isActive('/talent/auditions')}     onClick={() => navigate('/talent/auditions')}     collapsed={collapsed} />
@@ -205,6 +209,26 @@ export const ChatShell = () => {
               <NavItem icon={ScrollText}  label="Contracts"     active={isActive('/talent/contracts')}     onClick={() => navigate('/talent/contracts')}     collapsed={collapsed} />
             </>
           )}
+
+          {isTalent && !isPlatformAdmin && (() => {
+            const persona = getPersona(profile);
+            const nav = NAV_BY_PERSONA[persona] || NAV_BY_PERSONA.actor;
+            return (
+              <>
+                <SectionLabel collapsed={collapsed}>{nav.label}</SectionLabel>
+                {nav.items.map(item => (
+                  <NavItem
+                    key={item.path}
+                    icon={item.icon}
+                    label={item.label}
+                    active={isActive(item.path)}
+                    onClick={() => navigate(item.path)}
+                    collapsed={collapsed}
+                  />
+                ))}
+              </>
+            );
+          })()}
 
           {/* Agency surface */}
           {isAgency && (
