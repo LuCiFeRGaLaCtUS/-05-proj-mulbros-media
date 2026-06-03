@@ -407,7 +407,7 @@ app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
 
 // ── AI proxy ──────────────────────────────────────────────────────────────────
 app.post('/api/ai', aiLimiter, async (req, res) => {
-  const { model, messages, max_tokens } = req.body || {};
+  const { model, messages, max_tokens, tools } = req.body || {};
 
   // Request body validation
   if (!model || !ALLOWED_MODELS.has(model)) {
@@ -421,6 +421,8 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
   const safeMaxTokens = Math.min(Number(max_tokens) || 2048, 4096);
 
   const isAnthropic = model.startsWith('claude-');
+  // Tools currently supported only on OpenAI Chat Completions path.
+  const wantsTools = !isAnthropic && Array.isArray(tools) && tools.length > 0;
 
   // Use provider-specific env var first — never let an OpenAI key reach Anthropic or vice versa
   const serverKey = isAnthropic
@@ -462,13 +464,90 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
         'Content-Type':  'application/json',
         'Authorization': `Bearer ${apiKeyVal}`,
       };
-      body = { model, messages, max_tokens: safeMaxTokens };
+      body = {
+        model,
+        messages,
+        max_tokens: safeMaxTokens,
+        ...(wantsTools ? { tools, tool_choice: 'auto' } : {}),
+      };
     }
 
-    const response = await fetch(apiUrl, {
-      method: 'POST', headers, body: JSON.stringify(body), signal: controller.signal,
-    });
-    const data = await response.json();
+    // ── Tool-calling loop (OpenAI only) ──────────────────────────────────────
+    // When the model returns tool_calls, dispatch each through TOOL_HANDLERS,
+    // append the results to messages, and re-invoke. Cap at 5 iterations to
+    // bound cost and avoid runaway loops.
+    let response, data;
+    let toolHopProfileId = null;
+    let aggregateToolCalls = [];   // surfaced to client for confirmation cards
+    let totalTokensIn = 0, totalTokensOut = 0;
+    const MAX_TOOL_HOPS = wantsTools ? 5 : 1;
+
+    if (wantsTools) {
+      toolHopProfileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+    }
+
+    for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
+      response = await fetch(apiUrl, {
+        method: 'POST', headers, body: JSON.stringify(body), signal: controller.signal,
+      });
+      data = await response.json();
+      if (!response.ok) break;
+
+      // Accumulate usage across all hops for cost ledger
+      if (isAnthropic) {
+        totalTokensIn  += data.usage?.input_tokens  || 0;
+        totalTokensOut += data.usage?.output_tokens || 0;
+      } else {
+        totalTokensIn  += data.usage?.prompt_tokens     || 0;
+        totalTokensOut += data.usage?.completion_tokens || 0;
+      }
+
+      if (!wantsTools) break;
+
+      const msg = data.choices?.[0]?.message;
+      const calls = Array.isArray(msg?.tool_calls) ? msg.tool_calls : [];
+      if (calls.length === 0) break;  // no more tool calls — final content reached
+
+      // Append assistant message with tool_calls + each tool result back into history
+      body.messages = [...body.messages, msg];
+
+      for (const call of calls) {
+        const fnName = call.function?.name;
+        let parsedArgs = {};
+        try { parsedArgs = JSON.parse(call.function?.arguments || '{}'); }
+        catch { parsedArgs = {}; }
+
+        const handler = TOOL_HANDLERS[fnName];
+        let toolResult;
+        if (!handler) {
+          toolResult = { ok: false, error: `Unknown tool: ${fnName}` };
+        } else if (!toolHopProfileId) {
+          toolResult = { ok: false, error: 'Profile resolution failed' };
+        } else {
+          try {
+            toolResult = await handler(parsedArgs, { profileId: toolHopProfileId });
+          } catch (err) {
+            toolResult = { ok: false, error: err.message || 'handler threw' };
+          }
+        }
+
+        aggregateToolCalls.push({ name: fnName, args: parsedArgs, result: toolResult });
+        logCostFireAndForget({
+          userId:   toolHopProfileId,
+          endpoint: `/api/tools/${fnName}`,
+          provider: 'tool',
+          model:    fnName,
+          metadata: { args: parsedArgs, ok: !!toolResult?.ok, via: 'function_call' },
+        });
+
+        body.messages.push({
+          role:         'tool',
+          tool_call_id: call.id,
+          content:      JSON.stringify(toolResult).slice(0, 6000),
+        });
+      }
+      // Loop again — model gets the tool results and either calls more tools or returns content
+    }
 
     // Wrap non-OK upstream responses: log details server-side, return generic message
     if (!response.ok) {
@@ -480,19 +559,20 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       return res.status(response.status).json({ error: { code: 'ai_upstream', message: userFacing } });
     }
 
-    // Parse token usage for cost ledger (fire-and-forget)
-    const tokensIn  = isAnthropic ? (data.usage?.input_tokens  || 0) : (data.usage?.prompt_tokens     || 0);
-    const tokensOut = isAnthropic ? (data.usage?.output_tokens || 0) : (data.usage?.completion_tokens || 0);
-    const usdCost   = estimateAiCost(model, tokensIn, tokensOut);
+    // Cost ledger — sum tokens across all tool-call hops (fire-and-forget)
+    const finalTokensIn  = totalTokensIn  || (isAnthropic ? (data.usage?.input_tokens  || 0) : (data.usage?.prompt_tokens     || 0));
+    const finalTokensOut = totalTokensOut || (isAnthropic ? (data.usage?.output_tokens || 0) : (data.usage?.completion_tokens || 0));
+    const usdCost = estimateAiCost(model, finalTokensIn, finalTokensOut);
     resolveProfileIdFromStytch(req.stytchUser?.userId).then(profileId => {
       logCostFireAndForget({
         userId:   profileId,
         endpoint: '/api/ai',
         provider: isAnthropic ? 'anthropic' : 'openai',
         model,
-        tokens_in:  tokensIn,
-        tokens_out: tokensOut,
+        tokens_in:  finalTokensIn,
+        tokens_out: finalTokensOut,
         usd_cost:   usdCost,
+        metadata:   wantsTools ? { tool_hops: aggregateToolCalls.length } : {},
       });
     });
 
@@ -503,6 +583,10 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       });
     }
 
+    // Surface executed tool calls so the client can render confirmation cards
+    if (wantsTools && aggregateToolCalls.length > 0) {
+      data._tool_calls = aggregateToolCalls;
+    }
     res.status(response.status).json(data);
   } catch (err) {
     if (err.name === 'AbortError') {
@@ -2040,6 +2124,319 @@ app.post('/api/admin/requests/:profileId/deny', requireAuth, requireRole(['super
   } catch (err) {
     console.error('admin/deny failed:', err.message);
     return res.status(500).json({ error: { message: 'Deny failed.' } });
+  }
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// Sprint 8 — Agent tool dispatcher (POST /api/tools/:name)
+// Reuses service JWT for all cross-RLS writes. Each successful call is
+// fire-and-forget logged to cost_ledger as provider='tool'.
+// ═════════════════════════════════════════════════════════════════════════════
+
+const TOOL_HANDLERS = {
+  // ── Auditions ─────────────────────────────────────────────────────────────
+  'audition.create': async (args, ctx) => {
+    const ok = await supabaseServiceInsert('auditions', {
+      user_id:         ctx.profileId,
+      project_title:   args.project_title,
+      role_name:       args.role_name        || null,
+      casting_director:args.casting_director || null,
+      audition_type:   args.audition_type    || 'self_tape',
+      audition_at:     args.audition_at      || null,
+      deadline:        args.deadline         || null,
+      paying_rate:     args.paying_rate      || null,
+      source_url:      args.source_url       || null,
+      notes:           args.notes            || null,
+      status:          'submitted',
+    });
+    return ok ? { ok: true, project_title: args.project_title } : { ok: false, error: 'insert failed' };
+  },
+  'audition.update_status': async (args, ctx) => {
+    const ok = await supabaseServicePatch('auditions',
+      `id=eq.${encodeURIComponent(args.audition_id)}&user_id=eq.${ctx.profileId}`,
+      { status: args.status, updated_at: new Date().toISOString() });
+    return ok ? { ok: true, audition_id: args.audition_id, status: args.status } : { ok: false, error: 'update failed' };
+  },
+
+  // ── Roster ────────────────────────────────────────────────────────────────
+  'roster.add': async (args, ctx) => {
+    const ok = await supabaseServiceInsert('roster', {
+      user_id:        ctx.profileId,
+      talent_name:    args.talent_name,
+      union_status:   args.union_status   || 'Non-Union',
+      commission_pct: args.commission_pct ?? 10,
+      contact_email:  args.contact_email  || null,
+      contact_phone:  args.contact_phone  || null,
+      notes:          args.notes          || null,
+      status:         'active',
+    });
+    return ok ? { ok: true, talent_name: args.talent_name } : { ok: false, error: 'insert failed' };
+  },
+
+  // ── Commissions ───────────────────────────────────────────────────────────
+  'commission.create': async (args, ctx) => {
+    const pct = args.commission_pct ?? 10;
+    const amount_due = Number(args.amount_gross) * (pct / 100);
+    const ok = await supabaseServiceInsert('commissions', {
+      user_id:        ctx.profileId,
+      talent_name:    args.talent_name,
+      project_title:  args.project_title || null,
+      amount_gross:   args.amount_gross,
+      commission_pct: pct,
+      amount_due,
+      amount_collected: 0,
+      due_date:       args.due_date || null,
+      status:         'pending',
+    });
+    return ok ? { ok: true, amount_due, commission_pct: pct } : { ok: false, error: 'insert failed' };
+  },
+  'commission.mark_collected': async (args, ctx) => {
+    const patch = { status: 'collected' };
+    if (args.amount_collected != null) patch.amount_collected = args.amount_collected;
+    const ok = await supabaseServicePatch('commissions',
+      `id=eq.${encodeURIComponent(args.commission_id)}&user_id=eq.${ctx.profileId}`, patch);
+    return ok ? { ok: true } : { ok: false, error: 'update failed' };
+  },
+
+  // ── Industry contacts ─────────────────────────────────────────────────────
+  'industry_contact.create': async (args, ctx) => {
+    const ok = await supabaseServiceInsert('industry_contacts', {
+      user_id: ctx.profileId,
+      name:    args.name,
+      role:    args.role,
+      company: args.company || null,
+      email:   args.email   || null,
+      phone:   args.phone   || null,
+      notes:   args.notes   || null,
+    });
+    return ok ? { ok: true, name: args.name } : { ok: false, error: 'insert failed' };
+  },
+
+  // ── Submissions (HITL — stored pending until user approves) ───────────────
+  'submission.draft': async (args, ctx) => {
+    const ok = await supabaseServiceInsert('submissions', {
+      user_id:      ctx.profileId,
+      talent_name:  args.talent_name,
+      casting_ref:  args.casting_id  || null,
+      cover_note:   args.cover_note,
+      attachments:  args.attachments || [],
+      status:       'pending_approval',
+    });
+    return ok ? { ok: true, status: 'pending_approval' } : { ok: false, error: 'insert failed' };
+  },
+
+  // ── Comms ─────────────────────────────────────────────────────────────────
+  'twilio.sms': async (args /*, ctx */) => {
+    const sid  = process.env.TWILIO_ACCOUNT_SID;
+    const auth = process.env.TWILIO_AUTH_TOKEN;
+    const from = process.env.TWILIO_FROM_NUMBER;
+    if (!sid || !auth || !from) return { ok: false, mode: 'mock', error: 'Twilio not configured' };
+    if (!args.to || !args.message) return { ok: false, error: 'to + message required' };
+    try {
+      const credentials = Buffer.from(`${sid}:${auth}`).toString('base64');
+      const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
+        method: 'POST',
+        headers: { Authorization: `Basic ${credentials}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ To: args.to, From: from, Body: args.message.slice(0, 1600) }).toString(),
+      });
+      const data = await r.json();
+      if (!r.ok) return { ok: false, error: data?.message || `Twilio ${r.status}` };
+      return { ok: true, sid: data.sid };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+  'resend.email': async (args /*, ctx */) => {
+    const resendKey = process.env.Resend_API;
+    if (!resendKey) return { ok: false, mode: 'mock', error: 'Resend not configured' };
+    try {
+      const resend = new Resend(resendKey);
+      const { data, error } = await resend.emails.send({
+        from:    'MulBros Media OS <onboarding@resend.dev>',
+        to:      Array.isArray(args.to) ? args.to : [args.to],
+        subject: args.subject,
+        ...(args.html ? { html: args.html } : {}),
+        ...(args.text ? { text: args.text } : {}),
+      });
+      return error ? { ok: false, error: error.message } : { ok: true, id: data?.id };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  // ── Self-tape (Mux upload URL) ────────────────────────────────────────────
+  'selftape.request_upload': async (args, ctx) => {
+    const tokenId     = process.env.MUX_TOKEN_ID;
+    const tokenSecret = process.env.MUX_TOKEN_SECRET;
+    if (!tokenId || !tokenSecret) return { ok: false, mode: 'mock', error: 'Mux not configured' };
+    try {
+      const credentials = Buffer.from(`${tokenId}:${tokenSecret}`).toString('base64');
+      const r = await fetch('https://api.mux.com/video/v1/uploads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Basic ${credentials}` },
+        body: JSON.stringify({
+          cors_origin: '*',
+          new_asset_settings: { playback_policy: ['signed'], mp4_support: 'standard' },
+        }),
+      });
+      if (!r.ok) return { ok: false, error: `Mux ${r.status}` };
+      const data = await r.json();
+      const upload_id  = data.data?.id;
+      const upload_url = data.data?.url;
+      await supabaseServiceInsert('self_tapes', {
+        user_id:       ctx.profileId,
+        audition_id:   args.audition_id || null,
+        title:         args.title,
+        mux_upload_id: upload_id,
+        status:        'uploading',
+      });
+      return { ok: true, upload_url, upload_id };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  // ── Payments ──────────────────────────────────────────────────────────────
+  'stripe.onboard_link': async (args /*, ctx */) => {
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey) return { ok: false, mode: 'mock', error: 'Stripe not configured' };
+    try {
+      const acctR = await fetch('https://api.stripe.com/v1/accounts', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${stripeKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ type: 'express', country: 'US', email: args.email || '' }).toString()
+          + '&capabilities[card_payments][requested]=true&capabilities[transfers][requested]=true',
+      });
+      if (!acctR.ok) return { ok: false, error: `Stripe acct ${acctR.status}` };
+      const acct = await acctR.json();
+      const linkR = await fetch('https://api.stripe.com/v1/account_links', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${stripeKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          account: acct.id,
+          refresh_url: args.return_url || `${process.env.VITE_APP_URL || 'http://localhost:5173'}/settings`,
+          return_url:  args.return_url || `${process.env.VITE_APP_URL || 'http://localhost:5173'}/settings`,
+          type: 'account_onboarding',
+        }).toString(),
+      });
+      if (!linkR.ok) return { ok: false, error: `Stripe link ${linkR.status}` };
+      const link = await linkR.json();
+      return { ok: true, onboarding_url: link.url, account_id: acct.id };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+  'plaid.link_token': async (_args, ctx) => {
+    const clientId = process.env.PLAID_CLIENT_ID;
+    const secret   = process.env.PLAID_SECRET;
+    const env      = process.env.PLAID_ENV || 'sandbox';
+    if (!clientId || !secret) return { ok: false, mode: 'mock', error: 'Plaid not configured' };
+    const baseUrl = env === 'production' ? 'https://production.plaid.com'
+                  : env === 'development' ? 'https://development.plaid.com'
+                  : 'https://sandbox.plaid.com';
+    try {
+      const r = await fetch(`${baseUrl}/link/token/create`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: clientId, secret,
+          user: { client_user_id: ctx.profileId },
+          client_name: 'AI Operator',
+          products: ['transactions'],
+          country_codes: ['US'],
+          language: 'en',
+        }),
+      });
+      if (!r.ok) return { ok: false, error: `Plaid ${r.status}` };
+      const data = await r.json();
+      return { ok: true, link_token: data.link_token };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  // ── Read-only: cost snapshot ──────────────────────────────────────────────
+  'cost.snapshot': async (_args, ctx) => {
+    if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) {
+      return { ok: false, error: 'Supabase env missing' };
+    }
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
+    try {
+      const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+      const r = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/cost_ledger?user_id=eq.${ctx.profileId}&created_at=gte.${since}&select=provider,usd_cost`,
+        { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` } },
+      );
+      const rows = await r.json();
+      const byProvider = (Array.isArray(rows) ? rows : []).reduce((acc, x) => {
+        acc[x.provider] = (acc[x.provider] || 0) + Number(x.usd_cost || 0);
+        return acc;
+      }, {});
+      const total = Object.values(byProvider).reduce((s, v) => s + v, 0);
+      return { ok: true, period: '24h', total_usd: Number(total.toFixed(4)), by_provider: byProvider };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+
+  // ── Web search (proxies /api/ai-search internally) ────────────────────────
+  'web.search': async (args /*, ctx */) => {
+    if (!args?.query) return { ok: false, error: 'query required' };
+    if (!process.env.OPENAI_API_KEY) return { ok: false, error: 'OPENAI_API_KEY missing' };
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const guard = `Today is ${today}. Search the web for the user's query. Cite real URLs only.`;
+      const r = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: 'gpt-4o',
+          tools: [{ type: 'web_search_preview', search_context_size: 'high' }],
+          tool_choice: { type: 'web_search_preview' },
+          instructions: guard,
+          input: args.query,
+        }),
+      });
+      const data = await r.json();
+      if (!r.ok) return { ok: false, error: data?.error?.message || `OpenAI ${r.status}` };
+      const outputs    = Array.isArray(data.output) ? data.output : [];
+      const contentArr = outputs.flatMap(o => Array.isArray(o.content) ? o.content : []);
+      const text       = contentArr.filter(c => c.type === 'output_text').map(c => c.text).join('\n');
+      const citations  = contentArr
+        .flatMap(c => Array.isArray(c.annotations) ? c.annotations : [])
+        .filter(a => a.type === 'url_citation')
+        .map(a => ({ url: a.url, title: a.title || a.url }));
+      return { ok: true, text, citations };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+};
+
+// POST /api/tools/:name — dispatch an agent tool call.
+app.post('/api/tools/:name', requireAuth, integrationLimiter, async (req, res) => {
+  const name = req.params.name;
+  const handler = TOOL_HANDLERS[name];
+  if (!handler) return res.status(404).json({ ok: false, error: `Unknown tool: ${name}` });
+
+  const profileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+  if (!profileId) return res.status(403).json({ ok: false, error: 'No profile' });
+
+  try {
+    const result = await handler(req.body || {}, { profileId });
+    // Audit log — every tool call hits cost_ledger as provider='tool'
+    logCostFireAndForget({
+      userId:   profileId,
+      endpoint: `/api/tools/${name}`,
+      provider: 'tool',
+      model:    name,
+      metadata: { args: req.body || {}, ok: !!result?.ok },
+    });
+    return res.json(result);
+  } catch (err) {
+    console.error(`tool[${name}] failed:`, err.message);
+    return res.status(500).json({ ok: false, error: err.message || 'tool failed' });
   }
 });
 

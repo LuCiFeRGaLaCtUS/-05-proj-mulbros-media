@@ -8,6 +8,7 @@ import { useChatSessions } from '../../hooks/useChatSessions';
 import { useSessionMessages } from '../../hooks/useSessionMessages';
 import { routeToAgent } from '../../lib/personaRouter';
 import { callAI, getApiKey } from '../../utils/ai';
+import { toOpenAITools } from '../../config/tools';
 import { ChatMessage, TypingIndicator } from '../agents/ChatMessage';
 import { MOAvatar } from './MOAvatar';
 import { ChatBar } from './ChatBar';
@@ -72,7 +73,7 @@ export const ChatThread = () => {
     await appendMessage('user', text, sid);
 
     // Route to correct agent
-    const { agent, systemPrompt } = routeToAgent(text, pinnedAgentId);
+    const { agent, systemPrompt, allowedTools } = routeToAgent(text, pinnedAgentId);
 
     // Build API message history (last 20 to keep tokens sane)
     const history = [...messages, { role: 'user', content: text }].slice(-20).map(m => ({
@@ -81,9 +82,26 @@ export const ChatThread = () => {
     }));
 
     const apiKey = getApiKey(agent.model || 'gpt-4o');
+    // Build tools array: undefined allowedTools = all tools (MO); [] = none
+    const tools = allowedTools === undefined
+      ? toOpenAITools()                     // all
+      : (allowedTools.length > 0 ? toOpenAITools(allowedTools) : []);
     try {
-      const reply = await callAI(systemPrompt, history, apiKey, agent.model || 'gpt-4o');
-      await appendMessage('assistant', reply, sid);
+      const result = await callAI(
+        systemPrompt, history, apiKey, agent.model || 'gpt-4o',
+        tools.length > 0 ? { tools } : undefined,
+      );
+      const reply     = typeof result === 'string' ? result : (result?.content || '');
+      const toolCalls = typeof result === 'string' ? []     : (result?.toolCalls || []);
+      // Render tool-call summary inline (no separate UI yet — included in the reply text)
+      const toolSummary = toolCalls.length > 0
+        ? '\n\n' + toolCalls.map(c => {
+            const ok = c.result?.ok ? '✅' : '⚠️';
+            const arg = c.args ? JSON.stringify(c.args).slice(0, 120) : '';
+            return `${ok} \`${c.name}\` ${arg}`;
+          }).join('\n')
+        : '';
+      await appendMessage('assistant', (reply || (toolCalls.length ? 'Done.' : '')) + toolSummary, sid);
       await touchSession(sid);
     } catch (err) {
       const msg = err?.userMessage || err?.message || 'AI request failed.';

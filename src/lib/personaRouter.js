@@ -8,6 +8,15 @@
  * No new backend endpoint required — passes chosen system prompt to /api/ai.
  */
 import { agents } from '../config/agents';
+import { getAllowedTools } from '../config/agentTools';
+
+const TOOLS_INSTRUCTION =
+  '\n\nIMPORTANT — TOOLS ARE LIVE: You have function-calling tools available this turn. When the user asks you to log, create, send, schedule, look up, or otherwise act on something within your domain, CALL THE APPROPRIATE TOOL instead of describing what you would do. Confirm in plain language only AFTER the tool returns. If a required argument is missing, ask the user for it in one tight sentence. Never invent IDs or fields.';
+
+const withToolsInstruction = (systemPrompt, allowedTools) =>
+  (Array.isArray(allowedTools) && allowedTools.length === 0)
+    ? systemPrompt
+    : systemPrompt + TOOLS_INSTRUCTION;
 
 // Slash command aliases — short form → agent.id.
 // Keep aliases stable; users type these.
@@ -104,7 +113,13 @@ export const routeToAgent = (userMessage, pinnedAgentId = null) => {
   if (pinnedAgentId) {
     const pinned = agents.find(a => a.id === pinnedAgentId);
     if (pinned) {
-      return { agent: pinned, systemPrompt: pinned.systemPrompt, slashCommand: null };
+      const allowedTools = getAllowedTools(pinned.id);
+      return {
+        agent: pinned,
+        systemPrompt: withToolsInstruction(pinned.systemPrompt, allowedTools),
+        slashCommand: null,
+        allowedTools,
+      };
     }
   }
 
@@ -114,15 +129,22 @@ export const routeToAgent = (userMessage, pinnedAgentId = null) => {
   if (slashTarget) {
     const matched = agents.find(a => a.id === slashTarget);
     if (matched) {
-      return { agent: matched, systemPrompt: matched.systemPrompt, slashCommand: command };
+      const allowedTools = getAllowedTools(matched.id);
+      return {
+        agent: matched,
+        systemPrompt: withToolsInstruction(matched.systemPrompt, allowedTools),
+        slashCommand: command,
+        allowedTools,
+      };
     }
   }
 
-  // 3. Default — MO meta-prompt with sub-agent catalog
+  // 3. Default — MO meta-prompt with sub-agent catalog. MO gets ALL tools.
   return {
     agent:        { id: 'mo', name: 'MO', description: 'Media Operator' },
-    systemPrompt: buildMetaSystemPrompt(),
+    systemPrompt: withToolsInstruction(buildMetaSystemPrompt(), undefined),
     slashCommand: null,
+    allowedTools: undefined,  // undefined → all tools
   };
 };
 

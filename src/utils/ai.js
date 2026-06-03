@@ -21,8 +21,9 @@ export const getApiKey = (model = '') =>
     ? localStorage.getItem(STORAGE_KEYS.anthropicKey) || ''
     : localStorage.getItem(STORAGE_KEYS.openAiKey)    || '';
 
-const callProxy = async (model, systemPrompt, messages, apiKey) => {
+const callProxy = async (model, systemPrompt, messages, apiKey, opts = {}) => {
   const key = apiKey !== undefined ? apiKey : getApiKey(model);
+  const { tools } = opts;
 
   const response = await fetchWithTimeout(
     AI_PROXY,
@@ -36,6 +37,7 @@ const callProxy = async (model, systemPrompt, messages, apiKey) => {
         model,
         max_tokens: 2048,
         messages: [{ role: 'system', content: systemPrompt }, ...messages],
+        ...(Array.isArray(tools) && tools.length > 0 ? { tools } : {}),
       }),
     },
     API_TIMEOUTS_MS.ai,
@@ -50,12 +52,23 @@ const callProxy = async (model, systemPrompt, messages, apiKey) => {
   }
 
   const data = await response.json();
-  return data.choices[0].message.content;
+  const content    = data.choices?.[0]?.message?.content || '';
+  const toolCalls  = Array.isArray(data._tool_calls) ? data._tool_calls : [];
+  // If caller passed tools, return rich shape; else preserve string-return back-compat
+  return tools ? { content, toolCalls } : content;
 };
 
-// Primary — defaults to gpt-4o; pass an explicit model to use agent.model
-export const callAI = (systemPrompt, messages, apiKey, model) =>
-  callProxy(model || MODELS.primary, systemPrompt, messages, apiKey);
+/**
+ * Primary AI call.
+ * @param {string} systemPrompt
+ * @param {Array}  messages
+ * @param {string} apiKey
+ * @param {string} model
+ * @param {{ tools?: Array }} [opts] — when `tools` provided, returns
+ *   `{ content, toolCalls }` instead of a plain content string.
+ */
+export const callAI = (systemPrompt, messages, apiKey, model, opts) =>
+  callProxy(model || MODELS.primary, systemPrompt, messages, apiKey, opts);
 
 // Fast — gpt-4o-mini (floating chatbot only)
 export const callAIFast = (systemPrompt, messages, apiKey) =>
