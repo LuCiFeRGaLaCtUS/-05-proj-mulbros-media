@@ -216,6 +216,79 @@ export const TOOLS = [
     parameters: { type: 'object', properties: {}, additionalProperties: false },
   },
 
+  // ── Touring (Sprint 9) ───────────────────────────────────────────────────
+  {
+    name: 'tour.create',
+    description: 'Create a new tour. Returns the tour id so subsequent show.create calls can attach to it.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        name:       { type: 'string', description: 'Tour name, e.g. "Summer Run 2026"' },
+        start_date: { type: 'string', description: 'ISO date, e.g. 2026-07-01' },
+        end_date:   { type: 'string', description: 'ISO date' },
+        notes:      { type: 'string' },
+      },
+      required: ['name'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'show.create',
+    description: 'Add a show (hold or confirmed) to the user\'s schedule. Optionally attach to an existing tour.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        venue_name:  { type: 'string' },
+        city:        { type: 'string' },
+        country:     { type: 'string' },
+        show_date:   { type: 'string', description: 'ISO timestamp of the show' },
+        status:      { type: 'string', enum: ['hold','confirmed','cancelled','complete'] },
+        capacity:    { type: 'integer' },
+        gross_offer: { type: 'number', description: 'USD' },
+        tour_id:     { type: 'string' },
+        notes:       { type: 'string' },
+      },
+      required: ['venue_name'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'show.update_status',
+    description: 'Confirm, cancel, or complete an existing show.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        show_id: { type: 'string' },
+        status:  { type: 'string', enum: ['hold','confirmed','cancelled','complete'] },
+      },
+      required: ['show_id', 'status'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'show.add_logistics',
+    description: 'Attach or update day-of-show logistics (doors/soundcheck/set time, hotel, transport, contacts) for a show.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        show_id:    { type: 'string' },
+        doors_at:   { type: 'string' },
+        soundcheck: { type: 'string' },
+        set_time:   { type: 'string' },
+        hotel:      { type: 'string' },
+        transport:  { type: 'string' },
+        contacts:   { type: 'object' },
+        notes:      { type: 'string' },
+      },
+      required: ['show_id'],
+      additionalProperties: false,
+    },
+  },
+
   // ── Search (read-only) ───────────────────────────────────────────────────
   {
     name: 'web.search',

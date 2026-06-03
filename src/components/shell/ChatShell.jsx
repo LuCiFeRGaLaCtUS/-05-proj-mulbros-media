@@ -221,6 +221,7 @@ export const ChatShell = () => {
               <NavItem icon={Wallet}      label="Income"        active={isActive('/talent/income')}        onClick={() => navigate('/talent/income')}        collapsed={collapsed} />
               <NavItem icon={Activity}    label="Industry Intel" active={isActive('/talent/intel')}        onClick={() => navigate('/talent/intel')}         collapsed={collapsed} />
               <NavItem icon={ScrollText}  label="Contracts"     active={isActive('/talent/contracts')}     onClick={() => navigate('/talent/contracts')}     collapsed={collapsed} />
+              <NavItem icon={Mic2}        label="Touring"       active={isActive('/touring')}              onClick={() => navigate('/touring')}              collapsed={collapsed} />
             </>
           )}
 

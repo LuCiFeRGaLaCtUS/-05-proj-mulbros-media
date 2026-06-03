@@ -2380,6 +2380,84 @@ const TOOL_HANDLERS = {
     }
   },
 
+  // ── Touring (Sprint 9) ────────────────────────────────────────────────────
+  'tour.create': async (args, ctx) => {
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
+    try {
+      const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/tours`, {
+        method: 'POST',
+        headers: {
+          apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${svcJwt}`,
+          'Content-Type': 'application/json',
+          Prefer:        'return=representation',
+        },
+        body: JSON.stringify({
+          user_id:    ctx.profileId,
+          name:       args.name,
+          start_date: args.start_date || null,
+          end_date:   args.end_date   || null,
+          notes:      args.notes      || null,
+        }),
+      });
+      if (!r.ok) return { ok: false, error: `insert ${r.status}` };
+      const rows = await r.json();
+      return { ok: true, tour_id: rows[0]?.id, name: args.name };
+    } catch (err) { return { ok: false, error: err.message }; }
+  },
+  'show.create': async (args, ctx) => {
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
+    try {
+      const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/shows`, {
+        method: 'POST',
+        headers: {
+          apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${svcJwt}`,
+          'Content-Type': 'application/json',
+          Prefer:        'return=representation',
+        },
+        body: JSON.stringify({
+          user_id:     ctx.profileId,
+          tour_id:     args.tour_id     || null,
+          venue_name:  args.venue_name,
+          city:        args.city        || null,
+          country:     args.country     || null,
+          show_date:   args.show_date   || null,
+          status:      args.status      || 'hold',
+          capacity:    args.capacity    || null,
+          gross_offer: args.gross_offer || null,
+          notes:       args.notes       || null,
+        }),
+      });
+      if (!r.ok) return { ok: false, error: `insert ${r.status}` };
+      const rows = await r.json();
+      return { ok: true, show_id: rows[0]?.id, venue: args.venue_name, status: args.status || 'hold' };
+    } catch (err) { return { ok: false, error: err.message }; }
+  },
+  'show.update_status': async (args, ctx) => {
+    const ok = await supabaseServicePatch('shows',
+      `id=eq.${encodeURIComponent(args.show_id)}&user_id=eq.${ctx.profileId}`,
+      { status: args.status, updated_at: new Date().toISOString() });
+    return ok ? { ok: true, show_id: args.show_id, status: args.status } : { ok: false, error: 'update failed' };
+  },
+  'show.add_logistics': async (args, ctx) => {
+    // Upsert on show_id (PK)
+    const ok = await supabaseServiceInsert('show_logistics', {
+      show_id:    args.show_id,
+      user_id:    ctx.profileId,
+      doors_at:   args.doors_at   || null,
+      soundcheck: args.soundcheck || null,
+      set_time:   args.set_time   || null,
+      hotel:      args.hotel      || null,
+      transport:  args.transport  || null,
+      contacts:   args.contacts   || {},
+      notes:      args.notes      || null,
+    });
+    return ok ? { ok: true, show_id: args.show_id } : { ok: false, error: 'upsert failed' };
+  },
+
   // ── Web search (proxies /api/ai-search internally) ────────────────────────
   'web.search': async (args /*, ctx */) => {
     if (!args?.query) return { ok: false, error: 'query required' };

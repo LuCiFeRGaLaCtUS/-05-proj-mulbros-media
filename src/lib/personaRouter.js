@@ -42,6 +42,10 @@ export const SLASH_COMMANDS = {
   negotiate:      'agency-contract-negotiator',
   comms:          'agency-comms-relay',
   inbox:          'agency-comms-relay',
+  // Touring (Sprint 9)
+  tour:           'tour-manager',
+  show:           'tour-manager',
+  venue:          'tour-manager',
   // Cross
   admin:          'agency-admin',
   cost:           'mulbros-intelligence',   // fallback for /cost (Platform Admin owns the real cost view)

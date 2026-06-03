@@ -1,6 +1,6 @@
 import {
   Mic2, Video, Mail, Wallet, Activity, ScrollText,
-  Clapperboard, Film, Music2, Piano, Users, Radar,
+  Clapperboard, Film, Music2, Piano, Users, Radar, MapPin,
 } from 'lucide-react';
 
 /**
@@ -80,6 +80,7 @@ export const NAV_BY_PERSONA = {
     items: [
       { label: 'Music',          icon: Music2,    path: '/vertical/musician' },
       { label: 'Composer',       icon: Piano,     path: '/vertical/composer' },
+      { label: 'Touring',        icon: MapPin,    path: '/touring' },
       { label: 'Income',         icon: Wallet,    path: '/talent/income' },
       { label: 'Industry Intel', icon: Activity,  path: '/talent/intel' },
     ],

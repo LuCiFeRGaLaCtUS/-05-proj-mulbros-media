@@ -60,6 +60,9 @@ const ChatThread             = lazy(() => import('./components/shell/ChatThread'
 // Sprint 6.5 — Integrations
 const IntegrationsView       = lazy(() => import('./components/integrations/IntegrationsView').then(m => ({ default: m.IntegrationsView })));
 
+// Sprint 9 — Touring module (musician persona)
+const TouringView            = lazy(() => import('./components/verticals/touring/TouringView').then(m => ({ default: m.TouringView })));
+
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
@@ -358,6 +361,9 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               <Route path="/settings" element={<Settings user={user} />} />
 
               {/* Talent skill pack (Sprint 2 — shipped) */}
+              {/* Sprint 9 — Touring (musician persona; admins see it too) */}
+              <Route path="/touring" element={<TouringView />} />
+
               <Route path="/talent/auditions"  element={<AuditionsView />} />
               <Route path="/talent/self-tape"  element={<SelfTapeView />} />
               <Route path="/talent/inbox"      element={<AgentInboxView />} />

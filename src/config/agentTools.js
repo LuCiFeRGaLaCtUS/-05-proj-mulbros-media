@@ -61,6 +61,14 @@ export const AGENT_TOOLS = {
   'agency-admin': [
     'cost.snapshot',
   ],
+
+  // ── Touring (Sprint 9) ───────────────────────────────────────────────────
+  'tour-manager': [
+    'tour.create',
+    'show.create', 'show.update_status', 'show.add_logistics',
+    'industry_contact.create',  // promoters / venue mgrs
+    'twilio.sms',               // reminders
+  ],
 };
 
 /**
