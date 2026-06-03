@@ -54,6 +54,9 @@ export const SLASH_COMMANDS = {
   royalty:        'royalty-auditor',
   statement:      'royalty-auditor',
   audit:          'royalty-auditor',
+  // EPK (Sprint 11)
+  epk:            'epk-builder',
+  presskit:       'epk-builder',
   // Cross
   admin:          'agency-admin',
   cost:           'mulbros-intelligence',   // fallback for /cost (Platform Admin owns the real cost view)

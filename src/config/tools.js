@@ -359,6 +359,39 @@ export const TOOLS = [
     },
   },
 
+  // ── EPK (Sprint 11) ──────────────────────────────────────────────────────
+  {
+    name: 'epk.upsert',
+    description: 'Create or update the user\'s electronic press kit (EPK). Slug is unique app-wide; default is derived from display_name. Set public=true to make /epk/:slug publicly viewable.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        slug:          { type: 'string', description: 'URL slug — lowercase, dash-separated. Auto-generated from display_name if omitted.' },
+        display_name:  { type: 'string' },
+        tagline:       { type: 'string' },
+        bio_md:        { type: 'string', description: 'Bio in markdown' },
+        hero_image_url:{ type: 'string' },
+        reel_mux_id:   { type: 'string', description: 'Mux playback id for the showreel' },
+        press_quotes:  { type: 'array', items: { type: 'object', properties: { quote: { type: 'string' }, source: { type: 'string' } } } },
+        contact_email: { type: 'string' },
+        public:        { type: 'boolean', description: 'Set true to publish; defaults false.' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'epk.publish',
+    description: 'Toggle the user\'s EPK to publicly viewable at /epk/:slug.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: { public: { type: 'boolean' } },
+      required: ['public'],
+      additionalProperties: false,
+    },
+  },
+
   // ── Search (read-only) ───────────────────────────────────────────────────
   {
     name: 'web.search',

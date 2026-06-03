@@ -2676,6 +2676,66 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
     };
   },
 
+  // ── EPK (Sprint 11) ───────────────────────────────────────────────────────
+  'epk.upsert': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    // Derive slug if missing
+    const slugify = (s) =>
+      String(s || '').toLowerCase().trim()
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 64);
+    const candidateSlug = args.slug
+      ? slugify(args.slug)
+      : slugify(args.display_name || ctx.profileId);
+    if (!candidateSlug) return { ok: false, error: 'cannot derive slug — supply display_name or slug' };
+
+    const svcJwt = mintServiceJwt(ctx.profileId);
+    // Try update first (by user_id) — single kit per user
+    try {
+      const find = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/epk_kits?user_id=eq.${ctx.profileId}&select=id,slug`,
+        { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` } },
+      );
+      const existing = (await find.json())[0];
+
+      const payload = {
+        user_id:        ctx.profileId,
+        slug:           args.slug ? candidateSlug : (existing?.slug || candidateSlug),
+        display_name:   args.display_name,
+        tagline:        args.tagline,
+        bio_md:         args.bio_md,
+        hero_image_url: args.hero_image_url,
+        reel_mux_id:    args.reel_mux_id,
+        press_quotes:   args.press_quotes,
+        contact_email:  args.contact_email,
+        public:         args.public,
+        updated_at:     new Date().toISOString(),
+      };
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      if (existing) {
+        const ok = await supabaseServicePatch('epk_kits', { id: existing.id }, payload);
+        return ok
+          ? { ok: true, epk_id: existing.id, slug: payload.slug || existing.slug, public_url: `/epk/${payload.slug || existing.slug}` }
+          : { ok: false, error: 'update failed' };
+      }
+      const ok = await supabaseServiceInsert('epk_kits', payload);
+      return ok
+        ? { ok: true, slug: payload.slug, public_url: `/epk/${payload.slug}` }
+        : { ok: false, error: 'insert failed' };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  },
+  'epk.publish': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const ok = await supabaseServicePatch(
+      'epk_kits',
+      { user_id: ctx.profileId },
+      { public: !!args.public, updated_at: new Date().toISOString() },
+    );
+    return ok ? { ok: true, public: !!args.public } : { ok: false, error: 'publish failed' };
+  },
+
   // ── Web search (proxies /api/ai-search internally) ────────────────────────
   'web.search': async (args /*, ctx */) => {
     if (!args?.query) return { ok: false, error: 'query required' };

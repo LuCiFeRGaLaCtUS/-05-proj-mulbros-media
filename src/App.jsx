@@ -67,6 +67,11 @@ const TouringView            = lazy(() => import('./components/verticals/touring
 const CatalogueView          = lazy(() => import('./components/verticals/catalogue/CatalogueView').then(m => ({ default: m.CatalogueView })));
 const StatementsView         = lazy(() => import('./components/verticals/catalogue/StatementsView').then(m => ({ default: m.StatementsView })));
 
+// Sprint 11 — EPK builder + public page, Team chat
+const EPKBuilderView         = lazy(() => import('./components/verticals/epk/EPKBuilderView').then(m => ({ default: m.EPKBuilderView })));
+const EPKPublicView          = lazy(() => import('./components/epk/EPKPublicView').then(m => ({ default: m.EPKPublicView })));
+const TeamChatView           = lazy(() => import('./components/team/TeamChatView').then(m => ({ default: m.TeamChatView })));
+
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
@@ -205,6 +210,17 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
   }
   // Password reset link click
   if (stytchTokenType === 'reset_password') return <ResetPasswordPage />;
+
+  // Public EPK page — accessible without auth. RLS allows anon SELECT on public kits.
+  if (window.location.pathname.startsWith('/epk/')) {
+    return (
+      <Suspense fallback={<FullScreenLoader />}>
+        <Routes>
+          <Route path="/epk/:slug" element={<EPKPublicView />} />
+        </Routes>
+      </Suspense>
+    );
+  }
 
   // Wait for auth, then wait for profile if logged in
   const loading = authLoading || (!!session && profileLoading);
@@ -371,6 +387,10 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               {/* Sprint 10 — Catalogue + royalty statements */}
               <Route path="/catalogue"            element={<CatalogueView />} />
               <Route path="/catalogue/statements" element={<StatementsView />} />
+
+              {/* Sprint 11 — EPK builder + Team chat (all personas) */}
+              <Route path="/epk-builder" element={<EPKBuilderView />} />
+              <Route path="/team"        element={<TeamChatView />} />
 
               <Route path="/talent/auditions"  element={<AuditionsView />} />
               <Route path="/talent/self-tape"  element={<SelfTapeView />} />

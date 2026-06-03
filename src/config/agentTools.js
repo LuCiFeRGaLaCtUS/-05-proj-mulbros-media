@@ -77,6 +77,11 @@ export const AGENT_TOOLS = {
   'royalty-auditor': [
     'statement.parse',
   ],
+
+  // ── EPK (Sprint 11) ──────────────────────────────────────────────────────
+  'epk-builder': [
+    'epk.upsert', 'epk.publish',
+  ],
 };
 
 /**
