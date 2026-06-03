@@ -69,6 +69,14 @@ export const AGENT_TOOLS = {
     'industry_contact.create',  // promoters / venue mgrs
     'twilio.sms',               // reminders
   ],
+
+  // ── Catalogue + royalties (Sprint 10) ────────────────────────────────────
+  'catalogue-manager': [
+    'release.create', 'track.add', 'split.set',
+  ],
+  'royalty-auditor': [
+    'statement.parse',
+  ],
 };
 
 /**

@@ -63,6 +63,10 @@ const IntegrationsView       = lazy(() => import('./components/integrations/Inte
 // Sprint 9 — Touring module (musician persona)
 const TouringView            = lazy(() => import('./components/verticals/touring/TouringView').then(m => ({ default: m.TouringView })));
 
+// Sprint 10 — Catalogue + royalties (musician persona)
+const CatalogueView          = lazy(() => import('./components/verticals/catalogue/CatalogueView').then(m => ({ default: m.CatalogueView })));
+const StatementsView         = lazy(() => import('./components/verticals/catalogue/StatementsView').then(m => ({ default: m.StatementsView })));
+
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
@@ -363,6 +367,10 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               {/* Talent skill pack (Sprint 2 — shipped) */}
               {/* Sprint 9 — Touring (musician persona; admins see it too) */}
               <Route path="/touring" element={<TouringView />} />
+
+              {/* Sprint 10 — Catalogue + royalty statements */}
+              <Route path="/catalogue"            element={<CatalogueView />} />
+              <Route path="/catalogue/statements" element={<StatementsView />} />
 
               <Route path="/talent/auditions"  element={<AuditionsView />} />
               <Route path="/talent/self-tape"  element={<SelfTapeView />} />

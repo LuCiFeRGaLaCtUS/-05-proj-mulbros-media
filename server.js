@@ -2458,6 +2458,224 @@ const TOOL_HANDLERS = {
     return ok ? { ok: true, show_id: args.show_id } : { ok: false, error: 'upsert failed' };
   },
 
+  // ── Catalogue + royalties (Sprint 10) ─────────────────────────────────────
+  'release.create': async (args, ctx) => {
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
+    try {
+      const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/releases`, {
+        method: 'POST',
+        headers: {
+          apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${svcJwt}`,
+          'Content-Type': 'application/json',
+          Prefer:        'return=representation',
+        },
+        body: JSON.stringify({
+          user_id:      ctx.profileId,
+          title:        args.title,
+          type:         args.type || 'single',
+          release_date: args.release_date || null,
+          isrc:         args.isrc || null,
+          upc:          args.upc  || null,
+          notes:        args.notes || null,
+        }),
+      });
+      if (!r.ok) return { ok: false, error: `insert ${r.status}` };
+      const rows = await r.json();
+      return { ok: true, release_id: rows[0]?.id, title: args.title };
+    } catch (err) { return { ok: false, error: err.message }; }
+  },
+  'track.add': async (args, ctx) => {
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
+    try {
+      const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/tracks`, {
+        method: 'POST',
+        headers: {
+          apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${svcJwt}`,
+          'Content-Type': 'application/json',
+          Prefer:        'return=representation',
+        },
+        body: JSON.stringify({
+          release_id:   args.release_id,
+          user_id:      ctx.profileId,
+          title:        args.title,
+          duration_sec: args.duration_sec || null,
+          isrc:         args.isrc || null,
+          position:     args.position || null,
+        }),
+      });
+      if (!r.ok) return { ok: false, error: `insert ${r.status}` };
+      const rows = await r.json();
+      return { ok: true, track_id: rows[0]?.id, title: args.title };
+    } catch (err) { return { ok: false, error: err.message }; }
+  },
+  'split.set': async (args, ctx) => {
+    if (args.share_bps == null || args.share_bps < 0 || args.share_bps > 10000) {
+      return { ok: false, error: 'share_bps must be 0–10000' };
+    }
+    const ok = await supabaseServiceInsert('royalty_splits', {
+      track_id:   args.track_id,
+      user_id:    ctx.profileId,
+      payee_name: args.payee_name,
+      role:       args.role || null,
+      share_bps:  args.share_bps,
+      notes:      args.notes || null,
+    });
+    return ok ? { ok: true, track_id: args.track_id, payee: args.payee_name, share_pct: args.share_bps / 100 } : { ok: false, error: 'insert failed' };
+  },
+  'statement.parse': async (args, ctx) => {
+    if (!args.raw_text || args.raw_text.trim().length < 20) {
+      return { ok: false, error: 'raw_text is required (paste the statement)' };
+    }
+    if (!process.env.OPENAI_API_KEY) {
+      return { ok: false, error: 'OPENAI_API_KEY missing — cannot parse statement' };
+    }
+
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
+
+    // 1) Load the user's stored royalty splits for cross-check
+    let knownSplits = [];
+    try {
+      const r = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/royalty_splits?user_id=eq.${ctx.profileId}&select=track_id,payee_name,share_bps,role`,
+        { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY || '', Authorization: `Bearer ${svcJwt}` } },
+      );
+      knownSplits = await r.json();
+    } catch { knownSplits = []; }
+
+    // 2) Call OpenAI to extract structured line items
+    const systemPrompt = `You are a royalty statement parser. Extract structured line items from the pasted text.
+Return ONLY a JSON object matching this schema (no markdown, no commentary):
+{
+  "lines": [
+    {
+      "track_title":      string,
+      "isrc":             string | null,
+      "source_subtype":   string | null,  // e.g. "stream", "download", "sync", "mechanical"
+      "territory":        string | null,
+      "units":            number | null,
+      "gross_usd":        number | null,
+      "net_usd":          number | null,
+      "deductions":       number | null,
+      "split_pct":        number | null   // if statement specifies a split %
+    }
+  ],
+  "gross_total_usd":  number | null,
+  "net_total_usd":    number | null,
+  "currency":         string,
+  "notes":            string | null
+}`;
+    let parsed = { lines: [] };
+    try {
+      const aiR = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          max_tokens: 2500,
+          response_format: { type: 'json_object' },
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user',   content: args.raw_text.slice(0, 60_000) },  // cap to keep tokens sane
+          ],
+        }),
+      });
+      const aiData = await aiR.json();
+      if (!aiR.ok) return { ok: false, error: aiData?.error?.message || `OpenAI ${aiR.status}` };
+      try { parsed = JSON.parse(aiData.choices?.[0]?.message?.content || '{}'); } catch { parsed = { lines: [] }; }
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+
+    // 3) Anomaly detection vs known splits
+    const anomalies = [];
+    const lines = Array.isArray(parsed.lines) ? parsed.lines : [];
+    for (const line of lines) {
+      if (line.split_pct != null) {
+        const knownForTrack = knownSplits.filter(s =>
+          line.track_title && s.payee_name && line.track_title.toLowerCase().includes(s.payee_name.toLowerCase()),
+        );
+        for (const split of knownForTrack) {
+          const expectedPct = split.share_bps / 100;
+          if (Math.abs(expectedPct - line.split_pct) > 0.5) {
+            anomalies.push({
+              type:          'split_mismatch',
+              track_title:   line.track_title,
+              payee:         split.payee_name,
+              expected_pct:  expectedPct,
+              statement_pct: line.split_pct,
+            });
+          }
+        }
+      }
+      if (line.gross_usd != null && line.net_usd != null && line.deductions != null) {
+        const expectedNet = line.gross_usd - line.deductions;
+        if (Math.abs(expectedNet - line.net_usd) > 0.01) {
+          anomalies.push({
+            type:           'net_math_mismatch',
+            track_title:    line.track_title,
+            gross_usd:      line.gross_usd,
+            deductions:     line.deductions,
+            expected_net:   expectedNet,
+            statement_net:  line.net_usd,
+          });
+        }
+      }
+    }
+    // Total roll-up vs sum of lines
+    const lineGrossSum = lines.reduce((s, l) => s + (Number(l.gross_usd) || 0), 0);
+    if (parsed.gross_total_usd != null && Math.abs(lineGrossSum - parsed.gross_total_usd) > 1) {
+      anomalies.push({
+        type:                   'gross_total_mismatch',
+        line_gross_sum:         Number(lineGrossSum.toFixed(2)),
+        statement_gross_total:  parsed.gross_total_usd,
+      });
+    }
+
+    // 4) Persist statement row
+    let statement_id = null;
+    try {
+      const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/royalty_statements`, {
+        method: 'POST',
+        headers: {
+          apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+          Authorization: `Bearer ${svcJwt}`,
+          'Content-Type': 'application/json',
+          Prefer:        'return=representation',
+        },
+        body: JSON.stringify({
+          user_id:      ctx.profileId,
+          source:       args.source,
+          period_start: args.period_start || null,
+          period_end:   args.period_end   || null,
+          gross_usd:    parsed.gross_total_usd ?? null,
+          net_usd:      parsed.net_total_usd   ?? null,
+          raw_text:     args.raw_text.slice(0, 200_000),
+          parsed_json:  parsed,
+          anomalies,
+        }),
+      });
+      const rows = await r.json();
+      statement_id = rows[0]?.id;
+    } catch (err) {
+      return { ok: false, error: `persist: ${err.message}` };
+    }
+
+    return {
+      ok:           true,
+      statement_id,
+      line_count:   lines.length,
+      gross_usd:    parsed.gross_total_usd ?? null,
+      net_usd:      parsed.net_total_usd ?? null,
+      anomaly_count:anomalies.length,
+      anomalies:    anomalies.slice(0, 10),  // truncate response payload
+    };
+  },
+
   // ── Web search (proxies /api/ai-search internally) ────────────────────────
   'web.search': async (args /*, ctx */) => {
     if (!args?.query) return { ok: false, error: 'query required' };

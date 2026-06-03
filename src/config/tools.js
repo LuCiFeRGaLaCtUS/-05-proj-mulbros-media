@@ -289,6 +289,76 @@ export const TOOLS = [
     },
   },
 
+  // ── Catalogue + royalties (Sprint 10) ────────────────────────────────────
+  {
+    name: 'release.create',
+    description: 'Create a music release (single / EP / album / compilation / sync_cue) for the signed-in artist.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        title:        { type: 'string' },
+        type:         { type: 'string', enum: ['single','EP','album','compilation','sync_cue'] },
+        release_date: { type: 'string', description: 'ISO date' },
+        isrc:         { type: 'string', description: 'ISRC code if known' },
+        upc:          { type: 'string', description: 'UPC barcode if known' },
+        notes:        { type: 'string' },
+      },
+      required: ['title'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'track.add',
+    description: 'Add a track to an existing release.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        release_id:   { type: 'string', description: 'UUID of the parent release' },
+        title:        { type: 'string' },
+        duration_sec: { type: 'integer' },
+        isrc:         { type: 'string' },
+        position:     { type: 'integer', description: 'Track number within the release' },
+      },
+      required: ['release_id', 'title'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'split.set',
+    description: 'Add a royalty split row to a track. share_bps is in basis points — 5000 = 50%, 10000 = 100%. Multiple calls per track allowed; the sum should equal 10000.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        track_id:   { type: 'string' },
+        payee_name: { type: 'string', description: 'Name of payee (writer, composer, producer, label, publisher)' },
+        role:       { type: 'string', description: 'Role on the track (writer, composer, producer, performer, publisher, label, sync_owner)' },
+        share_bps:  { type: 'integer', description: '0–10000 basis points; 5000 = 50%' },
+        notes:      { type: 'string' },
+      },
+      required: ['track_id', 'payee_name', 'share_bps'],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'statement.parse',
+    description: 'Parse a pasted royalty statement text via AI. Extracts line items + computes anomalies vs the user\'s stored royalty_splits. Inserts a royalty_statements row and returns parsed payload + anomalies.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        source:       { type: 'string', enum: ['spotify','apple','youtube','mlc','soundexchange','publisher','sync','distributor','other'] },
+        period_start: { type: 'string', description: 'ISO date — start of statement period' },
+        period_end:   { type: 'string', description: 'ISO date — end of statement period' },
+        raw_text:     { type: 'string', description: 'Paste the entire statement text here. AI extracts structured line items.' },
+      },
+      required: ['source', 'raw_text'],
+      additionalProperties: false,
+    },
+  },
+
   // ── Search (read-only) ───────────────────────────────────────────────────
   {
     name: 'web.search',

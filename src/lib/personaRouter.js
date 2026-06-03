@@ -46,6 +46,14 @@ export const SLASH_COMMANDS = {
   tour:           'tour-manager',
   show:           'tour-manager',
   venue:          'tour-manager',
+  // Catalogue + royalties (Sprint 10)
+  catalogue:      'catalogue-manager',
+  release:        'catalogue-manager',
+  track:          'catalogue-manager',
+  split:          'catalogue-manager',
+  royalty:        'royalty-auditor',
+  statement:      'royalty-auditor',
+  audit:          'royalty-auditor',
   // Cross
   admin:          'agency-admin',
   cost:           'mulbros-intelligence',   // fallback for /cost (Platform Admin owns the real cost view)
