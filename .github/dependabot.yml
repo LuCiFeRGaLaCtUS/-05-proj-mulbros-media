@@ -1,0 +1,36 @@
+version: 2
+updates:
+  # npm — runtime + dev deps. Groups patches together so PR volume stays sane.
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "08:00"
+      timezone: America/Los_Angeles
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      production-patches:
+        dependency-type: production
+        update-types: [patch]
+      development-patches:
+        dependency-type: development
+        update-types: [patch]
+      production-minor:
+        dependency-type: production
+        update-types: [minor]
+    ignore:
+      # major bumps reviewed manually
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+    labels: [dependencies, automated]
+
+  # GitHub Actions used in .github/workflows/*
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    labels: [dependencies, github-actions, automated]

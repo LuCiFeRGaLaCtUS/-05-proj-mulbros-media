@@ -3,11 +3,13 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
+import cors from 'cors';
 import basicAuth from 'express-basic-auth';
 import { Resend } from 'resend';
 import * as stytch from 'stytch';
 import jwt from 'jsonwebtoken';
 import * as Sentry from '@sentry/node';
+import { Langfuse } from 'langfuse';
 import crypto from 'crypto';
 
 // ── Sentry init — must run before Express creates handlers ────────────────────
@@ -34,6 +36,21 @@ if (process.env.SENTRY_DSN) {
 } else {
   console.warn('[Sentry] DSN not set — server-side error tracking disabled');
 }
+
+// ── Langfuse init — LLM tracing for /api/ai + /api/tools/:name ───────────────
+// Trace IDs are joined to req.requestId so a Sentry breadcrumb / cost_ledger
+// row / Langfuse trace all reference the same key.
+const langfuse = (process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_PUBLIC_KEY)
+  ? new Langfuse({
+      secretKey: process.env.LANGFUSE_SECRET_KEY,
+      publicKey: process.env.LANGFUSE_PUBLIC_KEY,
+      baseUrl:   process.env.LANGFUSE_BASE_URL || process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com',
+      flushAt:        20,
+      flushInterval:  10000,
+    })
+  : null;
+if (langfuse) console.log('[Langfuse] initialized — LLM tracing active');
+else          console.warn('[Langfuse] keys not set — LLM tracing disabled');
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
@@ -62,6 +79,8 @@ app.use(helmet({
         'https://test.stytch.com',
         'https://api.spotify.com',
         'https://accounts.spotify.com',
+        'https://us.cloud.langfuse.com',
+        'https://cloud.langfuse.com',
       ],
       imgSrc:      ["'self'", 'data:', 'https://i.scdn.co', 'https://mosaic.scdn.co'],
     },
@@ -79,7 +98,35 @@ if (process.env.ADMIN_USER && process.env.ADMIN_PASS) {
   }));
 }
 
+// ── CORS — explicit allowlist, no wildcards ─────────────────────────────────
+// SPA is served same-origin so CORS only fires when something cross-origin
+// (e.g. a future mobile shell, public EPK iframe, dev tool) calls /api/*.
+// Fail closed: any origin not in the allowlist gets the default Express 403.
+const corsAllowlist = (process.env.CORS_ORIGINS || 'https://mulbros-marketing-os.onrender.com,http://localhost:5173,http://localhost:3000')
+  .split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors({
+  origin: (origin, cb) => {
+    if (!origin) return cb(null, true);              // same-origin / curl / server-to-server
+    if (corsAllowlist.includes(origin)) return cb(null, true);
+    return cb(new Error(`CORS: origin ${origin} not allowed`), false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-stytch-session-jwt', 'x-stytch-session-token', 'x-request-id'],
+}));
+
 app.use(express.json({ limit: '512kb' }));   // tighter than 2MB for AI proxy
+
+// ── Request ID middleware ───────────────────────────────────────────────────
+// Mints (or honors) a per-request UUID. Surfaced as `X-Request-Id` response
+// header and as `req.requestId`. Used as the join key for Sentry / Langfuse /
+// PostHog / cost_ledger so a single request can be traced across systems.
+app.use((req, res, next) => {
+  const incoming = (req.headers['x-request-id'] || '').toString().trim();
+  req.requestId = incoming && incoming.length <= 128 ? incoming : crypto.randomUUID();
+  res.setHeader('X-Request-Id', req.requestId);
+  next();
+});
 
 // ── Stytch session verification middleware ───────────────────────────────────
 // Protects endpoints that spend paid quota (/api/email, /api/firecrawl-search,
@@ -486,12 +533,41 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       toolHopProfileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
     }
 
+    // Langfuse trace — request-scoped parent of all hops + tool spans.
+    // trace.id = req.requestId so Sentry/cost_ledger/X-Request-Id all join.
+    const t0 = Date.now();
+    const lfTrace = langfuse?.trace({
+      id:       req.requestId,
+      name:     'ai.chat',
+      userId:   toolHopProfileId || req.stytchUser?.userId || 'anon',
+      metadata: { model, provider: isAnthropic ? 'anthropic' : 'openai', wantsTools },
+      input:    messages,
+    });
+
     for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
+      const lfGen = lfTrace?.generation({
+        name:            `hop-${hop}`,
+        model,
+        modelParameters: { max_tokens: safeMaxTokens },
+        input:           body.messages || messages,
+      });
       response = await fetch(apiUrl, {
         method: 'POST', headers, body: JSON.stringify(body), signal: controller.signal,
       });
       data = await response.json();
-      if (!response.ok) break;
+      const hopUsage = isAnthropic
+        ? { input: data.usage?.input_tokens  || 0, output: data.usage?.output_tokens     || 0 }
+        : { input: data.usage?.prompt_tokens || 0, output: data.usage?.completion_tokens || 0 };
+      lfGen?.end({
+        output: isAnthropic
+          ? (data.content?.[0]?.text || data.content || null)
+          : (data.choices?.[0]?.message || null),
+        usage:  hopUsage,
+      });
+      if (!response.ok) {
+        lfTrace?.update({ level: 'ERROR', statusMessage: `upstream ${response.status}` });
+        break;
+      }
 
       // Accumulate usage across all hops for cost ledger
       if (isAnthropic) {
@@ -518,6 +594,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
         catch { parsedArgs = {}; }
 
         const handler = TOOL_HANDLERS[fnName];
+        const lfSpan = lfTrace?.span({ name: `tool.${fnName}`, input: parsedArgs });
         let toolResult;
         if (!handler) {
           toolResult = { ok: false, error: `Unknown tool: ${fnName}` };
@@ -525,11 +602,12 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
           toolResult = { ok: false, error: 'Profile resolution failed' };
         } else {
           try {
-            toolResult = await handler(parsedArgs, { profileId: toolHopProfileId });
+            toolResult = await handler(parsedArgs, { profileId: toolHopProfileId, requestId: req.requestId });
           } catch (err) {
             toolResult = { ok: false, error: err.message || 'handler threw' };
           }
         }
+        lfSpan?.end({ output: toolResult });
 
         aggregateToolCalls.push({ name: fnName, args: parsedArgs, result: toolResult });
         logCostFireAndForget({
@@ -574,6 +652,21 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
         usd_cost:   usdCost,
         metadata:   wantsTools ? { tool_hops: aggregateToolCalls.length } : {},
       });
+    });
+
+    // Langfuse — close out trace with final output + roll-up metadata
+    const finalOutput = isAnthropic
+      ? (data.content?.[0]?.text || '')
+      : (data.choices?.[0]?.message?.content || '');
+    lfTrace?.update({
+      output:   finalOutput,
+      metadata: {
+        tool_hops:  aggregateToolCalls.length,
+        latency_ms: Date.now() - t0,
+        tokens_in:  finalTokensIn,
+        tokens_out: finalTokensOut,
+        usd_cost:   usdCost,
+      },
     });
 
     // Normalize Anthropic response to OpenAI shape so the client doesn't need to change
@@ -2827,6 +2920,27 @@ app.use((err, req, res, _next) => {
   });
 });
 
-app.listen(port, () => {
+const httpServer = app.listen(port, () => {
   console.log(`MulBros Media OS — port ${port}`);
 });
+
+// ── Graceful shutdown ────────────────────────────────────────────────────────
+// On Render dyno restart (SIGTERM) we have ~30s before SIGKILL. Drain in-flight
+// requests, flush Langfuse trace buffer, then exit. Hard-exit timer ensures we
+// never hang past the kill window.
+const shutdown = async (signal) => {
+  console.log(`[shutdown] ${signal} received — draining...`);
+  const force = setTimeout(() => {
+    console.error('[shutdown] force exit after 28s');
+    process.exit(1);
+  }, 28_000);
+  force.unref();
+  try { await langfuse?.shutdownAsync(); } catch (err) { console.error('[shutdown] langfuse flush:', err.message); }
+  try { await Sentry.close(2000); } catch (_) { /* noop */ }
+  httpServer.close(() => {
+    console.log('[shutdown] http server closed');
+    process.exit(0);
+  });
+};
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT',  () => shutdown('SIGINT'));
