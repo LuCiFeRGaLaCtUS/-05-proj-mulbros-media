@@ -64,7 +64,7 @@
     "autoprefixer": "^10.4.16",
     "eslint": "^10.2.0",
     "eslint-plugin-react-hooks": "^7.1.0",
-    "globals": "^17.5.0",
+    "globals": "^17.6.0",
     "husky": "^9.1.7",
     "jsdom": "^29.0.2",
     "lint-staged": "^17.0.7",
