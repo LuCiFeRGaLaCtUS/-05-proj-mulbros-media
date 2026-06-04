@@ -981,8 +981,50 @@ app.get('/api/spotify/artist-stats', async (req, res) => {
 });
 
 // ── Health check ──────────────────────────────────────────────────────────────
+// Two endpoints:
+//   /health   — shallow liveness probe (always 200 if process is up). Render
+//               uses this to decide if the dyno needs restart.
+//   /healthz  — deep readiness probe (checks Supabase REST reachable inside
+//               2s). Returns 503 if upstream broken. Suitable for uptime
+//               monitors (BetterUptime, Render uptime monitor) that should
+//               page on real outages, not just node-up.
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', version: '2.0.0', timestamp: new Date().toISOString() });
+});
+app.get('/healthz', async (req, res) => {
+  const t0 = Date.now();
+  const probes = { supabase: 'unknown', langfuse: langfuse ? 'configured' : 'disabled', sentry: process.env.SENTRY_DSN ? 'configured' : 'disabled' };
+  let status = 'ok';
+
+  if (process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_ANON_KEY) {
+    const ctrl = new AbortController();
+    const tm   = setTimeout(() => ctrl.abort(), 2000);
+    try {
+      const r = await fetch(
+        `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?select=id&limit=1`,
+        { headers: { apikey: process.env.VITE_SUPABASE_ANON_KEY }, signal: ctrl.signal },
+      );
+      probes.supabase = r.ok ? 'ok' : `http_${r.status}`;
+      if (!r.ok) status = 'degraded';
+    } catch (err) {
+      probes.supabase = err.name === 'AbortError' ? 'timeout' : 'error';
+      status = 'down';
+    } finally {
+      clearTimeout(tm);
+    }
+  } else {
+    probes.supabase = 'not_configured';
+    status = 'degraded';
+  }
+
+  res.status(status === 'down' ? 503 : 200).json({
+    status,
+    version:    '2.0.0',
+    timestamp:  new Date().toISOString(),
+    request_id: req.requestId,
+    latency_ms: Date.now() - t0,
+    probes,
+  });
 });
 
 // ── Weather proxy — avoids CSP connectSrc restriction on wttr.in ──────────────
