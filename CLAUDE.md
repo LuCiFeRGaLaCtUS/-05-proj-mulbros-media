@@ -6,17 +6,40 @@
 
 ---
 
-## ⚠️ NEXT-SESSION REMINDER (2026-06-04 end-of-day)
+## ⚠️ NEXT-SESSION REMINDER (resumed 2026-06-04 evening)
 
-**Before doing anything else tomorrow, Claude must surface the dashboard punch list to Arghya.**
+**Last live commit:** `736ee18` on `main` — Sentry ingest + worker-src CSP fix.
 
-Sprint 12 code is fully shipped (last commit: `4095043` on `main`). Remaining work is dashboard-only (Sentry signup, Render env vars, Supabase Edge Function deploy, Resend DNS, GitHub repo secrets, BetterUptime). Full step-by-step is in `docs/DASHBOARD_PUNCHLIST.md` — **read that file first** and remind Arghya to do P0 (Sentry DSN, NODE_ENV=production, Render Health Check Path) before any new work.
+### What's DONE since the previous reminder
+- ✅ Sentry projects created (`ai-operator-server` Node.js + `ai-operator-client` React)
+- ✅ `SENTRY_DSN` + `VITE_SENTRY_DSN` set on Render
+- ✅ `NODE_ENV=production` set on Render
+- ✅ `NPM_CONFIG_PRODUCTION=false` set on Render (devDeps needed at build time)
+- ✅ Sentry initialised at boot — logs show `[Sentry] initialized — server-side error tracking active`
+- ✅ `/healthz` shows `probes.sentry: configured`
+- ✅ Prod CSP strict (`script-src 'self'`)
+- ✅ CSP fix shipped for Sentry ingest hosts + worker-src blob: (commit `736ee18`)
+- ✅ OpenAI tool-name encode fix shipped (commit `54c65b2`) — chat working again
 
-Recommended opener for tomorrow morning:
+### What's STILL pending (priority order)
+1. **Sentry client test from incognito** — Arghya's normal browser has an ad-blocker (uBlock/Brave Shields) → blocks `*.ingest.us.sentry.io`. Incognito or whitelist will confirm capture works.
+2. **Render Health Check Path** — Settings → Health & Alerts → set `/healthz`. 1 min.
+3. **MUX_WEBHOOK_SECRET** on Render. Mux dashboard → Webhooks → reveal. 5 min.
+4. **DOCUSIGN_HMAC_KEY** on Render. DocuSign Connect → HMAC. 5 min (skip if no DocuSign use).
+5. **Sentry CI auth token + 3 GitHub repo secrets** (`SENTRY_AUTH_TOKEN`, `SENTRY_ORG`, `SENTRY_PROJECT=ai-operator-client`) — activates source-map upload from CI.
+6. **`Resend_API` → `RESEND_API_KEY` rename on Render** — cost-alert function expects `RESEND_API_KEY`.
+7. **Deploy `cost-alert` Edge Function** — `supabase login` + `supabase link --project-ref ymkikosszdherismfckl` + `supabase functions deploy cost-alert` + set 4 function secrets in Supabase dashboard.
+8. **pg_cron `service_role_key`** — `ALTER DATABASE postgres SET app.settings.service_role_key TO '...'` in Supabase SQL editor.
+9. **Resend domain DNS** — SPF + DKIM + DMARC on `keemakr.ai` (10 min config + 24h propagation).
+10. **BetterUptime monitor** OR ship GitHub Actions cron alternative (Arghya can say "ship cron uptime").
+11. **`.env.smoke` populate + run `npm run smoke:prod` locally** + add 5 GitHub repo secrets to activate CI smoke.
+12. **Backup restore drill** on a Supabase branch project. ~30 min one-time.
 
-> "Good morning. Before we start anything new — yesterday Sprint 12 code shipped. The dashboard punch list still needs you. Top-3 (12 min): Sentry DSN, NODE_ENV=production, Render Health Check Path = /healthz. Full list in `docs/DASHBOARD_PUNCHLIST.md`. Want to knock those out first or pick a Sprint 13 item?"
+### Recommended opener tomorrow
 
-After that opener, await Arghya's call. Do NOT auto-start Sprint 13 work without confirmation.
+> "Good morning. Sentry is wired and `/healthz` shows all 3 probes configured. Still pending: Render Health Check Path + Mux/DocuSign webhook secrets + Sentry CI auth + cost-alert deploy + Resend DNS + BetterUptime/cron + smoke creds + backup drill. Full state in `docs/DASHBOARD_PUNCHLIST.md`. Want to start with the Sentry client incognito test, or knock out webhook secrets first (5 min each)?"
+
+After opener, await Arghya's call. Do NOT auto-start Sprint 13 work.
 
 ---
 

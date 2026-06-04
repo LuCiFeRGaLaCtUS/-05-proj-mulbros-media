@@ -1,8 +1,30 @@
 # Dashboard punch list — TOMORROW MORNING START HERE
 
-**Saved 2026-06-04 end-of-day. Last live commit:** `4095043` on `main`.
+**Last update:** 2026-06-04 evening · **Last live commit:** `736ee18` on `main`.
 
-> Sprint 12 code is shipped. Everything below is dashboard-only (Sentry, Render, Supabase, GitHub repo secrets, Resend DNS, BetterUptime). ~75 min total. Do in order — later items depend on earlier.
+> Sprint 12 code is shipped. Everything below is dashboard-only. ~50 min remaining (already knocked out Sentry signup + DSNs + env vars + NODE_ENV + CSP fixes).
+
+## Progress so far
+
+| Step | State |
+|---|---|
+| P0.1 Sentry projects + DSN | ✅ done (server + client projects, DSNs on Render) |
+| P0.2 NODE_ENV=production | ✅ set on Render |
+| P0.3 Render Health Check Path | ❌ STILL TO DO |
+| P1.4 MUX_WEBHOOK_SECRET | ❌ STILL TO DO |
+| P1.5 DOCUSIGN_HMAC_KEY | ❌ STILL TO DO (skip if not using DocuSign) |
+| P2.7 Deploy cost-alert function | ❌ STILL TO DO |
+| P2.8 service_role_key for pg_cron | ❌ STILL TO DO |
+| P3.10 Sentry CI auth token + GH secrets | ❌ STILL TO DO |
+| P4.11 Resend DNS | ❌ STILL TO DO |
+| P5.12 Uptime monitor | ❌ STILL TO DO |
+| P6.13 `.env.smoke` + smoke:prod | ❌ STILL TO DO |
+| P6.14 CI smoke GitHub secrets | ❌ STILL TO DO |
+| P7.15 Backup restore drill | ❌ STILL TO DO |
+| Sentry client capture verify | 🟡 pending (incognito test — ad-blocker blocks in normal browser) |
+| `Resend_API` → `RESEND_API_KEY` rename | ❌ NEW — cost-alert function expects `RESEND_API_KEY` |
+
+Remaining time estimate: **~50 min** for full completion.
 
 ---
 
