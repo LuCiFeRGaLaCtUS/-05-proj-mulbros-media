@@ -52,6 +52,32 @@ const langfuse = (process.env.LANGFUSE_SECRET_KEY && process.env.LANGFUSE_PUBLIC
 if (langfuse) console.log('[Langfuse] initialized — LLM tracing active');
 else          console.warn('[Langfuse] keys not set — LLM tracing disabled');
 
+// ── PII scrubber for Langfuse trace + cost_ledger metadata ───────────────────
+// Strip emails, US phone numbers, US SSNs, and obvious card-number patterns
+// from any string/object before it leaves the server. Deep, defensive — runs
+// over input + output payloads, not just top-level keys.
+const PII_PATTERNS = [
+  { name: 'email',  re: /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi,  mask: '<email>' },
+  { name: 'phone',  re: /\+?\d{1,3}[\s.-]?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g, mask: '<phone>' },
+  { name: 'ssn',    re: /\b\d{3}-\d{2}-\d{4}\b/g,  mask: '<ssn>' },
+  { name: 'card',   re: /\b(?:\d[ -]*?){13,16}\b/g, mask: '<card>' },
+];
+const scrubPii = (val, depth = 0) => {
+  if (depth > 6 || val == null) return val;
+  if (typeof val === 'string') {
+    let out = val;
+    for (const p of PII_PATTERNS) out = out.replace(p.re, p.mask);
+    return out;
+  }
+  if (Array.isArray(val)) return val.map((v) => scrubPii(v, depth + 1));
+  if (typeof val === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) out[k] = scrubPii(v, depth + 1);
+    return out;
+  }
+  return val;
+};
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = dirname(__filename);
 
@@ -196,14 +222,23 @@ const requireAuth = async (req, res, next) => {
 // Used by server for internal Supabase REST calls that need to bypass RLS
 // (profile lookup before user session exists, role gate, auto-create flows).
 // Short-lived (10 min) so a leaked token expires fast.
+//
+// Cached at module scope — one token reused across all requests until 60s
+// before expiry. Saves ~1ms HMAC per cost-ledger / tool-handler write under
+// load. Cache key is fixed (no per-user scope; the token is server-internal).
+let _svcJwtCache = { token: null, expSec: 0 };
 const mintServiceJwt = () => {
   if (!process.env.SUPABASE_JWT_SECRET) return null;
   const now = Math.floor(Date.now() / 1000);
-  return jwt.sign(
-    { aud: 'authenticated', role: 'service_role', iss: 'mulbros-bridge-svc', iat: now, exp: now + 600 },
+  if (_svcJwtCache.token && _svcJwtCache.expSec - now > 60) return _svcJwtCache.token;
+  const exp = now + 600;
+  const token = jwt.sign(
+    { aud: 'authenticated', role: 'service_role', iss: 'mulbros-bridge-svc', iat: now, exp },
     process.env.SUPABASE_JWT_SECRET,
     { algorithm: 'HS256' },
   );
+  _svcJwtCache = { token, expSec: exp };
+  return token;
 };
 
 // ── Cost ledger helper ────────────────────────────────────────────────────────
@@ -541,7 +576,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       name:     'ai.chat',
       userId:   toolHopProfileId || req.stytchUser?.userId || 'anon',
       metadata: { model, provider: isAnthropic ? 'anthropic' : 'openai', wantsTools },
-      input:    messages,
+      input:    scrubPii(messages),
     });
 
     for (let hop = 0; hop < MAX_TOOL_HOPS; hop++) {
@@ -549,7 +584,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
         name:            `hop-${hop}`,
         model,
         modelParameters: { max_tokens: safeMaxTokens },
-        input:           body.messages || messages,
+        input:           scrubPii(body.messages || messages),
       });
       response = await fetch(apiUrl, {
         method: 'POST', headers, body: JSON.stringify(body), signal: controller.signal,
@@ -559,9 +594,9 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
         ? { input: data.usage?.input_tokens  || 0, output: data.usage?.output_tokens     || 0 }
         : { input: data.usage?.prompt_tokens || 0, output: data.usage?.completion_tokens || 0 };
       lfGen?.end({
-        output: isAnthropic
+        output: scrubPii(isAnthropic
           ? (data.content?.[0]?.text || data.content || null)
-          : (data.choices?.[0]?.message || null),
+          : (data.choices?.[0]?.message || null)),
         usage:  hopUsage,
       });
       if (!response.ok) {
@@ -594,7 +629,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
         catch { parsedArgs = {}; }
 
         const handler = TOOL_HANDLERS[fnName];
-        const lfSpan = lfTrace?.span({ name: `tool.${fnName}`, input: parsedArgs });
+        const lfSpan = lfTrace?.span({ name: `tool.${fnName}`, input: scrubPii(parsedArgs) });
         let toolResult;
         if (!handler) {
           toolResult = { ok: false, error: `Unknown tool: ${fnName}` };
@@ -607,7 +642,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
             toolResult = { ok: false, error: err.message || 'handler threw' };
           }
         }
-        lfSpan?.end({ output: toolResult });
+        lfSpan?.end({ output: scrubPii(toolResult) });
 
         aggregateToolCalls.push({ name: fnName, args: parsedArgs, result: toolResult });
         logCostFireAndForget({
@@ -615,7 +650,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
           endpoint: `/api/tools/${fnName}`,
           provider: 'tool',
           model:    fnName,
-          metadata: { args: parsedArgs, ok: !!toolResult?.ok, via: 'function_call' },
+          metadata: { args: scrubPii(parsedArgs), ok: !!toolResult?.ok, via: 'function_call', request_id: req.requestId },
         });
 
         body.messages.push({
@@ -659,7 +694,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       ? (data.content?.[0]?.text || '')
       : (data.choices?.[0]?.message?.content || '');
     lfTrace?.update({
-      output:   finalOutput,
+      output:   scrubPii(finalOutput),
       metadata: {
         tool_hops:  aggregateToolCalls.length,
         latency_ms: Date.now() - t0,
@@ -2905,8 +2940,63 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
   },
 };
 
+// ── Per-tool rate limits (per user, sliding window in-memory) ────────────────
+// Stricter than the generic integrationLimiter (20/min) for tools that hit
+// paid upstream APIs or generate user-visible side effects. Default: no
+// extra cap (only global integrationLimiter + global toolGlobalPerUser).
+const TOOL_QUOTAS = {
+  // tool name              hourly per-user cap
+  'twilio.sms':              5,
+  'resend.email':            30,
+  'statement.parse':         20,
+  'web.search':              50,
+  'selftape.request_upload': 30,
+};
+const toolWindows = new Map(); // key = `${uid}:${name}`, value = { windowStart, count }
+const checkToolQuota = (uid, name) => {
+  const max = TOOL_QUOTAS[name];
+  if (!max || !uid) return { ok: true };
+  const key = `${uid}:${name}`;
+  const now = Date.now();
+  const entry = toolWindows.get(key);
+  if (!entry || now - entry.windowStart > 3_600_000) {
+    toolWindows.set(key, { windowStart: now, count: 1 });
+    return { ok: true };
+  }
+  if (entry.count >= max) {
+    return { ok: false, message: `Tool ${name} limited to ${max}/hr per user. Try again later.` };
+  }
+  entry.count += 1;
+  return { ok: true };
+};
+
+// Tool-call global per-user cap — guards the dispatcher itself from abuse
+// (a runaway agent loop firing 1000 tools/hr). Generous default; OK to raise.
+const toolGlobalPerUser = perUserLimit({
+  windowMs: 60 * 60 * 1000,
+  max:      200,
+  message:  'Tool-call quota exceeded. 200 calls/hr/user.',
+});
+
+// Standardize tool-handler return shape at the dispatcher boundary.
+// Handlers historically returned heterogeneous shapes — { ok, data }, { ok,
+// foo, bar }, raw { error: '...' }. Normalize to { ok, result?, error? } so
+// clients (and Langfuse) see one contract.
+const normalizeToolResult = (raw) => {
+  if (raw == null)                  return { ok: false, error: 'handler returned null' };
+  if (typeof raw !== 'object')      return { ok: true,  result: raw };
+  if (raw.ok === false)             return { ok: false, error: raw.error || 'tool failed', ...raw };
+  if (raw.ok === true) {
+    const { ok, error, ...rest } = raw;
+    return { ok: true, result: Object.keys(rest).length ? rest : null };
+  }
+  // Legacy handlers without an `ok` field — treat as success if no `error` key
+  if (raw.error)                    return { ok: false, error: String(raw.error) };
+  return { ok: true, result: raw };
+};
+
 // POST /api/tools/:name — dispatch an agent tool call.
-app.post('/api/tools/:name', requireAuth, integrationLimiter, async (req, res) => {
+app.post('/api/tools/:name', requireAuth, toolGlobalPerUser, integrationLimiter, async (req, res) => {
   const name = req.params.name;
   const handler = TOOL_HANDLERS[name];
   if (!handler) return res.status(404).json({ ok: false, error: `Unknown tool: ${name}` });
@@ -2914,15 +3004,21 @@ app.post('/api/tools/:name', requireAuth, integrationLimiter, async (req, res) =
   const profileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
   if (!profileId) return res.status(403).json({ ok: false, error: 'No profile' });
 
+  // Per-tool quota check (in addition to global per-user + IP limiters above)
+  const quota = checkToolQuota(req.stytchUser?.userId, name);
+  if (!quota.ok) return res.status(429).json({ ok: false, error: quota.message });
+
+  const t0 = Date.now();
   try {
-    const result = await handler(req.body || {}, { profileId });
+    const raw = await handler(req.body || {}, { profileId, requestId: req.requestId });
+    const result = normalizeToolResult(raw);
     // Audit log — every tool call hits cost_ledger as provider='tool'
     logCostFireAndForget({
       userId:   profileId,
       endpoint: `/api/tools/${name}`,
       provider: 'tool',
       model:    name,
-      metadata: { args: req.body || {}, ok: !!result?.ok },
+      metadata: { args: scrubPii(req.body || {}), ok: result.ok, request_id: req.requestId, latency_ms: Date.now() - t0 },
     });
     return res.json(result);
   } catch (err) {
