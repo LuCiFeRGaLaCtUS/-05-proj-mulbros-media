@@ -28,12 +28,15 @@ jobs:
       - name: Lint
         run: npm run lint
 
-  # ── Dependency audit (warn-only; never fails the build) ────────────────────
+  # ── Dependency audit ────────────────────────────────────────────────────────
+  # Two passes:
+  #   1. Production deps at HIGH severity — FAILS the build. Real risk.
+  #   2. All deps at MODERATE — warn-only, surfaces transitive low-severity
+  #      issues without blocking shipping.
   audit:
     name: npm audit
     runs-on: ubuntu-latest
     needs: lint
-    continue-on-error: true
 
     steps:
       - name: Checkout
@@ -48,11 +51,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Audit production deps (high+ only)
+      - name: Audit production deps (high+ — BLOCKS on fail)
         run: npm audit --omit=dev --audit-level=high
-        continue-on-error: true
 
-      - name: Audit all deps (warn)
+      - name: Audit all deps incl. dev (moderate — warn only)
         run: npm audit --audit-level=moderate
         continue-on-error: true
 
@@ -80,6 +82,25 @@ jobs:
         env:
           # No real key needed for build — proxy is server-side only
           OPENAI_API_KEY: ''
+
+      - name: Bundle size budget gate
+        run: npm run bundle:budget
+
+      - name: Upload source maps to Sentry
+        if: env.SENTRY_AUTH_TOKEN != '' && env.SENTRY_ORG != '' && env.SENTRY_PROJECT != ''
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG:        ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT:    ${{ secrets.SENTRY_PROJECT }}
+        run: |
+          npx @sentry/cli releases new "$GITHUB_SHA"
+          npx @sentry/cli releases set-commits "$GITHUB_SHA" --auto
+          npx @sentry/cli sourcemaps inject ./dist
+          npx @sentry/cli sourcemaps upload --release="$GITHUB_SHA" ./dist
+          npx @sentry/cli releases finalize "$GITHUB_SHA"
+          # Strip .map files from dist before they ship to Render (sourcemaps
+          # are now in Sentry; we don't need them publicly fetchable).
+          find ./dist -name "*.map" -delete
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4

@@ -458,7 +458,13 @@ export default defineConfig(({ mode }) => {
 
     build: {
       outDir:               'dist',
-      sourcemap:            false,
+      // Hidden source maps: emit .map files alongside dist/assets/ but do NOT
+      // reference them from the JS via sourcemap comment. CI uploads to Sentry
+      // after build, then can be deleted before deploy if we want zero
+      // public exposure. Currently they stay on the dyno (404-able but not
+      // linked). Trade: better stack traces in Sentry. See SENTRY_AUTH_TOKEN
+      // CI step in .github/workflows/ci.yml.
+      sourcemap:            'hidden',
       chunkSizeWarningLimit: 600, // jsPDF is legitimately ~570 kB; suppress the noise
       // ── Manual chunk splitting — keeps the main bundle lean ────────────────
       rollupOptions: {

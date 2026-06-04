@@ -19,7 +19,10 @@ if (process.env.SENTRY_DSN) {
   Sentry.init({
     dsn:         process.env.SENTRY_DSN,
     environment: process.env.NODE_ENV || 'development',
-    release:     process.env.APP_VERSION || 'dev',
+    // Release = commit SHA from Render's auto-detected env var. CI also
+    // uploads sourcemaps under this exact release name so Sentry can
+    // symbolicate stack traces against the matching bundle.
+    release:     process.env.RENDER_GIT_COMMIT || process.env.APP_VERSION || 'dev',
     tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
     beforeSend(event) {
       // Scrub auth headers from outbound events
@@ -120,6 +123,7 @@ app.use(helmet({
         'https://cloud.langfuse.com',
       ],
       imgSrc:      ["'self'", 'data:', 'https://i.scdn.co', 'https://mosaic.scdn.co'],
+      reportUri:   ['/api/csp-report'],
     },
   },
 }));
@@ -153,6 +157,35 @@ app.use(cors({
 }));
 
 app.use(express.json({ limit: '512kb' }));   // tighter than 2MB for AI proxy
+
+// CSP violation reports land here. Browsers POST application/csp-report or
+// application/reports+json. We accept both shapes, log to Sentry (if wired)
+// and console. Rate-limited to keep noise bounded.
+const cspReportLimiter = rateLimit({ windowMs: 60_000, max: 30, standardHeaders: false, legacyHeaders: false });
+app.post(
+  '/api/csp-report',
+  cspReportLimiter,
+  express.raw({ type: ['application/csp-report', 'application/reports+json', 'application/json'], limit: '32kb' }),
+  (req, res) => {
+    try {
+      const body = req.body?.length ? JSON.parse(req.body.toString('utf8')) : null;
+      const report = body?.['csp-report'] || body;
+      console.warn('[csp-violation]', JSON.stringify(report).slice(0, 500));
+      if (process.env.SENTRY_DSN) {
+        try {
+          Sentry.captureMessage('CSP violation', {
+            level: 'warning',
+            tags: { surface: 'csp' },
+            extra: { report },
+          });
+        } catch { /* noop */ }
+      }
+    } catch (err) {
+      console.warn('[csp-violation] parse failed:', err.message);
+    }
+    res.status(204).end();
+  },
+);
 
 // ── Request ID middleware ───────────────────────────────────────────────────
 // Mints (or honors) a per-request UUID. Surfaced as `X-Request-Id` response
@@ -307,21 +340,27 @@ const logCostFireAndForget = async ({ userId, endpoint, provider, model, tokens_
 // LRU semantics via insertion-order eviction (Map preserves insertion order).
 // Bounded at PROFILE_CACHE_MAX entries to prevent unbounded memory growth on
 // long-lived single dyno (one entry per distinct Stytch user ever seen).
+// Each entry carries an `expiresAt` so stale (e.g. profile email changed,
+// profile soft-deleted) values can't live forever.
 const PROFILE_CACHE_MAX = 5000;
+const PROFILE_CACHE_TTL_MS = 60 * 60 * 1000;   // 1 hour
 const stytchToProfileCache = new Map();
 const profileCacheGet = (key) => {
   if (!stytchToProfileCache.has(key)) return undefined;
-  const val = stytchToProfileCache.get(key);
+  const entry = stytchToProfileCache.get(key);
+  if (entry.expiresAt <= Date.now()) {
+    stytchToProfileCache.delete(key);
+    return undefined;
+  }
   // Touch — move to end (most-recently-used)
   stytchToProfileCache.delete(key);
-  stytchToProfileCache.set(key, val);
-  return val;
+  stytchToProfileCache.set(key, entry);
+  return entry.value;
 };
-const profileCacheSet = (key, val) => {
+const profileCacheSet = (key, value) => {
   if (stytchToProfileCache.has(key)) stytchToProfileCache.delete(key);
-  stytchToProfileCache.set(key, val);
+  stytchToProfileCache.set(key, { value, expiresAt: Date.now() + PROFILE_CACHE_TTL_MS });
   if (stytchToProfileCache.size > PROFILE_CACHE_MAX) {
-    // Evict oldest (insertion-order = first key)
     const oldest = stytchToProfileCache.keys().next().value;
     stytchToProfileCache.delete(oldest);
   }
@@ -421,6 +460,18 @@ const aiLimiter = rateLimit({
   message: { error: { message: 'Too many AI requests — please wait a minute.' } },
 });
 
+// Per-IP cap on Supabase JWT mint endpoint. Prevents an attacker holding a
+// valid (or replayed) Stytch session from hammering the route to drain
+// server CPU + Supabase REST quota. Generous so legitimate clients with
+// occasional refresh storms aren't blocked.
+const authMintLimiter = rateLimit({
+  windowMs:        60 * 1000,
+  max:             60,
+  standardHeaders: true,
+  legacyHeaders:   false,
+  message: { error: { message: 'Too many token requests — try again shortly.' } },
+});
+
 // ── Allowed models ─────────────────────────────────────────────────────────────
 const ALLOWED_MODELS = new Set([
   // OpenAI
@@ -442,7 +493,7 @@ const ALLOWED_MODELS = new Set([
 // This enables RLS policies of the form `user_id = auth.uid()` to work.
 // `mintServiceJwt` is defined above (used by requireRole + this endpoint).
 
-app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
+app.post('/api/auth/supabase-token', authMintLimiter, requireAuth, async (req, res) => {
   if (!process.env.SUPABASE_JWT_SECRET) {
     return res.status(503).json({ error: { message: 'SUPABASE_JWT_SECRET not configured.' } });
   }
@@ -487,6 +538,10 @@ app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
     const upserted = await ur.json();
     const profile = Array.isArray(upserted) ? upserted[0] : upserted;
     if (!profile?.id) return res.status(500).json({ error: { message: 'Profile resolution failed.' } });
+
+    // Refresh the LRU cache entry so subsequent requests see the fresh profile.id
+    // (and any updated email) within milliseconds rather than after TTL expiry.
+    profileCacheSet(stytchUid, profile.id);
 
     // Mint Supabase JWT — sub=profile.id, role=authenticated, exp=1h
     const now = Math.floor(Date.now() / 1000);
@@ -3120,14 +3175,16 @@ app.get('*', (req, res) => {
 // Must be last middleware before listen.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, _next) => {
-  console.error('[api]', req.method, req.path, err.message || err);
+  console.error('[api]', req.method, req.path, 'rid=' + (req.requestId || '?'), err.message || err);
   const status = err.status || err.statusCode || 500;
-  // Forward 5xx to Sentry (skip 4xx — those are client errors, noise)
+  // Forward 5xx to Sentry (skip 4xx — those are client errors, noise).
+  // Tag with X-Request-Id so the Sentry event joins to its Langfuse trace and
+  // any cost_ledger row tagged with the same id.
   if (status >= 500 && process.env.SENTRY_DSN) {
     try {
       Sentry.captureException(err, {
-        tags: { route: req.path, method: req.method },
-        extra: { stytch_user_id: req.stytchUser?.userId },
+        tags:  { route: req.path, method: req.method, request_id: req.requestId },
+        extra: { stytch_user_id: req.stytchUser?.userId, request_id: req.requestId },
       });
     } catch { /* noop */ }
   }
@@ -3139,6 +3196,38 @@ app.use((err, req, res, _next) => {
     },
   });
 });
+
+// Startup audit — surface env-var gaps loud at boot so they're caught before
+// they bite at 3am. Critical missing secrets exit non-zero in production.
+const auditEnv = () => {
+  const isProd = process.env.NODE_ENV === 'production';
+  const critical = [
+    'SUPABASE_JWT_SECRET',
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY',
+    'STYTCH_PROJECT_ID',
+    'STYTCH_SECRET',
+  ];
+  const recommended = {
+    SENTRY_DSN:         'server-side error tracking disabled',
+    MUX_WEBHOOK_SECRET: 'Mux webhook accepts unverified payloads',
+    DOCUSIGN_HMAC_KEY:  'DocuSign webhook accepts unverified payloads',
+    LANGFUSE_SECRET_KEY:'LLM tracing disabled',
+  };
+  const missingCritical = critical.filter((k) => !process.env[k]);
+  if (missingCritical.length && isProd) {
+    console.error(`[startup] FATAL — missing required env: ${missingCritical.join(', ')}`);
+    process.exit(1);
+  }
+  if (missingCritical.length) {
+    console.warn(`[startup] missing critical env (allowed in dev): ${missingCritical.join(', ')}`);
+  }
+  for (const [k, msg] of Object.entries(recommended)) {
+    if (!process.env[k]) console.warn(`[startup] ${k} not set — ${msg}`);
+  }
+  if (!isProd) console.warn('[startup] NODE_ENV !== production — prod CSP scriptSrc has unsafe-inline');
+};
+auditEnv();
 
 const httpServer = app.listen(port, () => {
   console.log(`MulBros Media OS — port ${port}`);
