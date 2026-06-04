@@ -72,6 +72,10 @@ const EPKBuilderView         = lazy(() => import('./components/verticals/epk/EPK
 const EPKPublicView          = lazy(() => import('./components/epk/EPKPublicView').then(m => ({ default: m.EPKPublicView })));
 const TeamChatView           = lazy(() => import('./components/team/TeamChatView').then(m => ({ default: m.TeamChatView })));
 
+// Sprint 12 — Legal pages (anon, no auth gate)
+const PrivacyView            = lazy(() => import('./components/legal/PrivacyView').then(m => ({ default: m.PrivacyView })));
+const TermsView              = lazy(() => import('./components/legal/TermsView').then(m => ({ default: m.TermsView })));
+
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);
 export const useAppContext = () => useContext(AppContext);
@@ -217,6 +221,19 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
       <Suspense fallback={<FullScreenLoader />}>
         <Routes>
           <Route path="/epk/:slug" element={<EPKPublicView />} />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  // Public legal pages — anonymous-readable. Privacy + ToS must be visible
+  // before sign-up so users can read what they're agreeing to.
+  if (window.location.pathname === '/privacy' || window.location.pathname === '/terms') {
+    return (
+      <Suspense fallback={<FullScreenLoader />}>
+        <Routes>
+          <Route path="/privacy" element={<PrivacyView />} />
+          <Route path="/terms"   element={<TermsView />} />
         </Routes>
       </Suspense>
     );
@@ -391,6 +408,10 @@ function AppInner({ session, user, loading: authLoading, signOut }) {
               {/* Sprint 11 — EPK builder + Team chat (all personas) */}
               <Route path="/epk-builder" element={<EPKBuilderView />} />
               <Route path="/team"        element={<TeamChatView />} />
+
+              {/* Sprint 12 — Legal (authed shell also serves these for in-app footer links) */}
+              <Route path="/privacy" element={<PrivacyView />} />
+              <Route path="/terms"   element={<TermsView />} />
 
               <Route path="/talent/auditions"  element={<AuditionsView />} />
               <Route path="/talent/self-tape"  element={<SelfTapeView />} />

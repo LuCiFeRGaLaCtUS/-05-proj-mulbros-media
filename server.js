@@ -304,10 +304,32 @@ const logCostFireAndForget = async ({ userId, endpoint, provider, model, tokens_
 };
 
 // Cache stytch_user_id → profile.id so cost logging doesn't hit Supabase every request.
+// LRU semantics via insertion-order eviction (Map preserves insertion order).
+// Bounded at PROFILE_CACHE_MAX entries to prevent unbounded memory growth on
+// long-lived single dyno (one entry per distinct Stytch user ever seen).
+const PROFILE_CACHE_MAX = 5000;
 const stytchToProfileCache = new Map();
+const profileCacheGet = (key) => {
+  if (!stytchToProfileCache.has(key)) return undefined;
+  const val = stytchToProfileCache.get(key);
+  // Touch — move to end (most-recently-used)
+  stytchToProfileCache.delete(key);
+  stytchToProfileCache.set(key, val);
+  return val;
+};
+const profileCacheSet = (key, val) => {
+  if (stytchToProfileCache.has(key)) stytchToProfileCache.delete(key);
+  stytchToProfileCache.set(key, val);
+  if (stytchToProfileCache.size > PROFILE_CACHE_MAX) {
+    // Evict oldest (insertion-order = first key)
+    const oldest = stytchToProfileCache.keys().next().value;
+    stytchToProfileCache.delete(oldest);
+  }
+};
 const resolveProfileIdFromStytch = async (stytchUid) => {
   if (!stytchUid) return null;
-  if (stytchToProfileCache.has(stytchUid)) return stytchToProfileCache.get(stytchUid);
+  const cached = profileCacheGet(stytchUid);
+  if (cached !== undefined) return cached;
   if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) return null;
   try {
     const svcJwt = mintServiceJwt();
@@ -318,7 +340,7 @@ const resolveProfileIdFromStytch = async (stytchUid) => {
     );
     const rows = await r.json();
     const pid = rows[0]?.id || null;
-    if (pid) stytchToProfileCache.set(stytchUid, pid);
+    if (pid) profileCacheSet(stytchUid, pid);
     return pid;
   } catch {
     return null;
@@ -3073,8 +3095,23 @@ app.post('/api/tools/:name', requireAuth, toolGlobalPerUser, integrationLimiter,
 });
 
 // ── Static SPA ────────────────────────────────────────────────────────────────
-app.use(express.static(join(__dirname, 'dist')));
+// /assets/* are Vite-hashed bundles — content-addressable. Cache 1 year as
+// immutable so browsers + Cloudflare/Render edge skip revalidation. New
+// deploys invalidate naturally because the hash in the filename changes.
+app.use('/assets', express.static(join(__dirname, 'dist', 'assets'), {
+  maxAge:    '1y',
+  immutable: true,
+  setHeaders(res) { res.setHeader('Cache-Control', 'public, max-age=31536000, immutable'); },
+}));
+// Everything else (favicon, html, etc.) — no aggressive cache; HTML must be
+// fresh so it can reference the latest /assets/<hash>.js.
+app.use(express.static(join(__dirname, 'dist'), {
+  setHeaders(res, filePath) {
+    if (filePath.endsWith('.html')) res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
 app.get('*', (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache');
   res.sendFile(join(__dirname, 'dist', 'index.html'));
 });
 
