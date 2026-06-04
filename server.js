@@ -8,6 +8,8 @@ import basicAuth from 'express-basic-auth';
 import { Resend } from 'resend';
 import * as stytch from 'stytch';
 import jwt from 'jsonwebtoken';
+import Ajv from 'ajv';
+import { TOOLS } from './src/config/tools.js';
 import * as Sentry from '@sentry/node';
 import { Langfuse } from 'langfuse';
 import crypto from 'crypto';
@@ -88,11 +90,20 @@ const port = process.env.PORT || 3000;
 app.set('trust proxy', 1);
 
 // ── Security headers ──────────────────────────────────────────────────────────
+// CSP scriptSrc:
+//   dev  → 'self' 'unsafe-inline' 'unsafe-eval'   (Vite HMR injects inline)
+//   prod → 'self' only                            (built dist/index.html has
+//                                                  one external <script src> —
+//                                                  no inline scripts, so we
+//                                                  drop unsafe-inline)
+const isProductionCsp = process.env.NODE_ENV === 'production';
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc:  ["'self'"],
-      scriptSrc:   ["'self'", "'unsafe-inline'"],   // Vite needs inline scripts
+      scriptSrc:   isProductionCsp
+        ? ["'self'"]
+        : ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       styleSrc:    ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
       fontSrc:     ["'self'", 'https://fonts.gstatic.com'],
       connectSrc:  [
@@ -424,36 +435,35 @@ app.post('/api/auth/supabase-token', requireAuth, async (req, res) => {
       apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
       Authorization: `Bearer ${svcJwt}`,
     };
-    const pr = await fetch(
-      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?stytch_user_id=eq.${encodeURIComponent(stytchUid)}&select=*`,
-      { headers: sbHeaders },
-    );
-    const profilesArr = await pr.json();
-    let profile = profilesArr[0];
-
-    // First login — auto-create profile via service_role
-    if (!profile?.id) {
-      const email = req.body?.email || null;
-      const cr = await fetch(
-        `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles`,
-        {
-          method:  'POST',
-          headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=representation' },
-          body:    JSON.stringify({
-            stytch_user_id:      stytchUid,
-            email,
-            onboarding_complete: false,
-          }),
+    // Race-safe upsert: single round-trip handles both first-login create and
+    // subsequent fetch. PostgREST `on_conflict=stytch_user_id` + merge-duplicates
+    // resolution maps to Postgres INSERT ... ON CONFLICT DO UPDATE. The unique
+    // index `profiles_stytch_user_id_key` is what makes this atomic — concurrent
+    // first-logins from the same Stytch user no longer race a duplicate row.
+    const email = req.body?.email || null;
+    const upsertBody = {
+      stytch_user_id:      stytchUid,
+      ...(email ? { email } : {}),
+    };
+    const ur = await fetch(
+      `${process.env.VITE_SUPABASE_URL}/rest/v1/profiles?on_conflict=stytch_user_id`,
+      {
+        method:  'POST',
+        headers: {
+          ...sbHeaders,
+          'Content-Type': 'application/json',
+          Prefer:         'return=representation,resolution=merge-duplicates',
         },
-      );
-      if (!cr.ok) {
-        const txt = await cr.text();
-        console.error('profile auto-create failed:', cr.status, txt);
-        return res.status(500).json({ error: { message: 'Profile create failed.' } });
-      }
-      const created = await cr.json();
-      profile = Array.isArray(created) ? created[0] : created;
+        body: JSON.stringify(upsertBody),
+      },
+    );
+    if (!ur.ok) {
+      const txt = await ur.text();
+      console.error('profile upsert failed:', ur.status, txt);
+      return res.status(500).json({ error: { message: 'Profile resolution failed.' } });
     }
+    const upserted = await ur.json();
+    const profile = Array.isArray(upserted) ? upserted[0] : upserted;
     if (!profile?.id) return res.status(500).json({ error: { message: 'Profile resolution failed.' } });
 
     // Mint Supabase JWT — sub=profile.id, role=authenticated, exp=1h
@@ -1843,11 +1853,15 @@ app.post('/api/webhooks/mux', express.raw({ type: 'application/json' }), async (
   if (!type || !data) return res.status(200).json({ ok: true }); // ack and ignore
 
   try {
+    // Track whether downstream DB writes succeeded. Returning 500 on failure
+    // makes Mux retry the webhook (it backs off with exponential delays) rather
+    // than silently dropping the event.
+    let dbOk = true;
     if (type === 'video.upload.asset_created') {
       const uploadId = data.id || data.upload_id;
       const assetId  = data.asset_id;
       if (uploadId && assetId) {
-        await supabaseServicePatch(
+        dbOk = await supabaseServicePatch(
           'self_tapes',
           `mux_upload_id=eq.${encodeURIComponent(uploadId)}`,
           { mux_asset_id: assetId, status: 'processing', updated_at: new Date().toISOString() },
@@ -1858,7 +1872,7 @@ app.post('/api/webhooks/mux', express.raw({ type: 'application/json' }), async (
       const playbackId = Array.isArray(data.playback_ids) ? data.playback_ids[0]?.id : null;
       const duration   = data.duration ? Math.round(data.duration) : null;
       if (assetId) {
-        await supabaseServicePatch(
+        dbOk = await supabaseServicePatch(
           'self_tapes',
           `mux_asset_id=eq.${encodeURIComponent(assetId)}`,
           {
@@ -1872,12 +1886,16 @@ app.post('/api/webhooks/mux', express.raw({ type: 'application/json' }), async (
     } else if (type === 'video.asset.errored') {
       const assetId = data.id;
       if (assetId) {
-        await supabaseServicePatch(
+        dbOk = await supabaseServicePatch(
           'self_tapes',
           `mux_asset_id=eq.${encodeURIComponent(assetId)}`,
           { status: 'errored', updated_at: new Date().toISOString() },
         );
       }
+    }
+    if (!dbOk) {
+      console.error(`[mux-webhook] DB patch failed for ${type} — returning 500 so Mux retries`);
+      return res.status(500).json({ error: { message: 'DB write failed; retry expected.' } });
     }
     res.json({ ok: true });
   } catch (err) {
@@ -1945,11 +1963,15 @@ app.post('/api/webhooks/docusign', express.raw({ type: '*/*' }), async (req, res
         ? { signed_at: new Date().toISOString() }
         : {}),
     };
-    await supabaseServicePatch(
+    const dbOk = await supabaseServicePatch(
       'docusign_envelopes',
       `envelope_id=eq.${encodeURIComponent(envelopeId)}`,
       patch,
     );
+    if (!dbOk) {
+      console.error('[docusign-webhook] DB patch failed — returning 500 so DocuSign retries');
+      return res.status(500).json({ error: { message: 'DB write failed; retry expected.' } });
+    }
     res.json({ ok: true });
   } catch (err) {
     console.error('[docusign-webhook] handler failed:', err.message);
@@ -2978,6 +3000,17 @@ const toolGlobalPerUser = perUserLimit({
   message:  'Tool-call quota exceeded. 200 calls/hr/user.',
 });
 
+// ── Ajv JSON-Schema validators per tool ──────────────────────────────────────
+// TOOLS array in src/config/tools.js holds OpenAI function-call schemas
+// (JSON Schema 2020-12 minus $schema). Compile once at startup so dispatch is
+// O(1) lookup. Strict types so "5" is not a number, etc.
+const ajv = new Ajv({ allErrors: true, strict: false, coerceTypes: false });
+const toolValidators = new Map();
+for (const t of TOOLS) {
+  try { toolValidators.set(t.name, ajv.compile(t.parameters)); }
+  catch (err) { console.warn(`[ajv] failed to compile schema for ${t.name}:`, err.message); }
+}
+
 // Standardize tool-handler return shape at the dispatcher boundary.
 // Handlers historically returned heterogeneous shapes — { ok, data }, { ok,
 // foo, bar }, raw { error: '...' }. Normalize to { ok, result?, error? } so
@@ -3007,6 +3040,18 @@ app.post('/api/tools/:name', requireAuth, toolGlobalPerUser, integrationLimiter,
   // Per-tool quota check (in addition to global per-user + IP limiters above)
   const quota = checkToolQuota(req.stytchUser?.userId, name);
   if (!quota.ok) return res.status(429).json({ ok: false, error: quota.message });
+
+  // Validate args against the tool's JSON Schema before dispatch
+  const validate = toolValidators.get(name);
+  if (validate && !validate(req.body || {})) {
+    return res.status(400).json({
+      ok: false,
+      error: `Schema validation failed for ${name}`,
+      details: (validate.errors || []).slice(0, 5).map(e => ({
+        path: e.instancePath || e.schemaPath, message: e.message, params: e.params,
+      })),
+    });
+  }
 
   const t0 = Date.now();
   try {
