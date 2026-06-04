@@ -14,6 +14,8 @@
     "test:coverage": "vitest run --coverage",
     "smoke": "node scripts/headless-smoke.mjs",
     "smoke:prod": "node scripts/headless-smoke.mjs --prod",
+    "load": "node scripts/load-test.mjs",
+    "load:prod": "node scripts/load-test.mjs --prod",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -61,6 +63,7 @@
     "@testing-library/react": "^16.3.2",
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "^4.1.5",
+    "autocannon": "^8.0.0",
     "autoprefixer": "^10.4.16",
     "eslint": "^10.2.0",
     "eslint-plugin-react-hooks": "^7.1.0",
