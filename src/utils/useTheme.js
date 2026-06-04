@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { STORAGE_KEYS } from '../constants';
 
 /**
  * Reads the current theme and re-renders whenever TopBar calls applyTheme().
@@ -6,7 +7,7 @@ import { useState, useEffect } from 'react';
  */
 export const useTheme = () => {
   const [theme, setTheme] = useState(
-    () => localStorage.getItem('mulbros_theme') || 'dark'
+    () => localStorage.getItem(STORAGE_KEYS.theme) || 'dark'
   );
 
   useEffect(() => {

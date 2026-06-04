@@ -1,11 +1,15 @@
 // Central constants — keep magic numbers and string keys out of component bodies.
 
+// Single source of truth for localStorage key names. Prevents the split-key
+// bug we just had (theme stored under both `mulbros_theme` and `mulbros.theme`).
+// Bump the version suffix when stored shape changes incompatibly.
 export const STORAGE_KEYS = {
   openAiKey:       'mulbros_openai_key',
   anthropicKey:    'mulbros_anthropic_key',
   settings:        'mulbros_settings',
   integrations:    'mulbros_integration_toggles',
   calendar:        'mulbros_calendar_v1',
+  theme:           'mulbros.theme',
 };
 
 export const SESSION = {

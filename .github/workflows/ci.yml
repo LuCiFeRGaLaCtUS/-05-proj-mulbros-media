@@ -107,3 +107,48 @@ jobs:
         # 1. Go to your Render service → Settings → Deploy Hooks → Create hook
         # 2. Add the hook URL as a GitHub repo secret named RENDER_DEPLOY_HOOK_URL
         # 3. Push to main — Render will auto-pull and redeploy
+
+  # ── Smoke test after deploy (warn-only until SMOKE_* secrets configured) ────
+  smoke:
+    name: Smoke test (prod)
+    needs: deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    continue-on-error: true
+    env:
+      SMOKE_BASE:               https://mulbros-marketing-os.onrender.com
+      SMOKE_STYTCH_TOKEN:       ${{ secrets.SMOKE_STYTCH_TOKEN }}
+      SMOKE_USER_ID:            ${{ secrets.SMOKE_USER_ID }}
+      VITE_SUPABASE_URL:        ${{ secrets.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_ANON_KEY:   ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+      SUPABASE_JWT_SECRET:      ${{ secrets.SUPABASE_JWT_SECRET }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Wait for Render to finish deploying
+        run: |
+          for i in 1 2 3 4 5 6; do
+            sleep 25
+            curl -s --fail "$SMOKE_BASE/healthz" | grep -q '"status":"ok"' && exit 0 || true
+          done
+          echo "/healthz did not return 200 within ~150s"
+          exit 1
+
+      - name: Run smoke
+        run: |
+          if [ -z "$SMOKE_STYTCH_TOKEN" ] || [ -z "$SMOKE_USER_ID" ]; then
+            echo "SMOKE_* secrets not configured — skipping. Add SMOKE_STYTCH_TOKEN + SMOKE_USER_ID + VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY + SUPABASE_JWT_SECRET to GitHub repo secrets to enable."
+            exit 0
+          fi
+          npm run smoke:prod

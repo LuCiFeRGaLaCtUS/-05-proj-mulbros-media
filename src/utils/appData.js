@@ -12,6 +12,7 @@ import {
   lukeBio,
   taliseBio
 } from '../config/mockData';
+import { STORAGE_KEYS } from '../constants';
 
 export const getDashboardKPIs = () => kpiData;
 
@@ -70,7 +71,7 @@ export const getQuickStats = () => ({
 // M15: read calendar posts saved by CalendarView so chatbot knows scheduled content
 const getCalendarSummary = () => {
   try {
-    const posts = JSON.parse(localStorage.getItem('mulbros_calendar_v1') || '[]');
+    const posts = JSON.parse(localStorage.getItem(STORAGE_KEYS.calendar) || '[]');
     if (!posts.length) return 'No posts scheduled yet.';
     const byStatus = posts.reduce((acc, p) => {
       acc[p.status] = (acc[p.status] || 0) + 1;
