@@ -408,6 +408,14 @@ export const TOOLS = [
   },
 ];
 
+// OpenAI's function-calling spec requires tool names to match
+// `^[a-zA-Z0-9_-]+$`. Our internal tool names use `domain.action` (dot
+// separated) for readability. Encode `.` → `__` going OUT to OpenAI and
+// decode `__` → `.` coming BACK from tool_calls so the handler lookup +
+// every other site in the code keeps using the friendly dotted names.
+export const encodeToolNameForOpenAI = (name) => name.replace(/\./g, '__');
+export const decodeToolNameFromOpenAI = (name) => name.replace(/__/g, '.');
+
 /**
  * Filter the registry to the OpenAI tools-array format for a given allow-list.
  * @param {string[]|undefined} allowedNames — agent's allowed-tool whitelist; if
@@ -421,7 +429,7 @@ export const toOpenAITools = (allowedNames) => {
     .map(t => ({
       type: 'function',
       function: {
-        name:        t.name,
+        name:        encodeToolNameForOpenAI(t.name),
         description: t.description,
         parameters:  t.parameters,
       },

@@ -9,7 +9,7 @@ import { Resend } from 'resend';
 import * as stytch from 'stytch';
 import jwt from 'jsonwebtoken';
 import Ajv from 'ajv';
-import { TOOLS } from './src/config/tools.js';
+import { TOOLS, decodeToolNameFromOpenAI } from './src/config/tools.js';
 import * as Sentry from '@sentry/node';
 import { Langfuse } from 'langfuse';
 import crypto from 'crypto';
@@ -710,7 +710,10 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
       body.messages = [...body.messages, msg];
 
       for (const call of calls) {
-        const fnName = call.function?.name;
+        // OpenAI returns the encoded name (e.g. "audition__create"); decode
+        // back to the friendly internal form "audition.create" for handler
+        // lookup, cost-ledger logging, and Langfuse span naming.
+        const fnName = decodeToolNameFromOpenAI(call.function?.name || '');
         let parsedArgs = {};
         try { parsedArgs = JSON.parse(call.function?.arguments || '{}'); }
         catch { parsedArgs = {}; }
