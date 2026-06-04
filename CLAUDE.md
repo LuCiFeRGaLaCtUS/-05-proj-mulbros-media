@@ -1,8 +1,22 @@
 # MulBros Media OS v2 — Full Project Memory Log
 
-> Auto-read by Claude Code at session start. Contains the full project history.  
-> Last updated: 2026-04-17  
+> Auto-read by Claude Code at session start. Contains the full project history.
+> Last updated: 2026-06-04
 > Owner: Arghya Chowdhury — Arghya@fsztpartners.com
+
+---
+
+## ⚠️ NEXT-SESSION REMINDER (2026-06-04 end-of-day)
+
+**Before doing anything else tomorrow, Claude must surface the dashboard punch list to Arghya.**
+
+Sprint 12 code is fully shipped (last commit: `4095043` on `main`). Remaining work is dashboard-only (Sentry signup, Render env vars, Supabase Edge Function deploy, Resend DNS, GitHub repo secrets, BetterUptime). Full step-by-step is in `docs/DASHBOARD_PUNCHLIST.md` — **read that file first** and remind Arghya to do P0 (Sentry DSN, NODE_ENV=production, Render Health Check Path) before any new work.
+
+Recommended opener for tomorrow morning:
+
+> "Good morning. Before we start anything new — yesterday Sprint 12 code shipped. The dashboard punch list still needs you. Top-3 (12 min): Sentry DSN, NODE_ENV=production, Render Health Check Path = /healthz. Full list in `docs/DASHBOARD_PUNCHLIST.md`. Want to knock those out first or pick a Sprint 13 item?"
+
+After that opener, await Arghya's call. Do NOT auto-start Sprint 13 work without confirmation.
 
 ---
 
