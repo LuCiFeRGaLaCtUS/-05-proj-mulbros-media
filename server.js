@@ -121,8 +121,15 @@ app.use(helmet({
         'https://accounts.spotify.com',
         'https://us.cloud.langfuse.com',
         'https://cloud.langfuse.com',
+        // Sentry ingest — client SDK ships error envelopes here.
+        // Pattern: https://o<orgId>.ingest.<region>.sentry.io
+        'https://*.ingest.us.sentry.io',
+        'https://*.ingest.sentry.io',
       ],
       imgSrc:      ["'self'", 'data:', 'https://i.scdn.co', 'https://mosaic.scdn.co'],
+      // Sentry Session Replay spawns a Web Worker via blob: URL. Without
+      // explicit worker-src, browsers fall back to script-src and block it.
+      workerSrc:   ["'self'", 'blob:'],
       reportUri:   ['/api/csp-report'],
     },
   },
