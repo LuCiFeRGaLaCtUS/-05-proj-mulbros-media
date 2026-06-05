@@ -1,0 +1,100 @@
+name: Uptime monitor
+
+# Pings /healthz every 5 minutes from GitHub's free cron runner.
+# On a non-200 (or wrong body), opens a GitHub Issue tagged @LuCiFeRGaLaCtUS.
+# On recovery, auto-closes any open uptime issue.
+# Zero external vendor — uses the repo's own Issues as the alert channel.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # every 5 min (GitHub min granularity; may lag a few min under load)
+  workflow_dispatch: {}      # allow manual trigger from Actions tab
+
+permissions:
+  issues: write
+
+jobs:
+  probe:
+    name: Probe /healthz
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit /healthz
+        id: probe
+        run: |
+          URL="https://mulbros-marketing-os.onrender.com/healthz"
+          # Render free tier can cold-start (~50s). Retry up to 3x before declaring down.
+          for attempt in 1 2 3; do
+            code=$(curl -s -o /tmp/body.txt -w "%{http_code}" --max-time 60 "$URL" || echo "000")
+            body=$(cat /tmp/body.txt 2>/dev/null || echo "")
+            if [ "$code" = "200" ] && echo "$body" | grep -q '"status":"ok"'; then
+              echo "ok=true"  >> "$GITHUB_OUTPUT"
+              echo "Healthy on attempt $attempt (HTTP $code)"
+              exit 0
+            fi
+            echo "Attempt $attempt: HTTP $code — retrying in 20s"
+            sleep 20
+          done
+          echo "ok=false" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          echo "Probe FAILED after 3 attempts. Last HTTP=$code"
+          # Truncate body for the issue
+          head -c 500 /tmp/body.txt > /tmp/body_trunc.txt || true
+          echo "body<<EOF" >> "$GITHUB_OUTPUT"
+          cat /tmp/body_trunc.txt >> "$GITHUB_OUTPUT" 2>/dev/null || true
+          echo "" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - name: Open issue on failure
+        if: steps.probe.outputs.ok == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- uptime-monitor -->';
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'uptime',
+            });
+            const existing = open.find(i => i.body && i.body.includes(marker));
+            const code = `${{ steps.probe.outputs.code }}`;
+            const body = `${marker}\n\n**AI Operator /healthz is DOWN.**\n\n` +
+              `- HTTP code: \`${code}\`\n` +
+              `- Probed: https://mulbros-marketing-os.onrender.com/healthz\n` +
+              `- Time (UTC): ${new Date().toISOString()}\n\n` +
+              `Last response body (truncated):\n\`\`\`\n${{ steps.probe.outputs.body }}\n\`\`\`\n\n` +
+              `cc @LuCiFeRGaLaCtUS`;
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing.number,
+                body: `Still down at ${new Date().toISOString()} (HTTP ${code}).`,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: '🔴 Uptime: /healthz is down',
+                labels: ['uptime'],
+                body,
+              });
+            }
+
+      - name: Close issue on recovery
+        if: steps.probe.outputs.ok == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- uptime-monitor -->';
+            const { data: open } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'uptime',
+            });
+            for (const issue of open.filter(i => i.body && i.body.includes(marker))) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number,
+                body: `✅ Recovered at ${new Date().toISOString()}. Auto-closing.`,
+              });
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: issue.number, state: 'closed',
+              });
+            }
