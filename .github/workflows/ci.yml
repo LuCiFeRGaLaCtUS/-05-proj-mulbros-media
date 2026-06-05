@@ -114,20 +114,21 @@ jobs:
     name: Deploy → Render
     needs: build
     runs-on: ubuntu-latest
-    # M13: guard — skip gracefully if deploy hook secret isn't configured
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.RENDER_DEPLOY_HOOK_URL != ''
-    env:
-      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+    # Runs on push to main. The deploy-hook step self-skips if the secret is
+    # absent (guarded at STEP level, where `env` context is legal — job-level
+    # `if` cannot reference `env` or `secrets`).
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:
-      - name: Trigger Render deploy hook
+      - name: Trigger Render deploy hook (skips if secret unset)
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
         run: |
-          curl --silent --show-error --fail \
-            -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
-        # To activate:
-        # 1. Go to your Render service → Settings → Deploy Hooks → Create hook
-        # 2. Add the hook URL as a GitHub repo secret named RENDER_DEPLOY_HOOK_URL
-        # 3. Push to main — Render will auto-pull and redeploy
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL not set — Render's native GitHub auto-deploy handles this. Skipping."
+            exit 0
+          fi
+          curl --silent --show-error --fail -X POST "$RENDER_DEPLOY_HOOK_URL"
 
   # ── Smoke test after deploy (warn-only until SMOKE_* secrets configured) ────
   smoke:
