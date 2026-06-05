@@ -1970,6 +1970,27 @@ const supabaseServiceInsert = async (table, rows) => {
   }
 };
 
+// Service-role SELECT. `query` is a raw PostGREST query string already scoped
+// to the caller's user_id by the tool handler. Returns rows array or null.
+const supabaseServiceSelect = async (table, query) => {
+  if (!process.env.SUPABASE_JWT_SECRET || !process.env.VITE_SUPABASE_URL) return null;
+  const svcJwt = mintServiceJwt();
+  if (!svcJwt) return null;
+  try {
+    const r = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/${table}?${query}`, {
+      headers: {
+        apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
+        Authorization: `Bearer ${svcJwt}`,
+      },
+    });
+    if (!r.ok) { console.error(`[supabaseServiceSelect] ${table} ${r.status}`); return null; }
+    return await r.json();
+  } catch (err) {
+    console.error(`[supabaseServiceSelect] ${table} failed:`, err.message);
+    return null;
+  }
+};
+
 // ── 5.3 Mux webhook: fired on upload + asset state changes ────────────────────
 // Mux signs each request: `mux-signature: t=<ts>,v1=<hmac>`.
 // HMAC is SHA256 of `${t}.${rawBody}` with MUX_WEBHOOK_SECRET.
@@ -3097,6 +3118,79 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
       { public: !!args.public, updated_at: new Date().toISOString() },
     );
     return ok ? { ok: true, public: !!args.public } : { ok: false, error: 'publish failed' };
+  },
+
+  // ── Read / query tools — scoped to ctx.profileId via service select ───────
+  'audition.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 20, 100);
+    let q = `user_id=eq.${ctx.profileId}&select=id,project_title,role_name,casting_director,audition_type,audition_at,status,deadline&order=created_at.desc&limit=${lim}`;
+    if (args.status) q += `&status=eq.${encodeURIComponent(args.status)}`;
+    const rows = await supabaseServiceSelect('auditions', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, auditions: rows };
+  },
+  'contract.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 20, 100);
+    let q = `user_id=eq.${ctx.profileId}&select=id,project,client,contract_type,value,signed_date,expiry_date,status&order=created_at.desc&limit=${lim}`;
+    if (args.status) q += `&status=eq.${encodeURIComponent(args.status)}`;
+    const rows = await supabaseServiceSelect('contracts', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, contracts: rows };
+  },
+  'commission.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 20, 100);
+    let q = `user_id=eq.${ctx.profileId}&select=id,talent_id,amount_due,amount_collected,due_date,collected_at,status&order=due_date.asc&limit=${lim}`;
+    if (args.status) q += `&status=eq.${encodeURIComponent(args.status)}`;
+    const rows = await supabaseServiceSelect('commissions', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, commissions: rows };
+  },
+  'roster.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 50, 200);
+    const q = `user_id=eq.${ctx.profileId}&select=id,talent_name,email,phone,union_status,status,commission_rate&order=talent_name.asc&limit=${lim}`;
+    const rows = await supabaseServiceSelect('roster', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, roster: rows };
+  },
+  'tour.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 20, 100);
+    const q = `user_id=eq.${ctx.profileId}&select=id,name,status,start_date,end_date&order=start_date.desc.nullslast&limit=${lim}`;
+    const rows = await supabaseServiceSelect('tours', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, tours: rows };
+  },
+  'show.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 30, 200);
+    let q = `user_id=eq.${ctx.profileId}&select=id,venue_name,city,country,show_date,status,capacity,gross_offer,tour_id&order=show_date.asc.nullslast&limit=${lim}`;
+    if (args.status)  q += `&status=eq.${encodeURIComponent(args.status)}`;
+    if (args.tour_id) q += `&tour_id=eq.${encodeURIComponent(args.tour_id)}`;
+    const rows = await supabaseServiceSelect('shows', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, shows: rows };
+  },
+  'release.list': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 30, 200);
+    const q = `user_id=eq.${ctx.profileId}&select=id,title,type,release_date,isrc,upc&order=release_date.desc.nullslast&limit=${lim}`;
+    const rows = await supabaseServiceSelect('releases', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, releases: rows };
+  },
+  'income.summary': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    let q = `user_id=eq.${ctx.profileId}&select=amount,currency,source,category,tax_year,received_at&order=received_at.desc&limit=1000`;
+    if (args.tax_year) q += `&tax_year=eq.${encodeURIComponent(args.tax_year)}`;
+    const rows = await supabaseServiceSelect('income_records', q);
+    if (rows == null) return { ok: false, error: 'query failed' };
+    const total = rows.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+    const bySource = {};
+    for (const r of rows) bySource[r.source || 'other'] = (bySource[r.source || 'other'] || 0) + (Number(r.amount) || 0);
+    return {
+      ok: true,
+      record_count: rows.length,
+      total_usd: Number(total.toFixed(2)),
+      tax_year: args.tax_year || 'all',
+      by_source: Object.fromEntries(Object.entries(bySource).map(([k, v]) => [k, Number(v.toFixed(2))])),
+    };
   },
 
   // ── Web search (proxies /api/ai-search internally) ────────────────────────

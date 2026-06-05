@@ -392,6 +392,89 @@ export const TOOLS = [
     },
   },
 
+  // ── Read / query tools (let MO answer "what do I have?") ──────────────────
+  {
+    name: 'audition.list',
+    description: 'List the signed-in user\'s auditions, newest first. Use when the user asks what auditions they have, upcoming reads, or pipeline status.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['submitted','callback','booked','pass','no_response'], description: 'Optional status filter' },
+        limit:  { type: 'integer', description: 'Max rows (default 20)' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'contract.list',
+    description: 'List the user\'s contracts (project, client, type, value, status, expiry). Use when the user asks about active contracts, what\'s expiring, or signed deals.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', description: 'Optional status filter (e.g. active, signed, expired, draft)' },
+        limit:  { type: 'integer' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'commission.list',
+    description: 'List the agency\'s commissions (amount due/collected, due date, status). Use for "what commissions are outstanding / overdue".',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', description: 'Optional status filter (e.g. pending, collected, overdue)' },
+        limit:  { type: 'integer' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'roster.list',
+    description: 'List talent on the signed-in agency\'s roster. Use for "who is on my roster", "show my talent".',
+    mode: 'auto',
+    parameters: { type: 'object', properties: { limit: { type: 'integer' } }, additionalProperties: false },
+  },
+  {
+    name: 'tour.list',
+    description: 'List the user\'s tours (name, status, dates). Use for "what tours do I have".',
+    mode: 'auto',
+    parameters: { type: 'object', properties: { limit: { type: 'integer' } }, additionalProperties: false },
+  },
+  {
+    name: 'show.list',
+    description: 'List the user\'s shows (venue, city, date, status, offer). Use for "what shows are confirmed", "upcoming gigs", or shows on a specific tour.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        status:  { type: 'string', enum: ['hold','confirmed','cancelled','complete'] },
+        tour_id: { type: 'string', description: 'Optional — only shows on this tour' },
+        limit:   { type: 'integer' },
+      },
+      additionalProperties: false,
+    },
+  },
+  {
+    name: 'release.list',
+    description: 'List the user\'s music releases (title, type, release date, ISRC/UPC). Use for "show my catalogue", "what have I released".',
+    mode: 'auto',
+    parameters: { type: 'object', properties: { limit: { type: 'integer' } }, additionalProperties: false },
+  },
+  {
+    name: 'income.summary',
+    description: 'Summarize the user\'s income records — total + breakdown by source for an optional tax year. Use for "how much did I earn", "income this year".',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: { tax_year: { type: 'integer', description: 'Optional 4-digit year filter, e.g. 2026' } },
+      additionalProperties: false,
+    },
+  },
+
   // ── Search (read-only) ───────────────────────────────────────────────────
   {
     name: 'web.search',

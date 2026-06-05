@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense, createContext, useContext } from 'react';
+import React, { useState, useEffect, Suspense, createContext, useContext } from 'react';
 import { Routes, Route, Navigate, useNavigate, Outlet } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { Mail } from 'lucide-react';
@@ -10,71 +10,74 @@ import { useTheme } from './utils/useTheme';
 import { useAuth } from './hooks/useAuth';
 import { useSupabaseSession } from './hooks/useSupabaseSession';
 import { LoginPage, ResetPasswordPage } from './components/auth/LoginPage';
+import { lazyRetry } from './lib/lazyRetry';
 
 // ── Route-level code splitting ────────────────────────────────────────────────
-const Dashboard         = lazy(() => import('./components/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
-const FilmFinancingView = lazy(() => import('./components/verticals/FilmFinancingView').then(m => ({ default: m.FilmFinancingView })));
-const ProductionsView   = lazy(() => import('./components/verticals/ProductionsView').then(m => ({ default: m.ProductionsView })));
-const MusicView         = lazy(() => import('./components/verticals/MusicView').then(m => ({ default: m.MusicView })));
-const CalendarView      = lazy(() => import('./components/verticals/CalendarView').then(m => ({ default: m.CalendarView })));
-const CrewView          = lazy(() => import('./components/verticals/CrewView').then(m => ({ default: m.CrewView })));
-const ComposerView      = lazy(() => import('./components/verticals/ComposerView').then(m => ({ default: m.ComposerView })));
-const ActorView         = lazy(() => import('./components/verticals/ActorView').then(m => ({ default: m.ActorView })));
-const ScreenwriterView  = lazy(() => import('./components/verticals/ScreenwriterView').then(m => ({ default: m.ScreenwriterView })));
-const ArtistView        = lazy(() => import('./components/verticals/ArtistView').then(m => ({ default: m.ArtistView })));
-const WriterView        = lazy(() => import('./components/verticals/WriterView').then(m => ({ default: m.WriterView })));
-const ArtsOrgView       = lazy(() => import('./components/verticals/ArtsOrgView').then(m => ({ default: m.ArtsOrgView })));
-const Invoices          = lazy(() => import('./components/backoffice/Invoices').then(m => ({ default: m.Invoices })));
-const Contracts         = lazy(() => import('./components/backoffice/Contracts').then(m => ({ default: m.Contracts })));
-const Payments          = lazy(() => import('./components/backoffice/Payments').then(m => ({ default: m.Payments })));
-const CRMView           = lazy(() => import('./components/crm/CRMView').then(m => ({ default: m.CRMView })));
-const AgentChat         = lazy(() => import('./components/agents/AgentChat').then(m => ({ default: m.AgentChat })));
-const Settings          = lazy(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
-const OnboardingFlow    = lazy(() => import('./components/onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
-const VerticalRouteGuard = lazy(() => import('./components/auth/VerticalRouteGuard').then(m => ({ default: m.VerticalRouteGuard })));
+// lazyRetry (not bare lazy) so a stale chunk after a deploy auto-recovers
+// instead of throwing "Failed to fetch dynamically imported module".
+const Dashboard         = lazyRetry(() => import('./components/dashboard/Dashboard').then(m => ({ default: m.Dashboard })));
+const FilmFinancingView = lazyRetry(() => import('./components/verticals/FilmFinancingView').then(m => ({ default: m.FilmFinancingView })));
+const ProductionsView   = lazyRetry(() => import('./components/verticals/ProductionsView').then(m => ({ default: m.ProductionsView })));
+const MusicView         = lazyRetry(() => import('./components/verticals/MusicView').then(m => ({ default: m.MusicView })));
+const CalendarView      = lazyRetry(() => import('./components/verticals/CalendarView').then(m => ({ default: m.CalendarView })));
+const CrewView          = lazyRetry(() => import('./components/verticals/CrewView').then(m => ({ default: m.CrewView })));
+const ComposerView      = lazyRetry(() => import('./components/verticals/ComposerView').then(m => ({ default: m.ComposerView })));
+const ActorView         = lazyRetry(() => import('./components/verticals/ActorView').then(m => ({ default: m.ActorView })));
+const ScreenwriterView  = lazyRetry(() => import('./components/verticals/ScreenwriterView').then(m => ({ default: m.ScreenwriterView })));
+const ArtistView        = lazyRetry(() => import('./components/verticals/ArtistView').then(m => ({ default: m.ArtistView })));
+const WriterView        = lazyRetry(() => import('./components/verticals/WriterView').then(m => ({ default: m.WriterView })));
+const ArtsOrgView       = lazyRetry(() => import('./components/verticals/ArtsOrgView').then(m => ({ default: m.ArtsOrgView })));
+const Invoices          = lazyRetry(() => import('./components/backoffice/Invoices').then(m => ({ default: m.Invoices })));
+const Contracts         = lazyRetry(() => import('./components/backoffice/Contracts').then(m => ({ default: m.Contracts })));
+const Payments          = lazyRetry(() => import('./components/backoffice/Payments').then(m => ({ default: m.Payments })));
+const CRMView           = lazyRetry(() => import('./components/crm/CRMView').then(m => ({ default: m.CRMView })));
+const AgentChat         = lazyRetry(() => import('./components/agents/AgentChat').then(m => ({ default: m.AgentChat })));
+const Settings          = lazyRetry(() => import('./components/settings/Settings').then(m => ({ default: m.Settings })));
+const OnboardingFlow    = lazyRetry(() => import('./components/onboarding/OnboardingFlow').then(m => ({ default: m.OnboardingFlow })));
+const VerticalRouteGuard = lazyRetry(() => import('./components/auth/VerticalRouteGuard').then(m => ({ default: m.VerticalRouteGuard })));
 
 // Talent skill pack (Sprint 2)
-const AuditionsView       = lazy(() => import('./components/verticals/talent/AuditionsView').then(m => ({ default: m.AuditionsView })));
-const SelfTapeView        = lazy(() => import('./components/verticals/talent/SelfTapeView').then(m => ({ default: m.SelfTapeView })));
-const AgentInboxView      = lazy(() => import('./components/verticals/talent/AgentInboxView').then(m => ({ default: m.AgentInboxView })));
-const IncomeView          = lazy(() => import('./components/verticals/talent/IncomeView').then(m => ({ default: m.IncomeView })));
-const IndustryIntelView   = lazy(() => import('./components/verticals/talent/IndustryIntelView').then(m => ({ default: m.IndustryIntelView })));
-const ContractReaderView  = lazy(() => import('./components/verticals/talent/ContractReaderView').then(m => ({ default: m.ContractReaderView })));
-const IndustryContactsView = lazy(() => import('./components/industry/IndustryContactsView').then(m => ({ default: m.IndustryContactsView })));
+const AuditionsView       = lazyRetry(() => import('./components/verticals/talent/AuditionsView').then(m => ({ default: m.AuditionsView })));
+const SelfTapeView        = lazyRetry(() => import('./components/verticals/talent/SelfTapeView').then(m => ({ default: m.SelfTapeView })));
+const AgentInboxView      = lazyRetry(() => import('./components/verticals/talent/AgentInboxView').then(m => ({ default: m.AgentInboxView })));
+const IncomeView          = lazyRetry(() => import('./components/verticals/talent/IncomeView').then(m => ({ default: m.IncomeView })));
+const IndustryIntelView   = lazyRetry(() => import('./components/verticals/talent/IndustryIntelView').then(m => ({ default: m.IndustryIntelView })));
+const ContractReaderView  = lazyRetry(() => import('./components/verticals/talent/ContractReaderView').then(m => ({ default: m.ContractReaderView })));
+const IndustryContactsView = lazyRetry(() => import('./components/industry/IndustryContactsView').then(m => ({ default: m.IndustryContactsView })));
 
 // Agency skill pack (Sprint 3)
-const RosterView             = lazy(() => import('./components/verticals/agency/RosterView').then(m => ({ default: m.RosterView })));
-const CommissionsView        = lazy(() => import('./components/verticals/agency/CommissionsView').then(m => ({ default: m.CommissionsView })));
-const SubmissionsView        = lazy(() => import('./components/verticals/agency/SubmissionsView').then(m => ({ default: m.SubmissionsView })));
-const CastingFeedView        = lazy(() => import('./components/verticals/agency/CastingFeedView').then(m => ({ default: m.CastingFeedView })));
-const ContractNegotiatorView = lazy(() => import('./components/verticals/agency/ContractNegotiatorView').then(m => ({ default: m.ContractNegotiatorView })));
-const CommsRelayView         = lazy(() => import('./components/verticals/agency/CommsRelayView').then(m => ({ default: m.CommsRelayView })));
-const AgencyAdminView        = lazy(() => import('./components/verticals/agency/AgencyAdminView').then(m => ({ default: m.AgencyAdminView })));
-const PlatformAdminView      = lazy(() => import('./components/admin/PlatformAdminView').then(m => ({ default: m.PlatformAdminView })));
+const RosterView             = lazyRetry(() => import('./components/verticals/agency/RosterView').then(m => ({ default: m.RosterView })));
+const CommissionsView        = lazyRetry(() => import('./components/verticals/agency/CommissionsView').then(m => ({ default: m.CommissionsView })));
+const SubmissionsView        = lazyRetry(() => import('./components/verticals/agency/SubmissionsView').then(m => ({ default: m.SubmissionsView })));
+const CastingFeedView        = lazyRetry(() => import('./components/verticals/agency/CastingFeedView').then(m => ({ default: m.CastingFeedView })));
+const ContractNegotiatorView = lazyRetry(() => import('./components/verticals/agency/ContractNegotiatorView').then(m => ({ default: m.ContractNegotiatorView })));
+const CommsRelayView         = lazyRetry(() => import('./components/verticals/agency/CommsRelayView').then(m => ({ default: m.CommsRelayView })));
+const AgencyAdminView        = lazyRetry(() => import('./components/verticals/agency/AgencyAdminView').then(m => ({ default: m.AgencyAdminView })));
+const PlatformAdminView      = lazyRetry(() => import('./components/admin/PlatformAdminView').then(m => ({ default: m.PlatformAdminView })));
 
 // Sprint 6 chat-first shell
-const ChatShell              = lazy(() => import('./components/shell/ChatShell').then(m => ({ default: m.ChatShell })));
-const ChatHome               = lazy(() => import('./components/shell/ChatHome').then(m => ({ default: m.ChatHome })));
-const ChatThread             = lazy(() => import('./components/shell/ChatThread').then(m => ({ default: m.ChatThread })));
+const ChatShell              = lazyRetry(() => import('./components/shell/ChatShell').then(m => ({ default: m.ChatShell })));
+const ChatHome               = lazyRetry(() => import('./components/shell/ChatHome').then(m => ({ default: m.ChatHome })));
+const ChatThread             = lazyRetry(() => import('./components/shell/ChatThread').then(m => ({ default: m.ChatThread })));
 
 // Sprint 6.5 — Integrations
-const IntegrationsView       = lazy(() => import('./components/integrations/IntegrationsView').then(m => ({ default: m.IntegrationsView })));
+const IntegrationsView       = lazyRetry(() => import('./components/integrations/IntegrationsView').then(m => ({ default: m.IntegrationsView })));
 
 // Sprint 9 — Touring module (musician persona)
-const TouringView            = lazy(() => import('./components/verticals/touring/TouringView').then(m => ({ default: m.TouringView })));
+const TouringView            = lazyRetry(() => import('./components/verticals/touring/TouringView').then(m => ({ default: m.TouringView })));
 
 // Sprint 10 — Catalogue + royalties (musician persona)
-const CatalogueView          = lazy(() => import('./components/verticals/catalogue/CatalogueView').then(m => ({ default: m.CatalogueView })));
-const StatementsView         = lazy(() => import('./components/verticals/catalogue/StatementsView').then(m => ({ default: m.StatementsView })));
+const CatalogueView          = lazyRetry(() => import('./components/verticals/catalogue/CatalogueView').then(m => ({ default: m.CatalogueView })));
+const StatementsView         = lazyRetry(() => import('./components/verticals/catalogue/StatementsView').then(m => ({ default: m.StatementsView })));
 
 // Sprint 11 — EPK builder + public page, Team chat
-const EPKBuilderView         = lazy(() => import('./components/verticals/epk/EPKBuilderView').then(m => ({ default: m.EPKBuilderView })));
-const EPKPublicView          = lazy(() => import('./components/epk/EPKPublicView').then(m => ({ default: m.EPKPublicView })));
-const TeamChatView           = lazy(() => import('./components/team/TeamChatView').then(m => ({ default: m.TeamChatView })));
+const EPKBuilderView         = lazyRetry(() => import('./components/verticals/epk/EPKBuilderView').then(m => ({ default: m.EPKBuilderView })));
+const EPKPublicView          = lazyRetry(() => import('./components/epk/EPKPublicView').then(m => ({ default: m.EPKPublicView })));
+const TeamChatView           = lazyRetry(() => import('./components/team/TeamChatView').then(m => ({ default: m.TeamChatView })));
 
 // Sprint 12 — Legal pages (anon, no auth gate)
-const PrivacyView            = lazy(() => import('./components/legal/PrivacyView').then(m => ({ default: m.PrivacyView })));
-const TermsView              = lazy(() => import('./components/legal/TermsView').then(m => ({ default: m.TermsView })));
+const PrivacyView            = lazyRetry(() => import('./components/legal/PrivacyView').then(m => ({ default: m.PrivacyView })));
+const TermsView              = lazyRetry(() => import('./components/legal/TermsView').then(m => ({ default: m.TermsView })));
 
 // ── App-level context — shared state without prop drilling ────────────────────
 export const AppContext = createContext(null);

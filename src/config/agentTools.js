@@ -9,7 +9,7 @@
 export const AGENT_TOOLS = {
   // ── Talent ───────────────────────────────────────────────────────────────
   'talent-audition-tracker': [
-    'audition.create', 'audition.update_status',
+    'audition.create', 'audition.update_status', 'audition.list',
     'industry_contact.create', 'industry_contact.find',
     'cost.snapshot',
   ],
@@ -22,7 +22,7 @@ export const AGENT_TOOLS = {
     'industry_contact.create',
   ],
   'talent-income-tax': [
-    'plaid.link_token',
+    'plaid.link_token', 'income.summary',
     'cost.snapshot',
   ],
   'talent-marketing-assistant': [
@@ -32,12 +32,12 @@ export const AGENT_TOOLS = {
     'web.search',
   ],
   'talent-contract-reader': [
-    // Contract reader doesn't send — only reads. No write tools yet.
+    'contract.list',   // read-only: list the user's contracts
   ],
 
   // ── Agency ───────────────────────────────────────────────────────────────
   'agency-roster-manager': [
-    'roster.add',
+    'roster.add', 'roster.list',
     'industry_contact.create', 'industry_contact.find',
   ],
   'agency-opportunity-scout': [
@@ -49,11 +49,11 @@ export const AGENT_TOOLS = {
     'resend.email',       // HITL — confirmation
   ],
   'agency-commission-tracker': [
-    'commission.create', 'commission.mark_collected',
+    'commission.create', 'commission.mark_collected', 'commission.list',
     'cost.snapshot',
   ],
   'agency-contract-negotiator': [
-    // HITL contract send via DocuSign — defer until contract.send tool exists.
+    'contract.list',   // read-only until contract.send exists
   ],
   'agency-comms-relay': [
     'resend.email', 'twilio.sms',
@@ -64,15 +64,15 @@ export const AGENT_TOOLS = {
 
   // ── Touring (Sprint 9) ───────────────────────────────────────────────────
   'tour-manager': [
-    'tour.create',
-    'show.create', 'show.update_status', 'show.add_logistics',
+    'tour.create', 'tour.list',
+    'show.create', 'show.update_status', 'show.add_logistics', 'show.list',
     'industry_contact.create',  // promoters / venue mgrs
     'twilio.sms',               // reminders
   ],
 
   // ── Catalogue + royalties (Sprint 10) ────────────────────────────────────
   'catalogue-manager': [
-    'release.create', 'track.add', 'split.set',
+    'release.create', 'release.list', 'track.add', 'split.set',
   ],
   'royalty-auditor': [
     'statement.parse',
