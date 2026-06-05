@@ -410,6 +410,7 @@ export const Sidebar = ({ profile, onClose }) => {
         })()}
 
         {/* legacy render block — kept no-op to preserve downstream sections */}
+        {/* eslint-disable-next-line no-constant-binary-expression */}
         {false && VERTICALS.map(v => {
           const Icon     = ICON_MAP[v.icon] || Clapperboard;
           const c        = colorMap[v.color] || colorMap.emerald;

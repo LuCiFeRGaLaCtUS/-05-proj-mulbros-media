@@ -37,19 +37,6 @@ export const ChatThread = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages.length, sending]);
 
-  // Handle initial prompt passed via navigation state (from ChatHome)
-  useEffect(() => {
-    if (handledInitialRef.current) return;
-    const initial = location.state?.initialPrompt;
-    if (initial && sessionId && profile?.id) {
-      handledInitialRef.current = true;
-      handleSend(initial);
-      // Clear state so reload doesn't re-fire
-      window.history.replaceState({}, document.title);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sessionId, profile?.id, location.state]);
-
   const handleSend = useCallback(async (text) => {
     if (!text?.trim() || !profile?.id) return;
     setSending(true);
@@ -112,6 +99,20 @@ export const ChatThread = () => {
       setPersonaState('idle');
     }
   }, [profile?.id, sessionId, messages, pinnedAgentId, createSession, navigate, appendMessage, touchSession, setPersonaState]);
+
+  // Handle initial prompt passed via navigation state (from ChatHome).
+  // Declared after handleSend so it's in scope (no TDZ / use-before-define).
+  useEffect(() => {
+    if (handledInitialRef.current) return;
+    const initial = location.state?.initialPrompt;
+    if (initial && sessionId && profile?.id) {
+      handledInitialRef.current = true;
+      handleSend(initial);
+      // Clear state so reload doesn't re-fire
+      window.history.replaceState({}, document.title);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionId, profile?.id, location.state, handleSend]);
 
   const handleNewChat = async () => {
     const s = await createSession('New chat');

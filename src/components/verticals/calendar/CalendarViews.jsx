@@ -61,7 +61,7 @@ export const MonthView = ({ monthStart, posts, onAdd, onCycle, onDelete, onEdit 
   const gridEnd   = endOfWeek(endOfMonth(monthStart), { weekStartsOn: 1 });
   const days      = eachDayOfInterval({ start: gridStart, end: gridEnd });
   const selDs     = selectedDay ? format(selectedDay, 'yyyy-MM-dd') : null;
-  const selPosts  = selectedDay ? posts.filter(p => p.date === selDs && p.talent === talent) : [];
+  const selPosts  = selectedDay ? posts.filter(p => p.date === selDs) : [];
 
   return (
     <div className="space-y-4">
