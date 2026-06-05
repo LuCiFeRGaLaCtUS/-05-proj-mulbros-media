@@ -582,7 +582,7 @@ app.post('/api/auth/supabase-token', authMintLimiter, requireAuth, async (req, r
 });
 
 // ── AI proxy ──────────────────────────────────────────────────────────────────
-app.post('/api/ai', aiLimiter, async (req, res) => {
+app.post('/api/ai', requireAuth, aiLimiter, async (req, res) => {
   const { model, messages, max_tokens, tools } = req.body || {};
 
   // Request body validation
@@ -829,7 +829,7 @@ app.post('/api/ai', aiLimiter, async (req, res) => {
 // ── OpenAI web-search proxy (Responses API) ──────────────────────────────────
 // Uses the built-in `web_search_preview` tool. Model decides whether to search.
 // Returns { text, citations[], raw }. Used as fallback when Firecrawl is down.
-app.post('/api/ai-search', aiLimiter, async (req, res) => {
+app.post('/api/ai-search', requireAuth, aiLimiter, async (req, res) => {
   const { model = 'gpt-4o', input, system } = req.body || {};
 
   if (!input || typeof input !== 'string' || input.trim().length === 0) {
@@ -927,9 +927,12 @@ app.post('/api/ai-search', aiLimiter, async (req, res) => {
 
 const SPOTIFY_SCOPES = 'user-read-private user-top-read user-read-recently-played';
 
+// Spotify token read/write runs server-side and must bypass RLS via the
+// service-role JWT — NOT the anon key (anon-role writes to user_integrations
+// would let any caller overwrite another user's OAuth tokens).
 const supaHeaders = () => ({
   apikey:        process.env.VITE_SUPABASE_ANON_KEY || '',
-  Authorization: `Bearer ${process.env.VITE_SUPABASE_ANON_KEY || ''}`,
+  Authorization: `Bearer ${mintServiceJwt() || process.env.VITE_SUPABASE_ANON_KEY || ''}`,
   'Content-Type': 'application/json',
 });
 const supaUrl = (path) => `${process.env.VITE_SUPABASE_URL}/rest/v1/${path}`;
@@ -997,19 +1000,38 @@ const spotifyRefreshIfNeeded = async (row) => {
   return data.access_token;
 };
 
-app.get('/api/spotify/auth', (req, res) => {
+// HMAC-signed OAuth state, paired with an HttpOnly cookie nonce, to defeat
+// CSRF. state = base64url(profileId.ts.sig) where sig = HMAC(profileId.ts).
+// The same sig is stored in a short-lived HttpOnly cookie; callback requires
+// both to match. Without the cookie an attacker cannot forge a valid flow
+// even if they know the victim's profileId.
+const spotifyStateSign = (profileId, ts) =>
+  crypto.createHmac('sha256', process.env.SUPABASE_JWT_SECRET || 'dev')
+    .update(`${profileId}.${ts}`).digest('base64url');
+
+app.get('/api/spotify/auth', requireAuth, async (req, res) => {
   const clientId = process.env.SPOTIFY_CLIENT_ID;
   const redirect = process.env.SPOTIFY_REDIRECT_URI;
-  const profileId = String(req.query.profile_id || '').trim();
   if (!clientId || !redirect) return res.status(503).send('Spotify not configured.');
-  if (!profileId) return res.status(400).send('profile_id required.');
+
+  // Derive profileId from the session — never trust a query param.
+  const profileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+  if (!profileId) return res.status(403).send('No profile.');
+
+  const ts    = Date.now();
+  const sig   = spotifyStateSign(profileId, ts);
+  const state = Buffer.from(`${profileId}.${ts}.${sig}`).toString('base64url');
+
+  // HttpOnly, SameSite=Lax (OAuth redirect is top-level GET), 10-min expiry.
+  res.setHeader('Set-Cookie',
+    `spotify_oauth_nonce=${sig}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=600`);
 
   const authUrl = 'https://accounts.spotify.com/authorize?' + new URLSearchParams({
     response_type: 'code',
     client_id:     clientId,
     scope:         SPOTIFY_SCOPES,
     redirect_uri:  redirect,
-    state:         profileId,
+    state,
     show_dialog:   'true',
   });
   res.redirect(authUrl);
@@ -1019,8 +1041,37 @@ app.get('/api/spotify/callback', async (req, res) => {
   const { code, state, error } = req.query;
   const appUrl  = process.env.VITE_APP_URL || 'http://localhost:5173';
   const backTo  = `${appUrl}/vertical/musician`;
+  // Always clear the nonce cookie on the way out.
+  res.setHeader('Set-Cookie', 'spotify_oauth_nonce=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0');
   if (error) return res.redirect(`${backTo}?spotify=denied`);
   if (!code || !state) return res.redirect(`${backTo}?spotify=missing_params`);
+
+  // ── CSRF verification ──────────────────────────────────────────────────
+  // Decode state, recompute HMAC, constant-time compare against both the
+  // embedded sig AND the HttpOnly cookie. Reject expiry > 10 min.
+  let profileId;
+  try {
+    const decoded = Buffer.from(String(state), 'base64url').toString('utf8');
+    const [pid, tsStr, sig] = decoded.split('.');
+    const ts = Number(tsStr);
+    if (!pid || !ts || !sig) return res.redirect(`${backTo}?spotify=csrf_fail`);
+    if (Date.now() - ts > 600_000) return res.redirect(`${backTo}?spotify=csrf_expired`);
+
+    const expectSig = spotifyStateSign(pid, ts);
+    const cookieHdr = (req.headers.cookie || '').toString();
+    const cookieSig = (cookieHdr.match(/(?:^|;\s*)spotify_oauth_nonce=([^;]+)/) || [])[1] || '';
+
+    const eq = (a, b) => {
+      const ba = Buffer.from(a), bb = Buffer.from(b);
+      return ba.length === bb.length && crypto.timingSafeEqual(ba, bb);
+    };
+    if (!eq(sig, expectSig) || !eq(sig, cookieSig)) {
+      return res.redirect(`${backTo}?spotify=csrf_fail`);
+    }
+    profileId = pid;
+  } catch {
+    return res.redirect(`${backTo}?spotify=csrf_fail`);
+  }
 
   const clientId     = process.env.SPOTIFY_CLIENT_ID;
   const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -1050,7 +1101,7 @@ app.get('/api/spotify/callback', async (req, res) => {
     }
 
     await spotifyUpsertTokens({
-      profileId:    String(state),
+      profileId,
       access:       data.access_token,
       refresh:      data.refresh_token,
       expiresInSec: data.expires_in,
@@ -1063,9 +1114,15 @@ app.get('/api/spotify/callback', async (req, res) => {
   }
 });
 
-app.get('/api/spotify/artist-stats', async (req, res) => {
+app.get('/api/spotify/artist-stats', requireAuth, async (req, res) => {
   const profileId = String(req.query.profile_id || '').trim();
   if (!profileId) return res.status(400).json({ error: { message: 'profile_id required' } });
+
+  // Authorization: the caller may only read their OWN Spotify stats.
+  const callerProfileId = await resolveProfileIdFromStytch(req.stytchUser?.userId);
+  if (!callerProfileId || callerProfileId !== profileId) {
+    return res.status(403).json({ error: { message: 'Forbidden.' } });
+  }
 
   try {
     const row = await spotifyReadTokens(profileId);
@@ -1485,6 +1542,23 @@ const emailLimiter = rateLimit({
 const EMAIL_RE = /^[^\s@<>"',;:\\]+@[^\s@<>"',;:\\]+\.[^\s@<>"',;:\\]+$/;
 const hasCRLF  = (s) => typeof s === 'string' && /[\r\n]/.test(s);
 const EMAIL_LIMITS = { subject: 200, html: 200_000, text: 50_000, recipients: 10 };
+const PHONE_E164_RE = /^\+[1-9]\d{6,14}$/;
+
+// Shared validators reused by both the REST endpoints and the agent tool
+// handlers (resend.email / twilio.sms) so a jailbroken agent can't bypass
+// the input checks the REST routes enforce.
+const validateEmailPayload = ({ to, subject, html, text }) => {
+  if (!to || !subject || (!html && !text)) return 'to, subject, and html or text required.';
+  const recipients = Array.isArray(to) ? to : [to];
+  if (recipients.length === 0 || recipients.length > EMAIL_LIMITS.recipients) return `to must be 1–${EMAIL_LIMITS.recipients} addresses.`;
+  for (const addr of recipients) {
+    if (typeof addr !== 'string' || hasCRLF(addr) || !EMAIL_RE.test(addr.trim())) return 'Invalid email address.';
+  }
+  if (typeof subject !== 'string' || hasCRLF(subject) || subject.length > EMAIL_LIMITS.subject) return 'Invalid subject.';
+  if (html && (typeof html !== 'string' || html.length > EMAIL_LIMITS.html)) return 'html body too large.';
+  if (text && (typeof text !== 'string' || text.length > EMAIL_LIMITS.text)) return 'text body too large.';
+  return null; // valid
+};
 
 const emailPerUser = perUserLimit({
   windowMs: 60 * 60_000, max: 30,
@@ -1926,6 +2000,9 @@ app.post('/api/webhooks/mux', express.raw({ type: 'application/json' }), async (
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       return res.status(401).json({ error: { message: 'Invalid mux-signature.' } });
     }
+  } else if (isProduction) {
+    console.error('[mux-webhook] MUX_WEBHOOK_SECRET not set in production — rejecting.');
+    return res.status(503).json({ error: { message: 'Webhook verification not configured.' } });
   } else {
     console.warn('[mux-webhook] MUX_WEBHOOK_SECRET not set — accepting unverified payload (dev mode).');
   }
@@ -2016,6 +2093,9 @@ app.post('/api/webhooks/docusign', express.raw({ type: '*/*' }), async (req, res
     if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) {
       return res.status(401).json({ error: { message: 'Invalid DocuSign signature.' } });
     }
+  } else if (isProduction) {
+    console.error('[docusign-webhook] DOCUSIGN_HMAC_KEY not set in production — rejecting.');
+    return res.status(503).json({ error: { message: 'Webhook verification not configured.' } });
   } else {
     console.warn('[docusign-webhook] DOCUSIGN_HMAC_KEY not set — accepting unverified payload (dev mode).');
   }
@@ -2511,6 +2591,8 @@ const TOOL_HANDLERS = {
     const from = process.env.TWILIO_FROM_NUMBER;
     if (!sid || !auth || !from) return { ok: false, mode: 'mock', error: 'Twilio not configured' };
     if (!args.to || !args.message) return { ok: false, error: 'to + message required' };
+    if (!PHONE_E164_RE.test(String(args.to).trim())) return { ok: false, error: 'to must be E.164 (e.g. +14155551234)' };
+    if (typeof args.message !== 'string' || args.message.length > 1600) return { ok: false, error: 'message must be ≤1600 chars' };
     try {
       const credentials = Buffer.from(`${sid}:${auth}`).toString('base64');
       const r = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`, {
@@ -2528,6 +2610,8 @@ const TOOL_HANDLERS = {
   'resend.email': async (args /*, ctx */) => {
     const resendKey = process.env.Resend_API;
     if (!resendKey) return { ok: false, mode: 'mock', error: 'Resend not configured' };
+    const invalid = validateEmailPayload(args || {});
+    if (invalid) return { ok: false, error: invalid };
     try {
       const resend = new Resend(resendKey);
       const { data, error } = await resend.emails.send({
@@ -3154,8 +3238,10 @@ app.post('/api/tools/:name', requireAuth, toolGlobalPerUser, integrationLimiter,
     });
     return res.json(result);
   } catch (err) {
-    console.error(`tool[${name}] failed:`, err.message);
-    return res.status(500).json({ ok: false, error: err.message || 'tool failed' });
+    // Log detail server-side; return generic message so internal details
+    // (table names, connection strings) don't leak to the client.
+    console.error(`tool[${name}] failed:`, err.message, 'rid=' + (req.requestId || '?'));
+    return res.status(500).json({ ok: false, error: 'Tool execution failed.' });
   }
 });
 

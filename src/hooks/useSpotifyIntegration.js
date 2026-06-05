@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
+import { getStytchAuthHeaders } from '../lib/stytch';
 
 /**
  * Spotify integration state for a given profile.
@@ -22,7 +23,9 @@ export const useSpotifyIntegration = (profileId) => {
   const fetchStats = useCallback(async () => {
     if (!profileId) return;
     try {
-      const r = await fetch(`/api/spotify/artist-stats?profile_id=${encodeURIComponent(profileId)}`);
+      const r = await fetch(`/api/spotify/artist-stats?profile_id=${encodeURIComponent(profileId)}`, {
+        headers: getStytchAuthHeaders(),
+      });
       if (r.status === 404) {
         setConnected(false); setStats(null); return;
       }

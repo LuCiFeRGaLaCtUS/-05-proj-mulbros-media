@@ -8,8 +8,9 @@ import { fetchPublicEPK } from '../../hooks/useEPK';
  */
 export const EPKPublicView = () => {
   const { slug } = useParams();
-  const [kit, setKit]         = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [kit, setKit]                 = useState(null);
+  const [loading, setLoading]         = useState(true);
+  const [emailRevealed, setEmailReveal] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -119,12 +120,24 @@ export const EPKPublicView = () => {
             <h2 className="text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500 mb-3" style={{ fontFamily: 'var(--font-mono)' }}>
               Contact
             </h2>
-            <a
-              href={`mailto:${kit.contact_email}`}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-colors"
-            >
-              <Mail className="w-4 h-4" /> {kit.contact_email}
-            </a>
+            {/* Click-to-reveal: keeps the booking contact usable for real
+                visitors while denying it to bulk email scrapers. */}
+            {emailRevealed ? (
+              <a
+                href={`mailto:${kit.contact_email}`}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-colors"
+              >
+                <Mail className="w-4 h-4" /> {kit.contact_email}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setEmailReveal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-800 transition-colors"
+              >
+                <Mail className="w-4 h-4" /> Show contact email
+              </button>
+            )}
           </section>
         )}
 

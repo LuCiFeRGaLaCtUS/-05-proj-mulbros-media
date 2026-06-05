@@ -2,11 +2,10 @@ import { StytchUIClient } from '@stytch/vanilla-js';
 
 export const stytch = new StytchUIClient(import.meta.env.VITE_STYTCH_PUBLIC_TOKEN);
 
-// Expose on window in non-SSR contexts so browser DevTools can inspect session.
-// Enables quick diagnostics:
-//   window.stytch.session.getTokens()
-if (typeof window !== 'undefined') {
-   
+// DEV ONLY — expose on window for DevTools session diagnostics.
+// Never in production: window.stytch leaks session tokens to any XSS payload
+// (window.stytch.session.getTokens()), enabling full account impersonation.
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
   window.stytch = stytch;
 }
 

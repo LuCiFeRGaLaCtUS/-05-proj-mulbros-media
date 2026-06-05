@@ -31,6 +31,10 @@ const callProxy = async (model, systemPrompt, messages, apiKey, opts = {}) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // Stytch session headers — /api/ai now requires auth. Distinct header
+        // names (X-Stytch-*) so no collision with the optional client-key
+        // Authorization bearer below.
+        ...getStytchAuthHeaders(),
         ...(key ? { Authorization: `Bearer ${key}` } : {}),
       },
       body: JSON.stringify({
