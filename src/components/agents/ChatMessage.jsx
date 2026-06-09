@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Copy, Check, Zap } from 'lucide-react';
+import { Copy, Check, Zap, CheckCircle2, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { verticalColors } from '../../config/verticalColors';
@@ -26,6 +26,123 @@ const MD_COMPONENTS = {
   th:     ({ node, ...p }) => <th {...p} className="border border-zinc-300 px-2 py-1 bg-zinc-100 font-semibold text-left" />,
   td:     ({ node, ...p }) => <td {...p} className="border border-zinc-300 px-2 py-1" />,
   hr:     ({ node, ...p }) => <hr {...p} className="my-3 border-zinc-200" />,
+};
+
+// ── Tool-call result card ─────────────────────────────────────────────────────
+// ChatThread emits each executed tool call as a fenced ```toolcall block whose
+// body is JSON { name, ok, args, result }. We parse those out and render a
+// formatted result tile instead of raw JSON in the chat.
+const TOOL_LABELS = {
+  'audition.create':         'Audition logged',
+  'audition.update_status':  'Audition updated',
+  'tour.create':             'Tour created',
+  'show.create':             'Show added',
+  'show.update_status':      'Show updated',
+  'release.create':          'Release created',
+  'track.add':               'Track added',
+  'commission.create':       'Commission tracked',
+  'commission.mark_collected': 'Commission collected',
+  'roster.add':              'Talent added to roster',
+  'epk.upsert':              'EPK saved',
+  'epk.publish':             'EPK published',
+  'industry_contact.create': 'Contact saved',
+  'submission.draft':        'Submission drafted',
+  'resend.email':            'Email drafted',
+  'twilio.sms':              'SMS drafted',
+};
+
+const humanizeKey = (k) =>
+  String(k).replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+
+const ISO_RE = /^\d{4}-\d{2}-\d{2}([T ]\d{2}:\d{2})?/;
+const formatValue = (key, val) => {
+  if (val == null) return '';
+  if (typeof val === 'boolean') return val ? 'Yes' : 'No';
+  if (typeof val === 'object') return JSON.stringify(val);
+  const s = String(val);
+  // Format date-ish fields nicely
+  if ((/(_at|date|deadline|_on)$/i.test(key) || ISO_RE.test(s)) && ISO_RE.test(s)) {
+    const d = new Date(s);
+    if (!Number.isNaN(d.getTime())) {
+      const hasTime = /[T ]\d{2}:\d{2}/.test(s);
+      return d.toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        ...(hasTime ? { hour: 'numeric', minute: '2-digit' } : {}),
+      });
+    }
+  }
+  return s.length > 160 ? s.slice(0, 157) + '…' : s;
+};
+
+const friendlyToolName = (name) => {
+  if (TOOL_LABELS[name]) return TOOL_LABELS[name];
+  const parts = String(name || 'action').split('.');
+  return humanizeKey(parts[parts.length - 1] || name);
+};
+
+const ToolCallCard = ({ data }) => {
+  const ok = data?.ok !== false;
+  const rows = Object.entries(data?.args || {})
+    .filter(([, v]) => v != null && v !== '')
+    .map(([k, v]) => [humanizeKey(k), formatValue(k, v)])
+    .filter(([, v]) => v !== '');
+  return (
+    <div className="my-2 rounded-xl overflow-hidden" style={{
+      border: `1px solid ${ok ? 'rgba(5,150,105,0.25)' : 'rgba(217,119,6,0.3)'}`,
+      background: ok ? 'rgba(5,150,105,0.04)' : 'rgba(217,119,6,0.05)',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+    }}>
+      <div className="flex items-center gap-2 px-3.5 py-2.5" style={{
+        background: ok ? 'rgba(5,150,105,0.08)' : 'rgba(217,119,6,0.1)',
+        borderBottom: rows.length ? `1px solid ${ok ? 'rgba(5,150,105,0.15)' : 'rgba(217,119,6,0.2)'}` : 'none',
+      }}>
+        {ok
+          ? <CheckCircle2 size={15} style={{ color: '#059669' }} />
+          : <AlertTriangle size={15} style={{ color: '#d97706' }} />}
+        <span className="text-[13px] font-bold" style={{ color: ok ? '#065f46' : '#92400e' }}>
+          {friendlyToolName(data?.name)}
+        </span>
+        <span className="ml-auto text-[10px] font-mono uppercase tracking-wider" style={{ color: ok ? '#059669' : '#d97706' }}>
+          {ok ? 'Done' : 'Needs attention'}
+        </span>
+      </div>
+      {rows.length > 0 && (
+        <div className="px-3.5 py-2.5 grid gap-1.5" style={{ gridTemplateColumns: 'auto 1fr' }}>
+          {rows.map(([k, v]) => (
+            <React.Fragment key={k}>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500 pr-3 whitespace-nowrap" style={{ fontFamily: 'var(--font-mono)' }}>{k}</div>
+              <div className="text-[13px] text-zinc-800 break-words">{v}</div>
+            </React.Fragment>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Split agent content into markdown chunks + tool-call cards.
+const TOOLCALL_RE = /```toolcall\s*\n([\s\S]*?)\n```/g;
+const renderAgentContent = (content) => {
+  const src = content || '';
+  if (!src.includes('```toolcall')) {
+    return <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{src}</ReactMarkdown>;
+  }
+  const nodes = [];
+  let last = 0, m, i = 0;
+  TOOLCALL_RE.lastIndex = 0;
+  while ((m = TOOLCALL_RE.exec(src)) !== null) {
+    const before = src.slice(last, m.index).trim();
+    if (before) nodes.push(<ReactMarkdown key={`md-${i}`} remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{before}</ReactMarkdown>);
+    let parsed = null;
+    try { parsed = JSON.parse(m[1]); } catch { /* keep raw fallback below */ }
+    if (parsed) nodes.push(<ToolCallCard key={`tc-${i}`} data={parsed} />);
+    else nodes.push(<ReactMarkdown key={`raw-${i}`} remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{m[0]}</ReactMarkdown>);
+    last = m.index + m[0].length;
+    i++;
+  }
+  const tail = src.slice(last).trim();
+  if (tail) nodes.push(<ReactMarkdown key={`md-tail`} remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>{tail}</ReactMarkdown>);
+  return <>{nodes}</>;
 };
 
 const initials = (name) =>
@@ -113,12 +230,7 @@ export const ChatMessage = ({ message, agentName, vertical }) => {
             </p>
           ) : (
             <div className="relative z-10 leading-relaxed text-[15px] text-zinc-800">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
-                components={MD_COMPONENTS}
-              >
-                {message.content}
-              </ReactMarkdown>
+              {renderAgentContent(message.content)}
             </div>
           )}
 

@@ -158,7 +158,6 @@ export const ChatHome = () => {
             sending={sending}
             autoFocus
             onIntegrations={() => navigate('/settings')}
-            onVoice={() => { /* Phase B */ }}
           />
         </div>
 

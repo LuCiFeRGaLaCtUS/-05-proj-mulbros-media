@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { TrendingUp, Search, Sparkles } from 'lucide-react';
 import { TalentAgentShell } from './TalentAgentShell';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -18,12 +19,11 @@ const QUICK_QUERIES = [
 
 export const IndustryIntelView = () => {
   const [query, setQuery] = useState('');
+  const askMO = useAskMO();
 
   const fire = (prompt) => {
-    sessionStorage.setItem('agentchat.prefill', prompt);
-    sessionStorage.setItem('agentchat.preselectedAgent', 'talent-industry-intel');
-    sessionStorage.setItem('agentchat.searchMode.v2', 'web');
-    window.location.href = '/agents';
+    if (!prompt?.trim()) return;
+    askMO(prompt, 'intel');
   };
 
   return (

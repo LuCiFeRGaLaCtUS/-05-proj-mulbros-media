@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { UsersRound, Plus, Trash2, X, Mail, Phone, Film, Bot, ExternalLink } from 'lucide-react';
 import { useAppContext } from '../../../App';
 import { useRoster, UNION_OPTIONS } from '../../../hooks/useRoster';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -206,14 +207,14 @@ export const RosterView = () => {
   const { profile } = useAppContext();
   const navigate = useNavigate();
   const { roster, counts, addTalent, updateTalent, deleteTalent } = useRoster(profile?.id);
+  const askMO = useAskMO();
   const [showAdd, setShowAdd] = useState(false);
   const [filter, setFilter] = useState('active');
 
   const filtered = filter === 'all' ? roster : roster.filter(t => t.status === filter);
 
   const handleOpenAgent = () => {
-    sessionStorage.setItem('agentchat.preselectedAgent', 'agency-roster-manager');
-    navigate('/agents');
+    askMO('Help me manage my talent roster — union status, commissions, availability.', 'roster');
   };
 
   return (

@@ -593,6 +593,18 @@ app.post('/api/ai', requireAuth, aiLimiter, async (req, res) => {
     return res.status(400).json({ error: { message: 'messages must be a non-empty array.' } });
   }
 
+  // Give the model today's date so it resolves relative dates ("tomorrow",
+  // "next Friday") correctly instead of hallucinating a year from training data.
+  // Applied to the system message (both OpenAI + Anthropic read from `messages`).
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const dateLine = `Current date: ${todayISO}. Resolve relative dates ("today", "tomorrow", "next Friday", "in 2 weeks") against this date and output timestamps as ISO 8601 (YYYY-MM-DDTHH:mm:ss).`;
+  const sysIdx = messages.findIndex(m => m.role === 'system');
+  if (sysIdx >= 0) {
+    messages[sysIdx] = { ...messages[sysIdx], content: `${dateLine}\n\n${messages[sysIdx].content || ''}` };
+  } else {
+    messages.unshift({ role: 'system', content: dateLine });
+  }
+
   // Enforce max_tokens cap server-side
   const safeMaxTokens = Math.min(Number(max_tokens) || 2048, 4096);
 

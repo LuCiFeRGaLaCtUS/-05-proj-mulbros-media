@@ -80,15 +80,20 @@ export const ChatThread = () => {
       );
       const reply     = typeof result === 'string' ? result : (result?.content || '');
       const toolCalls = typeof result === 'string' ? []     : (result?.toolCalls || []);
-      // Render tool-call summary inline (no separate UI yet — included in the reply text)
-      const toolSummary = toolCalls.length > 0
+      // Encode each executed tool call as a fenced ```toolcall block — ChatMessage
+      // parses these and renders a formatted result card (not raw JSON).
+      const toolBlocks = toolCalls.length > 0
         ? '\n\n' + toolCalls.map(c => {
-            const ok = c.result?.ok ? '✅' : '⚠️';
-            const arg = c.args ? JSON.stringify(c.args).slice(0, 120) : '';
-            return `${ok} \`${c.name}\` ${arg}`;
+            const payload = JSON.stringify({
+              name:   c.name,
+              ok:     c.result?.ok !== false,
+              args:   c.args || {},
+              result: c.result ?? null,
+            });
+            return '```toolcall\n' + payload + '\n```';
           }).join('\n')
         : '';
-      await appendMessage('assistant', (reply || (toolCalls.length ? 'Done.' : '')) + toolSummary, sid);
+      await appendMessage('assistant', (reply || (toolCalls.length ? 'Done.' : '')) + toolBlocks, sid);
       await touchSession(sid);
     } catch (err) {
       const msg = err?.userMessage || err?.message || 'AI request failed.';
@@ -224,7 +229,6 @@ export const ChatThread = () => {
             sending={sending}
             autoFocus
             onIntegrations={() => navigate('/settings')}
-            onVoice={() => { /* Phase B */ }}
             placeholder={`Message ${persona.name || 'MO'}…`}
           />
           <div style={{

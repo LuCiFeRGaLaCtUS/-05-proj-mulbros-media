@@ -5,6 +5,7 @@ import { useAppContext } from '../../../App';
 import { useAuditions, AUDITION_STAGES, AUDITION_STAGE_LABELS } from '../../../hooks/useAuditions';
 import { useNavigate } from 'react-router-dom';
 import { twilioSendSms } from '../../../utils/integrations';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -221,6 +222,7 @@ const AddAuditionModal = ({ open, onClose, onAdd }) => {
 export const AuditionsView = () => {
   const { profile } = useAppContext();
   const navigate = useNavigate();
+  const askMO = useAskMO();
   const { auditions, counts, callbackRate, addAudition, moveAudition, deleteAudition } = useAuditions(profile?.id);
   const [showAdd, setShowAdd] = useState(false);
   const [smsLoading, setSmsLoading] = useState(false);
@@ -236,8 +238,7 @@ export const AuditionsView = () => {
   };
 
   const handleOpenAgent = () => {
-    sessionStorage.setItem('agentchat.preselectedAgent', 'talent-audition-tracker');
-    navigate('/agents');
+    askMO('Help me with my auditions — what should I focus on this week?', 'audition');
   };
 
   const handleSendReminders = async () => {

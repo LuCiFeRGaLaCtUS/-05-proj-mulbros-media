@@ -5,6 +5,7 @@ import { Wallet, AlertTriangle, Bot, TrendingUp, DollarSign, Link2, Loader2 } fr
 import { useAppContext } from '../../../App';
 import { useCommissions } from '../../../hooks/useCommissions';
 import { stripeConnectOnboard } from '../../../utils/integrations';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -68,11 +69,11 @@ export const CommissionsView = () => {
   const { profile } = useAppContext();
   const navigate = useNavigate();
   const { commissions, totals, aging, overdueCount, updateCommission, deleteCommission } = useCommissions(profile?.id);
+  const askMO = useAskMO();
   const [connecting, setConnecting] = useState(false);
 
   const handleOpenAgent = () => {
-    sessionStorage.setItem('agentchat.preselectedAgent', 'agency-commission-tracker');
-    navigate('/agents');
+    askMO('Help me track commissions — outstanding, collected, and overdue.', 'commission');
   };
 
   const handleStripeConnect = async () => {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { Bot, ArrowRight } from 'lucide-react';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -16,10 +16,9 @@ export const AgencyAgentShell = ({
   agentId, agentLabel = 'Open Agent',
   children, features = [], comingSoon = [],
 }) => {
-  const navigate = useNavigate();
+  const askMO = useAskMO();
   const handleOpenAgent = () => {
-    if (agentId) sessionStorage.setItem('agentchat.preselectedAgent', agentId);
-    navigate('/agents');
+    askMO(`Help me with ${title || 'this'}.`);
   };
   return (
     <div className="space-y-5">

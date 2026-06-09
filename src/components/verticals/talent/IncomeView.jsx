@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { PiggyBank, DollarSign, Receipt, Calculator, Link2, Loader2 } from 'lucide-react';
 import { TalentAgentShell } from './TalentAgentShell';
 import { plaidCreateLinkToken } from '../../../utils/integrations';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -24,6 +25,7 @@ export const IncomeView = () => {
   const [income, setIncome] = useState('');
   const [source, setSource] = useState('1099 indie feature');
   const [linking, setLinking] = useState(false);
+  const askMO = useAskMO();
 
   const handleConnectBank = async () => {
     setLinking(true);
@@ -45,10 +47,7 @@ export const IncomeView = () => {
 
   const handleAsk = () => {
     if (!income.trim()) return;
-    const prompt = `Categorize this income: ${income} from ${source}. What's deductible? Estimate quarterly tax.`;
-    sessionStorage.setItem('agentchat.prefill', prompt);
-    sessionStorage.setItem('agentchat.preselectedAgent', 'talent-income-tax');
-    window.location.href = '/agents';
+    askMO(`Categorize this income: ${income} from ${source}. What's deductible? Estimate quarterly tax.`, 'income');
   };
 
   return (

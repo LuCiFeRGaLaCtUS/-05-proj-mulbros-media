@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, Inbox, Send } from 'lucide-react';
 import { TalentAgentShell } from './TalentAgentShell';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -10,15 +11,13 @@ const CARD_STYLE = {
 export const AgentInboxView = () => {
   const [mode, setMode] = useState('summarize'); // summarize | draft
   const [text, setText] = useState('');
+  const askMO = useAskMO();
 
   const handleAsk = () => {
     if (!text.trim()) return;
-    const prompt = mode === 'summarize'
+    askMO(mode === 'summarize'
       ? `Summarize this email from my agent into key actions:\n\n${text}`
-      : `Draft a reply email to my agent:\n\n${text}`;
-    sessionStorage.setItem('agentchat.prefill', prompt);
-    sessionStorage.setItem('agentchat.preselectedAgent', 'talent-agent-intermediary');
-    window.location.href = '/agents';
+      : `Draft a reply email to my agent:\n\n${text}`, 'agent');
   };
 
   return (

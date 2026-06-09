@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Video, Upload, Lightbulb, Mic, Camera, Loader2, FileVideo } from 'lucide-react';
 import { TalentAgentShell } from './TalentAgentShell';
 import { uploadVideoToMux } from '../../../utils/integrations';
 import { supabase } from '../../../lib/supabase';
 import { useAppContext } from '../../../App';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -13,17 +14,28 @@ const CARD_STYLE = {
 
 export const SelfTapeView = () => {
   const { profile } = useAppContext();
+  const askMO = useAskMO();
   const [setupDescription, setSetupDescription] = useState('');
   const [tapeTitle, setTapeTitle] = useState('');
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const titleRef = useRef(null);
+
+  // Block the dropzone from opening the file picker until a title exists —
+  // give clear feedback instead of a silent dead click.
+  const handleDropzoneClick = (e) => {
+    if (uploading) { e.preventDefault(); return; }
+    if (!tapeTitle.trim()) {
+      e.preventDefault();
+      toast.error('Add a title first.');
+      titleRef.current?.focus();
+    }
+  };
 
   const handleAskCoach = () => {
-    if (setupDescription.trim()) {
-      sessionStorage.setItem('agentchat.prefill', `Review my self-tape setup: ${setupDescription}`);
-    }
-    sessionStorage.setItem('agentchat.preselectedAgent', 'talent-self-tape-coach');
-    window.location.href = '/agents';
+    askMO(setupDescription.trim()
+      ? `Review my self-tape setup: ${setupDescription}`
+      : 'Help me prep a self-tape — what should my framing, lighting, and audio setup be?', 'selftape');
   };
 
   const handleFileUpload = async (e) => {
@@ -86,6 +98,7 @@ export const SelfTapeView = () => {
           <div className="text-sm font-bold text-zinc-900">Upload self-tape to Mux</div>
         </div>
         <input
+          ref={titleRef}
           type="text"
           value={tapeTitle}
           onChange={(e) => setTapeTitle(e.target.value)}
@@ -93,12 +106,12 @@ export const SelfTapeView = () => {
           disabled={uploading}
           className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm mb-3 outline-none focus:border-sky-400"
         />
-        <label className={`block w-full border-2 border-dashed rounded-xl px-6 py-8 text-center cursor-pointer transition ${
+        <label onClick={handleDropzoneClick} className={`block w-full border-2 border-dashed rounded-xl px-6 py-8 text-center cursor-pointer transition ${
           uploading
             ? 'border-zinc-200 bg-zinc-50'
             : 'border-zinc-300 hover:border-sky-400 hover:bg-sky-50'
         }`}>
-          <input type="file" accept="video/*" className="hidden" disabled={uploading || !tapeTitle.trim()} onChange={handleFileUpload} />
+          <input type="file" accept="video/*" className="hidden" disabled={uploading} onChange={handleFileUpload} />
           {uploading ? (
             <>
               <Loader2 className="mx-auto mb-2 text-sky-600 animate-spin" size={24} />

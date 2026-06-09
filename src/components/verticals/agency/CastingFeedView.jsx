@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Radar, Search, Sparkles } from 'lucide-react';
 import { AgencyAgentShell } from './AgencyAgentShell';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -18,12 +19,11 @@ const QUICK_QUERIES = [
 
 export const CastingFeedView = () => {
   const [query, setQuery] = useState('');
+  const askMO = useAskMO();
 
   const fire = (prompt) => {
-    sessionStorage.setItem('agentchat.prefill', prompt);
-    sessionStorage.setItem('agentchat.preselectedAgent', 'agency-opportunity-scout');
-    sessionStorage.setItem('agentchat.searchMode.v2', 'web');
-    window.location.href = '/agents';
+    if (!prompt?.trim()) return;
+    askMO(prompt, 'casting');
   };
 
   return (

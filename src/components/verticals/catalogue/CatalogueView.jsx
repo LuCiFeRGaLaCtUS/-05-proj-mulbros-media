@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Disc3, Music, Bot, AlertCircle, ChevronDown, ChevronRight, FileText } from 'lucide-react';
 import { useAppContext } from '../../../App';
 import { useCatalogue } from '../../../hooks/useCatalogue';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border:    '1px solid rgba(0,0,0,0.07)',
@@ -78,10 +79,10 @@ export const CatalogueView = () => {
   const { profile } = useAppContext();
   const { releases, tracks, splits, tracksByRelease, splitsByTrack, splitTotalByTrack, loading } =
     useCatalogue(profile?.id);
+  const askMO = useAskMO();
 
   const handleAskCatalogue = () => {
-    sessionStorage.setItem('agentchat.preselectedAgent', 'catalogue-manager');
-    navigate('/chat');
+    askMO('Help me manage my catalogue — releases, tracks, and splits.', 'catalogue');
   };
 
   return (

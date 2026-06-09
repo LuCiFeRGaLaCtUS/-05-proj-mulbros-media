@@ -5,6 +5,7 @@ import { FileText, Bot, Upload, AlertCircle, CheckCircle2, Loader2, ChevronLeft 
 import { useAppContext } from '../../../App';
 import { useRoyaltyStatements } from '../../../hooks/useRoyaltyStatements';
 import { getStytchAuthHeaders } from '../../../lib/stytch';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border:    '1px solid rgba(0,0,0,0.07)',
@@ -143,8 +144,13 @@ const StatementCard = ({ s }) => {
             <div key={i} className="px-5 py-2.5 text-xs flex items-start gap-2">
               <AlertCircle size={12} className="text-amber-600 mt-0.5 flex-shrink-0" />
               <div className="min-w-0">
-                <div className="font-semibold text-zinc-800">{a.type.replace(/_/g, ' ')}</div>
-                <div className="text-zinc-500 truncate">{JSON.stringify(a)}</div>
+                <div className="font-semibold text-zinc-800 capitalize">{String(a.type || 'anomaly').replace(/_/g, ' ')}</div>
+                <div className="text-zinc-500 truncate">
+                  {Object.entries(a)
+                    .filter(([k]) => k !== 'type')
+                    .map(([k, v]) => `${k.replace(/_/g, ' ')}: ${v && typeof v === 'object' ? JSON.stringify(v) : v}`)
+                    .join(' · ') || 'Review this line against your splits.'}
+                </div>
               </div>
             </div>
           ))}
@@ -159,6 +165,7 @@ const StatementCard = ({ s }) => {
 
 export const StatementsView = () => {
   const navigate = useNavigate();
+  const askMO = useAskMO();
   const { profile } = useAppContext();
   const { statements, totals, loading, reload } = useRoyaltyStatements(profile?.id);
 
@@ -177,10 +184,7 @@ export const StatementsView = () => {
           <p className="text-sm text-zinc-500">Paste · AI-parse · anomaly-detect vs your splits</p>
         </div>
         <button
-          onClick={() => {
-            sessionStorage.setItem('agentchat.preselectedAgent', 'royalty-auditor');
-            navigate('/chat');
-          }}
+          onClick={() => askMO('Audit my royalty statements for anomalies versus my splits.', 'royalty')}
           className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-fuchsia-400 hover:text-fuchsia-600"
         >
           <Bot size={14} /> Ask Royalty Auditor

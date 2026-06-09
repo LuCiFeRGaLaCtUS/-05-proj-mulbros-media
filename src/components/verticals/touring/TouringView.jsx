@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Calendar, DollarSign, Bot, Plus, ChevronRight } from 'lucide-react';
 import { useAppContext } from '../../../App';
 import { useTours } from '../../../hooks/useTours';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border:    '1px solid rgba(0,0,0,0.07)',
@@ -55,6 +56,7 @@ const ShowRow = ({ show }) => {
 
 export const TouringView = () => {
   const navigate = useNavigate();
+  const askMO = useAskMO();
   const { profile } = useAppContext();
   const { tours, shows, counts, upcoming, grossOfferTotal, loading } = useTours(profile?.id);
   const [filter, setFilter] = useState('all');
@@ -65,8 +67,7 @@ export const TouringView = () => {
   }, [shows, filter]);
 
   const handleAskTourManager = () => {
-    sessionStorage.setItem('agentchat.preselectedAgent', 'tour-manager');
-    navigate('/chat');
+    askMO('Help me manage my tour — routing, holds, and logistics.', 'tour');
   };
 
   return (
