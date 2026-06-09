@@ -7,6 +7,7 @@ import { usePayments } from '../../hooks/useBackOffice';
 import {
   CARD_STYLE, AmberBg, StatLabel, KpiCard, fmtUsd, PageHeader,
 } from './shared';
+import { DatePicker } from '../ui/DatePicker';
 
 const SOURCES = ['Film Project', 'Sync Placement', 'Session Work', 'Grant', 'Gig', 'Royalty', 'Other'];
 
@@ -35,8 +36,7 @@ const PaymentForm = ({ draft, setDraft, onSubmit, onCancel, saving }) => {
             </label>
             <label className="block">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.18em] mb-1.5">Date *</div>
-              <input type="date" value={draft.received_date} onChange={e => set('received_date', e.target.value)}
-                className="w-full text-sm bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
+              <DatePicker minWidth="100%" value={draft.received_date} onChange={(v) => set('received_date', v)} placeholder="Date" />
             </label>
           </div>
           <label className="block">

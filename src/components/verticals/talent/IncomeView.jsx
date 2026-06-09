@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import { PiggyBank, DollarSign, Receipt, Calculator, Link2, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { TalentAgentShell } from './TalentAgentShell';
 import { plaidCreateLinkToken } from '../../../utils/integrations';
-import { useAskMO } from '../../../hooks/useAskMO';
+import { callAI, getApiKey } from '../../../utils/ai';
+import { getAgentById } from '../../../config/agents';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -25,7 +28,8 @@ export const IncomeView = () => {
   const [income, setIncome] = useState('');
   const [source, setSource] = useState('1099 indie feature');
   const [linking, setLinking] = useState(false);
-  const askMO = useAskMO();
+  const [result, setResult] = useState('');
+  const [thinking, setThinking] = useState(false);
 
   const handleConnectBank = async () => {
     setLinking(true);
@@ -45,9 +49,24 @@ export const IncomeView = () => {
     }
   };
 
-  const handleAsk = () => {
-    if (!income.trim()) return;
-    askMO(`Categorize this income: ${income} from ${source}. What's deductible? Estimate quarterly tax.`, 'income');
+  const handleAsk = async () => {
+    if (!income.trim() || thinking) return;
+    setThinking(true);
+    setResult('');
+    try {
+      const agent = getAgentById('talent-income-tax');
+      const apiKey = getApiKey(agent.model);
+      const messages = [{
+        role: 'user',
+        content: `Categorize this income for an entertainment professional and estimate taxes. Amount: $${income}. Source: ${source}.\n\nGive a concise answer with: (1) Category, (2) Likely deductibles against it, (3) Estimated quarterly tax set-aside (conservative, US self-employment rules), (4) Any documentation flags. Not legal/tax advice.`,
+      }];
+      const response = await callAI(agent.systemPrompt, messages, apiKey, agent.model);
+      setResult(typeof response === 'string' ? response : (response?.content || ''));
+    } catch (err) {
+      toast.error(err.userMessage || err.message || 'Could not categorize.');
+    } finally {
+      setThinking(false);
+    }
   };
 
   return (
@@ -118,15 +137,33 @@ export const IncomeView = () => {
         </div>
         <div className="flex justify-end">
           <button onClick={handleAsk}
-            disabled={!income.trim()}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold ${
-              income.trim()
+            disabled={!income.trim() || thinking}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold ${
+              income.trim() && !thinking
                 ? 'bg-emerald-500 text-white hover:bg-emerald-600'
                 : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
             }`}>
-            Categorize + Estimate
+            {thinking && <Loader2 size={14} className="animate-spin" />}
+            {thinking ? 'Estimating…' : 'Categorize + Estimate'}
           </button>
         </div>
+
+        {(thinking || result) && (
+          <div className="mt-4 pt-4 border-t border-zinc-100">
+            <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600 mb-2" style={{ fontFamily: 'var(--font-mono)' }}>
+              Estimate
+            </div>
+            {thinking && !result ? (
+              <div className="flex items-center gap-2 text-sm text-zinc-500">
+                <Loader2 size={14} className="animate-spin" /> Categorizing + estimating quarterly tax…
+              </div>
+            ) : (
+              <div className="text-sm text-zinc-800 leading-relaxed prose-sm max-w-none [&_strong]:font-semibold [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-1 [&_p]:mb-2">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{result}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">

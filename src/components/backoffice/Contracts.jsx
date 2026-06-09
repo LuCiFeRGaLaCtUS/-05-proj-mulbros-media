@@ -6,6 +6,7 @@ import { useContracts } from '../../hooks/useBackOffice';
 import {
   CARD_STYLE, AmberBg, StatLabel, KpiCard, fmtUsd, PageHeader, StatusBadge,
 } from './shared';
+import { DatePicker } from '../ui/DatePicker';
 
 const TYPES    = ['Flat Fee', 'Royalty', 'Revenue Share', 'Work for Hire', 'License'];
 const STATUSES = ['Pending Signature', 'Active', 'Completed', 'Expired'];
@@ -61,13 +62,11 @@ const ContractForm = ({ draft, setDraft, onSubmit, onCancel, saving }) => {
           <div className="grid grid-cols-2 gap-3">
             <label className="block">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.18em] mb-1.5">Signed Date</div>
-              <input type="date" value={draft.signed_date || ''} onChange={e => set('signed_date', e.target.value)}
-                className="w-full text-sm bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
+              <DatePicker minWidth="100%" value={draft.signed_date || ''} onChange={(v) => set('signed_date', v)} placeholder="Signed date" />
             </label>
             <label className="block">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.18em] mb-1.5">Expiry Date</div>
-              <input type="date" value={draft.expiry_date || ''} onChange={e => set('expiry_date', e.target.value)}
-                className="w-full text-sm bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
+              <DatePicker minWidth="100%" value={draft.expiry_date || ''} onChange={(v) => set('expiry_date', v)} placeholder="Expiry date" />
             </label>
           </div>
           <label className="block">

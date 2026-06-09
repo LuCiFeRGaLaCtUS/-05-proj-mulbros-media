@@ -6,6 +6,7 @@ import {
 import { useAppContext } from '../../App';
 import { useInvoices } from '../../hooks/useBackOffice';
 import { logger } from '../../lib/logger';
+import { DatePicker } from '../ui/DatePicker';
 import {
   CARD_STYLE, AmberBg, StatLabel, KpiCard, fmtUsd, PageHeader, StatusBadge,
 } from './shared';
@@ -57,8 +58,7 @@ const InvoiceForm = ({ draft, setDraft, onSubmit, onCancel, saving }) => {
             </label>
             <label className="block">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.18em] mb-1.5">Due Date</div>
-              <input type="date" value={draft.due_date || ''} onChange={e => setField('due_date', e.target.value)}
-                className="w-full text-sm bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
+              <DatePicker minWidth="100%" value={draft.due_date || ''} onChange={(v) => setField('due_date', v)} placeholder="Due date" />
             </label>
             <label className="block">
               <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.18em] mb-1.5">Status</div>

@@ -6,6 +6,7 @@ import { useAppContext } from '../../../App';
 import { useRoyaltyStatements } from '../../../hooks/useRoyaltyStatements';
 import { getStytchAuthHeaders } from '../../../lib/stytch';
 import { useAskMO } from '../../../hooks/useAskMO';
+import { DatePicker } from '../../ui/DatePicker';
 
 const CARD_STYLE = {
   border:    '1px solid rgba(0,0,0,0.07)',
@@ -86,13 +87,11 @@ const ParseForm = ({ onParsed }) => {
         </div>
         <div>
           <label className="text-xs text-zinc-500 block mb-1">Period start</label>
-          <input type="date" value={periodStart} onChange={e => setPeriodStart(e.target.value)}
-            className="w-full border border-zinc-200 rounded-lg px-2 py-2 text-sm outline-none focus:border-fuchsia-400" />
+          <DatePicker minWidth="100%" value={periodStart} onChange={setPeriodStart} placeholder="Start date" />
         </div>
         <div>
           <label className="text-xs text-zinc-500 block mb-1">Period end</label>
-          <input type="date" value={periodEnd} onChange={e => setPeriodEnd(e.target.value)}
-            className="w-full border border-zinc-200 rounded-lg px-2 py-2 text-sm outline-none focus:border-fuchsia-400" />
+          <DatePicker minWidth="100%" value={periodEnd} onChange={setPeriodEnd} placeholder="End date" />
         </div>
       </div>
       <textarea

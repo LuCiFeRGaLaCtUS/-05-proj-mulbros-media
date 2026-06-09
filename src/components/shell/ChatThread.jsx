@@ -9,6 +9,7 @@ import { useSessionMessages } from '../../hooks/useSessionMessages';
 import { routeToAgent } from '../../lib/personaRouter';
 import { callAI, getApiKey } from '../../utils/ai';
 import { toOpenAITools } from '../../config/tools';
+import { useSelectedModel } from '../../lib/selectedModel';
 import { ChatMessage, TypingIndicator } from '../agents/ChatMessage';
 import { MOAvatar } from './MOAvatar';
 import { ChatBar } from './ChatBar';
@@ -26,6 +27,7 @@ export const ChatThread = () => {
 
   const { createSession, touchSession } = useChatSessions(profile?.id, { skipLoad: true });
   const { messages, appendMessage } = useSessionMessages(profile?.id, sessionId);
+  const { model: selectedModel } = useSelectedModel();
 
   const [sending, setSending] = useState(false);
   const [pinnedAgentId] = useState(null); // future: support session-pinned agent
@@ -68,14 +70,16 @@ export const ChatThread = () => {
       content: m.content,
     }));
 
-    const apiKey = getApiKey(agent.model || 'gpt-4o');
+    // User-selected model (composer pill) overrides the agent's default.
+    const chosenModel = selectedModel || agent.model || 'gpt-4o';
+    const apiKey = getApiKey(chosenModel);
     // Build tools array: undefined allowedTools = all tools (MO); [] = none
     const tools = allowedTools === undefined
       ? toOpenAITools()                     // all
       : (allowedTools.length > 0 ? toOpenAITools(allowedTools) : []);
     try {
       const result = await callAI(
-        systemPrompt, history, apiKey, agent.model || 'gpt-4o',
+        systemPrompt, history, apiKey, chosenModel,
         tools.length > 0 ? { tools } : undefined,
       );
       const reply     = typeof result === 'string' ? result : (result?.content || '');
@@ -103,7 +107,7 @@ export const ChatThread = () => {
       setSending(false);
       setPersonaState('idle');
     }
-  }, [profile?.id, sessionId, messages, pinnedAgentId, createSession, navigate, appendMessage, touchSession, setPersonaState]);
+  }, [profile?.id, sessionId, messages, pinnedAgentId, createSession, navigate, appendMessage, touchSession, setPersonaState, selectedModel]);
 
   // Handle initial prompt passed via navigation state (from ChatHome).
   // Declared after handleSend so it's in scope (no TDZ / use-before-define).

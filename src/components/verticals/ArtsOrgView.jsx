@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { Building2, Plus, Bot, X, Loader2, FileText, DollarSign, Calendar } from 'lucide-react';
 import { useAppContext } from '../../App';
 import { useVerticalPipeline } from '../../hooks/useVerticalPipeline';
+import { DatePicker } from '../ui/DatePicker';
 import {
   CARD_STYLE, AmberBg, StatLabel, KpiCard, VerticalHeader, ToolsPanel, AgentTab,
 } from './shared/VerticalShell';
@@ -63,8 +64,7 @@ const AddModal = ({ onClose, onSubmit }) => {
             </select>
             <input type="number" value={f.amount_requested} onChange={e => set('amount_requested', e.target.value)} placeholder="Amount USD"
               className="text-sm bg-white rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
-            <input type="date" value={f.deadline} onChange={e => set('deadline', e.target.value)}
-              className="text-sm bg-white rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
+            <DatePicker minWidth="100%" value={f.deadline} onChange={(v) => set('deadline', v)} placeholder="Deadline" />
           </div>
           <textarea value={f.notes} onChange={e => set('notes', e.target.value)} placeholder="Notes" rows={3}
             className="w-full text-sm bg-white rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50 resize-y" />

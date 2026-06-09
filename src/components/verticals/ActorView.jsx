@@ -15,6 +15,7 @@ import { useActorSubmissions, ACTOR_STAGES } from '../../hooks/useActorSubmissio
 import { TiltCard } from '../ui/TiltCard';
 import { callAIFast } from '../../utils/ai';
 import { getAgentById } from '../../config/agents';
+import { DatePicker } from '../ui/DatePicker';
 import { logger } from '../../lib/logger';
 
 const CARD_STYLE = {
@@ -161,8 +162,7 @@ const AddSubmissionModal = ({ onClose, onSubmit }) => {
               className="text-sm bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <input type="datetime-local" value={form.audition_date} onChange={e => set('audition_date', e.target.value)}
-              className="text-sm bg-white text-zinc-900 rounded-lg px-2 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
+            <DatePicker withTime minWidth="100%" value={form.audition_date} onChange={(v) => set('audition_date', v)} />
             <input value={form.platform} onChange={e => set('platform', e.target.value)} placeholder="Platform"
               className="text-sm bg-white text-zinc-900 rounded-lg px-3 py-2 border border-zinc-200 focus:outline-none focus:border-amber-500/50" />
             <input type="number" value={form.rate} onChange={e => set('rate', e.target.value)} placeholder="Rate USD"

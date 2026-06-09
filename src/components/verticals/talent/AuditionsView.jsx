@@ -6,6 +6,7 @@ import { useAuditions, AUDITION_STAGES, AUDITION_STAGE_LABELS } from '../../../h
 import { useNavigate } from 'react-router-dom';
 import { twilioSendSms } from '../../../utils/integrations';
 import { useAskMO } from '../../../hooks/useAskMO';
+import { DatePicker } from '../../ui/DatePicker';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -183,15 +184,13 @@ const AddAuditionModal = ({ open, onClose, onAdd }) => {
             </div>
             <div>
               <label className="text-xs font-semibold text-zinc-700 block mb-1">Audition Date</label>
-              <input type="datetime-local" value={form.audition_at} onChange={(e) => setForm({ ...form, audition_at: e.target.value })}
-                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-amber-400" />
+              <DatePicker withTime minWidth="100%" value={form.audition_at} onChange={(v) => setForm({ ...form, audition_at: v })} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-zinc-700 block mb-1">Deadline</label>
-              <input type="datetime-local" value={form.deadline} onChange={(e) => setForm({ ...form, deadline: e.target.value })}
-                className="w-full border border-zinc-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-amber-400" />
+              <DatePicker withTime minWidth="100%" value={form.deadline} onChange={(v) => setForm({ ...form, deadline: v })} />
             </div>
             <div>
               <label className="text-xs font-semibold text-zinc-700 block mb-1">Paying Rate</label>
