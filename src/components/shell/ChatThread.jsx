@@ -135,9 +135,10 @@ export const ChatThread = () => {
   useEffect(() => {
     if (handledInitialRef.current) return;
     const initial = location.state?.initialPrompt;
-    if (initial && sessionId && profile?.id) {
+    const initialAttachments = location.state?.initialAttachments || [];
+    if ((initial || initialAttachments.length) && sessionId && profile?.id) {
       handledInitialRef.current = true;
-      handleSend(initial);
+      handleSend(initial || '', initialAttachments);
       // Clear state so reload doesn't re-fire
       window.history.replaceState({}, document.title);
     }

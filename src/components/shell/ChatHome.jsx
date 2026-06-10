@@ -89,12 +89,15 @@ export const ChatHome = () => {
   const greeting = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
   const personaName = persona.name || 'MO';
 
-  const sendPrompt = async (text) => {
+  const sendPrompt = async (text, files = []) => {
     setSending(true);
     try {
-      const s = await createSession(text.slice(0, 60));
+      const title = (text || 'Attachment').slice(0, 60);
+      const s = await createSession(title);
       if (s?.id) {
-        navigate(`/chat/${s.id}`, { state: { initialPrompt: text } });
+        // File objects are structured-cloneable, so they ride along in the
+        // in-memory router state to ChatThread, which sends them on mount.
+        navigate(`/chat/${s.id}`, { state: { initialPrompt: text, initialAttachments: files } });
       }
     } finally {
       setSending(false);
@@ -157,6 +160,7 @@ export const ChatHome = () => {
             onSend={sendPrompt}
             sending={sending}
             autoFocus
+            enableAttach
             onIntegrations={() => navigate('/settings')}
           />
         </div>
