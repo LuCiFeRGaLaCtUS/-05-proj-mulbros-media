@@ -3108,15 +3108,18 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
       };
       Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
+      // Absolute, real public URL so the model never has to guess a domain.
+      const epkBase = (process.env.PUBLIC_APP_URL || process.env.VITE_APP_URL || 'https://mulbros-marketing-os.onrender.com').replace(/\/$/, '');
       if (existing) {
         const ok = await supabaseServicePatch('epk_kits', { id: existing.id }, payload);
+        const slug = payload.slug || existing.slug;
         return ok
-          ? { ok: true, epk_id: existing.id, slug: payload.slug || existing.slug, public_url: `/epk/${payload.slug || existing.slug}` }
+          ? { ok: true, epk_id: existing.id, slug, public_url: `${epkBase}/epk/${slug}`, published: !!payload.public }
           : { ok: false, error: 'update failed' };
       }
       const ok = await supabaseServiceInsert('epk_kits', payload);
       return ok
-        ? { ok: true, slug: payload.slug, public_url: `/epk/${payload.slug}` }
+        ? { ok: true, slug: payload.slug, public_url: `${epkBase}/epk/${payload.slug}`, published: !!payload.public }
         : { ok: false, error: 'insert failed' };
     } catch (err) {
       return { ok: false, error: err.message };
