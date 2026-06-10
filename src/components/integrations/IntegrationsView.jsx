@@ -204,29 +204,16 @@ export const IntegrationsView = () => {
     });
   }, [tools, query, cat]);
 
-  // For now, "Connect" toggles local optimistic state + shows toast.
-  // Real OAuth/env-var connection flow comes per-tool (Sprint 4 already shipped
-  // Stripe/Mux/DocuSign/Plaid/Twilio adapters; this UI surfaces their status).
+  // Connection is provisioned server-side via API keys (per-tool adapters), not a
+  // per-user click. Be honest: don't fake a "connected" state (it wasn't persisted
+  // and reset on refresh) — explain how it actually gets enabled.
   const toggle = useCallback((key) => {
-    setBusy(b => ({ ...b, [key]: true }));
-    setTimeout(() => {
-      let connected = false;
-      let label = '';
-      setTools(prev => prev.map(t => {
-        if (t.key !== key) return t;
-        connected = t.status !== 'connected';
-        label     = t.name;
-        return { ...t, status: connected ? 'connected' : 'available' };
-      }));
-      setBusy(b => { const n = { ...b }; delete n[key]; return n; });
-      toast.success(
-        connected
-          ? `${label} marked as connected.`
-          : `${label} disconnected.`,
-        { duration: 2400 },
-      );
-    }, 600 + Math.random() * 600);
-  }, []);
+    const tool = tools.find(t => t.key === key);
+    toast(
+      `${tool?.name || 'This integration'} is enabled by your workspace admin via its API key on the server. Self-serve connect is coming soon.`,
+      { icon: 'ℹ️', duration: 4500 },
+    );
+  }, [tools]);
 
   const connectedCount  = tools.filter(t => t.status === 'connected').length;
   const requiredMissing = tools.filter(t => t.priority === 'required' && t.status !== 'connected').length;

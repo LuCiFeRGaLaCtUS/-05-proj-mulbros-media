@@ -1445,6 +1445,8 @@ app.post('/api/firecrawl-search', requireAuth, firecrawlPerUser, firecrawlLimite
         usd_cost: posts.length * 0.005,
         metadata: { query: query.trim(), result_count: posts.length },
       });
+    }).catch(err => {
+      console.warn('[cost_ledger] firecrawl fire-and-forget failed:', err.message);
     });
 
     res.json({ posts, query: query.trim(), count: posts.length, source: 'firecrawl' });
@@ -1552,6 +1554,8 @@ app.post('/api/apify-reddit', requireAuth, apifyPerUser, apifyLimiter, async (re
         usd_cost: 0.02,
         metadata: { query: query.trim(), result_count: posts.length, actor: slug },
       });
+    }).catch(err => {
+      console.warn('[cost_ledger] apify fire-and-forget failed:', err.message);
     });
 
     res.json({ posts, query: query.trim(), count: posts.length, source: 'apify' });
@@ -2604,15 +2608,21 @@ const TOOL_HANDLERS = {
 
   // ── Roster ────────────────────────────────────────────────────────────────
   'roster.add': async (args, ctx) => {
+    // Map chat args to the real `roster` columns (commission_rate/email/phone/bio).
+    const UNION = ['SAG-AFTRA', 'Equity', 'ACTRA', 'AFM', 'Non-union'];
+    const rawUnion = (args.union_status || '').trim();
+    const union_status = UNION.includes(rawUnion)
+      ? rawUnion
+      : (/non[-\s]?union/i.test(rawUnion) ? 'Non-union' : null);
     const ok = await supabaseServiceInsert('roster', {
-      user_id:        ctx.profileId,
-      talent_name:    args.talent_name,
-      union_status:   args.union_status   || 'Non-Union',
-      commission_pct: args.commission_pct ?? 10,
-      contact_email:  args.contact_email  || null,
-      contact_phone:  args.contact_phone  || null,
-      notes:          args.notes          || null,
-      status:         'active',
+      user_id:         ctx.profileId,
+      talent_name:     args.talent_name,
+      union_status,
+      commission_rate: args.commission_pct ?? 10,
+      email:           args.contact_email  || null,
+      phone:           args.contact_phone  || null,
+      bio:             args.notes          || null,
+      status:          'active',
     });
     return ok ? { ok: true, talent_name: args.talent_name } : { ok: false, error: 'insert failed' };
   },
@@ -2620,22 +2630,36 @@ const TOOL_HANDLERS = {
   // ── Commissions ───────────────────────────────────────────────────────────
   'commission.create': async (args, ctx) => {
     const pct = args.commission_pct ?? 10;
-    const amount_due = Number(args.amount_gross) * (pct / 100);
+    const gross = Number(args.amount_gross) || 0;
+    const amount_due = Math.round(gross * (pct / 100) * 100) / 100;
+    // commissions.booking_id is a NOT NULL FK → create the parent booking first.
+    // talent_name is free chat text (no roster link) → kept in notes.
+    const bookingId = crypto.randomUUID();
+    const talentNote = args.talent_name ? `Talent: ${args.talent_name}` : null;
+    const bookingOk = await supabaseServiceInsert('bookings', {
+      user_id:           ctx.profileId,
+      id:                bookingId,
+      project_title:     args.project_title || args.talent_name || 'Untitled booking',
+      gross_pay:         gross,
+      agency_commission: amount_due,
+      commission_rate:   pct,
+      status:            'confirmed',
+      notes:             talentNote,
+    });
+    if (!bookingOk) return { ok: false, error: 'insert failed' };
     const ok = await supabaseServiceInsert('commissions', {
-      user_id:        ctx.profileId,
-      talent_name:    args.talent_name,
-      project_title:  args.project_title || null,
-      amount_gross:   args.amount_gross,
-      commission_pct: pct,
+      user_id:          ctx.profileId,
+      booking_id:       bookingId,
       amount_due,
       amount_collected: 0,
-      due_date:       args.due_date || null,
-      status:         'pending',
+      due_date:         args.due_date || null,
+      status:           'pending',
+      notes:            talentNote,
     });
     return ok ? { ok: true, amount_due, commission_pct: pct } : { ok: false, error: 'insert failed' };
   },
   'commission.mark_collected': async (args, ctx) => {
-    const patch = { status: 'collected' };
+    const patch = { status: 'collected', collected_at: new Date().toISOString() };
     if (args.amount_collected != null) patch.amount_collected = args.amount_collected;
     const ok = await supabaseServicePatch('commissions',
       `id=eq.${encodeURIComponent(args.commission_id)}&user_id=eq.${ctx.profileId}`, patch);
@@ -2644,27 +2668,46 @@ const TOOL_HANDLERS = {
 
   // ── Industry contacts ─────────────────────────────────────────────────────
   'industry_contact.create': async (args, ctx) => {
+    // Real column is `contact_type` (NOT NULL, CHECK-constrained), not `role`.
+    const CT = ['casting_director', 'producer', 'director', 'agent', 'manager', 'scout', 'other'];
+    const norm = String(args.role || args.contact_type || 'other').toLowerCase().replace(/[\s-]+/g, '_');
+    const contact_type = CT.includes(norm) ? norm : 'other';
     const ok = await supabaseServiceInsert('industry_contacts', {
-      user_id: ctx.profileId,
-      name:    args.name,
-      role:    args.role,
-      company: args.company || null,
-      email:   args.email   || null,
-      phone:   args.phone   || null,
-      notes:   args.notes   || null,
+      user_id:      ctx.profileId,
+      name:         args.name,
+      contact_type,
+      company:      args.company || null,
+      email:        args.email   || null,
+      phone:        args.phone   || null,
+      notes:        args.notes   || null,
     });
     return ok ? { ok: true, name: args.name } : { ok: false, error: 'insert failed' };
+  },
+  'industry_contact.find': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    const lim = Math.min(Number(args.limit) || 20, 100);
+    let q = `user_id=eq.${ctx.profileId}&select=id,name,contact_type,company,email,phone,notes,last_outreach_at&order=created_at.desc&limit=${lim}`;
+    if (args.query) q += `&or=(name.ilike.%25${encodeURIComponent(args.query)}%25,company.ilike.%25${encodeURIComponent(args.query)}%25)`;
+    if (args.role) q += `&contact_type=eq.${encodeURIComponent(String(args.role).toLowerCase().replace(/[\s-]+/g, '_'))}`;
+    const rows = await supabaseServiceSelect('industry_contacts', q);
+    return rows == null ? { ok: false, error: 'query failed' } : { ok: true, count: rows.length, contacts: rows };
   },
 
   // ── Submissions (HITL — stored pending until user approves) ───────────────
   'submission.draft': async (args, ctx) => {
+    // Real `submissions` columns: project_title (NOT NULL), role_name, draft_content,
+    // talent_id/casting_director_id (FKs — left null for free-text chat input).
+    const draft = [
+      args.talent_name ? `Talent: ${args.talent_name}` : null,
+      args.cover_note || null,
+    ].filter(Boolean).join('\n\n') || null;
     const ok = await supabaseServiceInsert('submissions', {
-      user_id:      ctx.profileId,
-      talent_name:  args.talent_name,
-      casting_ref:  args.casting_id  || null,
-      cover_note:   args.cover_note,
-      attachments:  args.attachments || [],
-      status:       'pending_approval',
+      user_id:       ctx.profileId,
+      project_title: args.project_title || (args.talent_name ? `Submission — ${args.talent_name}` : 'Submission'),
+      role_name:     args.role_name || null,
+      source:        'chat',
+      draft_content: draft,
+      status:        'pending_approval',
     });
     return ok ? { ok: true, status: 'pending_approval' } : { ok: false, error: 'insert failed' };
   },
@@ -2891,6 +2934,13 @@ const TOOL_HANDLERS = {
     return ok ? { ok: true, show_id: args.show_id, status: args.status } : { ok: false, error: 'update failed' };
   },
   'show.add_logistics': async (args, ctx) => {
+    if (!ctx.profileId) return { ok: false, error: 'no profile' };
+    // Ownership guard — service role bypasses RLS, so confirm the show belongs to
+    // the caller before upserting (else a user could overwrite another user's
+    // logistics by passing their show_id).
+    const owned = await supabaseServiceSelect('shows',
+      `id=eq.${encodeURIComponent(args.show_id)}&user_id=eq.${ctx.profileId}&select=id&limit=1`);
+    if (!owned || owned.length === 0) return { ok: false, error: 'show not found' };
     // Upsert on show_id (PK)
     const ok = await supabaseServiceInsert('show_logistics', {
       show_id:    args.show_id,
@@ -3108,7 +3158,10 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
         }),
       });
       const rows = await r.json();
-      statement_id = rows[0]?.id;
+      if (!r.ok || !Array.isArray(rows) || !rows[0]?.id) {
+        return { ok: false, error: (rows && (rows.message || rows.error?.message)) || `statement not saved (${r.status})` };
+      }
+      statement_id = rows[0].id;
     } catch (err) {
       return { ok: false, error: `persist: ${err.message}` };
     }

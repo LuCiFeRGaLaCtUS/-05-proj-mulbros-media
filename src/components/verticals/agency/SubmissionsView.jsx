@@ -8,6 +8,7 @@ import { useRoster } from '../../../hooks/useRoster';
 import { useIndustryContacts } from '../../../hooks/useIndustryContacts';
 import { callAI, getApiKey } from '../../../utils/ai';
 import { getAgentById } from '../../../config/agents';
+import { useAskMO } from '../../../hooks/useAskMO';
 
 const CARD_STYLE = {
   border: '1px solid rgba(0,0,0,0.07)',
@@ -232,6 +233,7 @@ const SubmissionRow = ({ s, onApprove, onUpdate, onDelete }) => {
 export const SubmissionsView = () => {
   const { profile } = useAppContext();
   const navigate = useNavigate();
+  const askMO = useAskMO();
   const { submissions, counts, addSubmission, updateSubmission, approveSubmission, deleteSubmission } = useSubmissions(profile?.id);
   const { roster } = useRoster(profile?.id);
   const { contacts } = useIndustryContacts(profile?.id);
@@ -251,7 +253,7 @@ export const SubmissionsView = () => {
           <p className="text-sm text-zinc-500">Draft + send submissions to casting directors. HITL approval gate on every send.</p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => { sessionStorage.setItem('agentchat.preselectedAgent', 'agency-submission-drafter'); navigate('/agents'); }}
+          <button onClick={() => askMO('Help me draft a submission to a casting director.', 'submission')}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-zinc-200 text-sm font-medium text-zinc-700 hover:border-violet-400 hover:text-violet-600">
             <Bot size={14} />
             Ask Drafter

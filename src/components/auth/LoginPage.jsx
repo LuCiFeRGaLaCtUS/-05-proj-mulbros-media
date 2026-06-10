@@ -942,8 +942,8 @@ export const LoginPage = () => {
             marginTop: 14, fontSize: 11, color: MUTED_2, textAlign: 'center', lineHeight: 1.5,
           }}>
             By continuing you agree to our{' '}
-            <a href="#" style={{ color: MUTED, textDecoration: 'underline' }}>Terms</a>{' '}and{' '}
-            <a href="#" style={{ color: MUTED, textDecoration: 'underline' }}>Privacy Policy</a>.
+            <a href="/terms" target="_blank" rel="noopener noreferrer" style={{ color: MUTED, textDecoration: 'underline' }}>Terms</a>{' '}and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" style={{ color: MUTED, textDecoration: 'underline' }}>Privacy Policy</a>.
           </div>
         </div>
       </div>
