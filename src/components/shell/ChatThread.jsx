@@ -10,6 +10,7 @@ import { routeToAgent } from '../../lib/personaRouter';
 import { callAI, getApiKey } from '../../utils/ai';
 import { toOpenAITools } from '../../config/tools';
 import { useSelectedModel } from '../../lib/selectedModel';
+import { processAttachments } from '../../utils/attachments';
 import { ChatMessage, TypingIndicator } from '../agents/ChatMessage';
 import { MOAvatar } from './MOAvatar';
 import { ChatBar } from './ChatBar';
@@ -39,15 +40,16 @@ export const ChatThread = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages.length, sending]);
 
-  const handleSend = useCallback(async (text) => {
-    if (!text?.trim() || !profile?.id) return;
+  const handleSend = useCallback(async (text, attachments = []) => {
+    const trimmed = (text || '').trim();
+    if ((!trimmed && attachments.length === 0) || !profile?.id) return;
     setSending(true);
     setPersonaState('thinking');
 
     // Ensure session exists
     let sid = sessionId;
     if (!sid) {
-      const s = await createSession(text.slice(0, 60));
+      const s = await createSession((trimmed || 'Attachment').slice(0, 60));
       if (!s?.id) {
         setSending(false);
         setPersonaState('idle');
@@ -58,20 +60,39 @@ export const ChatThread = () => {
       navigate(`/chat/${sid}`, { replace: true });
     }
 
-    // Persist user message
-    await appendMessage('user', text, sid);
+    // Process attachments client-side: images → GPT-4o vision parts, PDFs → text.
+    let imageParts = [], pdfTexts = [], notes = [];
+    if (attachments.length) {
+      const res = await processAttachments(attachments);
+      imageParts = res.imageParts; pdfTexts = res.pdfTexts; notes = res.notes;
+      if (res.errors.length) toast.error(res.errors.join('\n'));
+    }
+    const pdfContext   = pdfTexts.map(p => `\n\n--- Attached PDF: ${p.name} ---\n${p.text}`).join('');
+    const combinedText = `${trimmed}${pdfContext}`.trim();
 
-    // Route to correct agent
-    const { agent, systemPrompt, allowedTools } = routeToAgent(text, pinnedAgentId);
+    // Persist the user message as TEXT only (never base64) — keeps history light.
+    const persistedText = [trimmed, notes.join(' · ')].filter(Boolean).join('\n\n') || '(attachment)';
+    await appendMessage('user', persistedText, sid);
 
-    // Build API message history (last 20 to keep tokens sane)
-    const history = [...messages, { role: 'user', content: text }].slice(-20).map(m => ({
+    // Route on the typed text
+    const { agent, systemPrompt, allowedTools } = routeToAgent(trimmed, pinnedAgentId);
+
+    // Current-turn content: multimodal array when images are attached, else string.
+    const apiContent = imageParts.length
+      ? [{ type: 'text', text: combinedText || 'Please review the attached image(s).' }, ...imageParts]
+      : (combinedText || persistedText);
+
+    // Build API message history (last 20). Prior messages are text; the current
+    // turn carries the multimodal content.
+    const history = [...messages, { role: 'user', content: apiContent }].slice(-20).map(m => ({
       role:    m.role,
       content: m.content,
     }));
 
-    // User-selected model (composer pill) overrides the agent's default.
-    const chosenModel = selectedModel || agent.model || 'gpt-4o';
+    // User-selected model overrides the agent default. Images need an OpenAI
+    // vision model (image_url format) — route to gpt-4o if a Claude model is picked.
+    let chosenModel = selectedModel || agent.model || 'gpt-4o';
+    if (imageParts.length && chosenModel.startsWith('claude-')) chosenModel = 'gpt-4o';
     const apiKey = getApiKey(chosenModel);
     // Build tools array: undefined allowedTools = all tools (MO); [] = none
     const tools = allowedTools === undefined
@@ -232,6 +253,7 @@ export const ChatThread = () => {
             onSend={handleSend}
             sending={sending}
             autoFocus
+            enableAttach
             onIntegrations={() => navigate('/settings')}
             placeholder={`Message ${persona.name || 'MO'}…`}
           />

@@ -48,6 +48,7 @@
     "jspdf": "^4.2.1",
     "langfuse": "^3.38.20",
     "lucide-react": "^0.303.0",
+    "pdfjs-dist": "^4.10.38",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",

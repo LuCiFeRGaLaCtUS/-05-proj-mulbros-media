@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Plug, ChevronDown, Check, Loader2, Zap, Sparkles, Brain } from 'lucide-react';
+import { Send, Plug, ChevronDown, Check, Loader2, Zap, Sparkles, Brain, Paperclip, X, FileText, Image as ImageIcon } from 'lucide-react';
 import { SlashMenu } from './SlashMenu';
 import { parseSlashCommand } from '../../lib/personaRouter';
 import { useSelectedModel } from '../../lib/selectedModel';
+import { ATTACH_ACCEPT, MAX_ATTACHMENTS, isImage } from '../../utils/attachments';
 
 /**
  * ChatBar — composer for ChatHome + ChatThread.
@@ -100,6 +101,7 @@ function ModelSelector() {
 export const ChatBar = ({
   onSend,
   onIntegrations,
+  enableAttach = false,
   disabled = false,
   placeholder = "Ask MO anything — or type / for commands",
   value: controlledValue,
@@ -113,8 +115,23 @@ export const ChatBar = ({
   const setValue = isControlled ? (v) => controlledOnChange?.(v) : setInternalValue;
 
   const inputRef = useRef(null);
+  const fileRef = useRef(null);
+  const [files, setFiles] = useState([]);
   const [slashOpen, setSlashOpen] = useState(false);
   const [slashQuery, setSlashQuery] = useState('');
+
+  const addFiles = useCallback((picked) => {
+    const next = [...files];
+    for (const f of picked) {
+      if (next.length >= MAX_ATTACHMENTS) break;
+      if (!next.some((e) => e.name === f.name && e.size === f.size)) next.push(f);
+    }
+    setFiles(next);
+  }, [files]);
+
+  const removeFile = useCallback((idx) => {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
 
   useEffect(() => {
     if (autoFocus) inputRef.current?.focus();
@@ -152,10 +169,11 @@ export const ChatBar = ({
 
   const submit = useCallback(async () => {
     const text = (value || '').trim();
-    if (!text || disabled || sending) return;
-    await onSend?.(text);
+    if ((!text && files.length === 0) || disabled || sending) return;
+    await onSend?.(text, files);
     setValue('');
-  }, [value, disabled, sending, onSend, setValue]);
+    setFiles([]);
+  }, [value, files, disabled, sending, onSend, setValue]);
 
   const onKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey && !slashOpen) {
@@ -164,7 +182,7 @@ export const ChatBar = ({
     }
   };
 
-  const canSend = (value || '').trim() && !sending && !disabled;
+  const canSend = ((value || '').trim() || files.length > 0) && !sending && !disabled;
 
   return (
     <div className="relative w-full">
@@ -184,6 +202,23 @@ export const ChatBar = ({
           boxShadow:  '0 1px 3px rgba(11,29,58,0.05), 0 8px 24px rgba(11,29,58,0.04)',
         }}
       >
+        {/* Attachment chips */}
+        {enableAttach && files.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 px-3 pt-3">
+            {files.map((f, i) => (
+              <span key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 max-w-[220px] rounded-lg pl-2 pr-1 py-1 text-xs"
+                style={{ background: 'rgba(11,29,58,0.05)', border: '1px solid #E0E0E0', color: '#0B1D3A' }}>
+                {isImage(f) ? <ImageIcon size={12} style={{ color: '#0F6E56' }} /> : <FileText size={12} style={{ color: '#0F6E56' }} />}
+                <span className="truncate">{f.name}</span>
+                <button type="button" onClick={() => removeFile(i)} aria-label={`Remove ${f.name}`}
+                  className="flex items-center justify-center rounded hover:bg-black/10" style={{ width: 16, height: 16 }}>
+                  <X size={11} />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Textarea */}
         <textarea
           ref={inputRef}
@@ -216,6 +251,34 @@ export const ChatBar = ({
             >
               <Plug size={15} />
             </button>
+          )}
+
+          {enableAttach && (
+            <>
+              <input
+                ref={fileRef}
+                type="file"
+                accept={ATTACH_ACCEPT}
+                multiple
+                className="hidden"
+                onChange={(e) => { addFiles(Array.from(e.target.files || [])); e.target.value = ''; }}
+              />
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={files.length >= MAX_ATTACHMENTS}
+                aria-label="Attach image or PDF"
+                title="Attach image or PDF"
+                className="flex items-center justify-center rounded-full transition-colors"
+                style={{
+                  width: 32, height: 32, background: 'rgba(11,29,58,0.05)', color: '#5a6472', flexShrink: 0,
+                  opacity: files.length >= MAX_ATTACHMENTS ? 0.4 : 1,
+                  cursor:  files.length >= MAX_ATTACHMENTS ? 'not-allowed' : 'pointer',
+                }}
+              >
+                <Paperclip size={15} />
+              </button>
+            </>
           )}
 
           <ModelSelector />
