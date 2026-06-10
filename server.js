@@ -269,6 +269,34 @@ const requireAuth = async (req, res, next) => {
   }
 };
 
+// Optional auth — populates req.stytchUser if a valid session is present, but
+// never rejects. Lets a public endpoint grant the owner extra visibility (e.g.
+// previewing their own unpublished EPK) without blocking anonymous access.
+const optionalAuth = async (req, res, next) => {
+  try {
+    if (!stytchClient) return next();
+    const cookieHeader = (req.headers.cookie || '').toString();
+    const cookieMatch = (name) => {
+      const m = cookieHeader.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+      return m ? decodeURIComponent(m[1]) : '';
+    };
+    let token = '';
+    if ((req.headers['x-stytch-session-jwt'] || '').toString().trim())        token = req.headers['x-stytch-session-jwt'].toString().trim();
+    else if ((req.headers['x-stytch-session-token'] || '').toString().trim()) token = req.headers['x-stytch-session-token'].toString().trim();
+    else if (cookieMatch('stytch_session_jwt'))                              token = cookieMatch('stytch_session_jwt');
+    else if (cookieMatch('stytch_session'))                                  token = cookieMatch('stytch_session');
+    if (!token) return next();
+    const result = token.split('.').length === 3
+      ? await stytchClient.sessions.authenticateJwt({ session_jwt: token })
+      : await stytchClient.sessions.authenticate({ session_token: token });
+    req.stytchUser = {
+      userId:    result.session?.user_id || result.user?.user_id,
+      sessionId: result.session?.session_id,
+    };
+  } catch { /* anonymous — leave req.stytchUser unset */ }
+  return next();
+};
+
 // ── Service-role JWT minter (HS256) ─────────────────────────────────────────
 // Used by server for internal Supabase REST calls that need to bypass RLS
 // (profile lookup before user session exists, role gate, auto-create flows).
@@ -2002,6 +2030,30 @@ const supabaseServiceSelect = async (table, query) => {
     return null;
   }
 };
+
+// ── Public EPK fetch (optional auth) ─────────────────────────────────────────
+// Returns the kit if it is published (public=true) OR the caller owns it.
+// Owner is resolved from an optional Stytch session (header or cookie), so a
+// signed-in owner can preview their own unpublished EPK at /epk/:slug before
+// publishing. Anonymous visitors only ever see published kits.
+app.get('/api/epk/:slug', optionalAuth, async (req, res) => {
+  const slug = String(req.params.slug || '').toLowerCase().trim();
+  if (!slug) return res.status(400).json({ error: { message: 'missing slug' } });
+  let viewerProfileId = null;
+  try {
+    if (req.stytchUser?.userId) viewerProfileId = await resolveProfileIdFromStytch(req.stytchUser.userId);
+  } catch { /* anonymous viewer */ }
+  const rows = await supabaseServiceSelect(
+    'epk_kits',
+    `slug=eq.${encodeURIComponent(slug)}&select=user_id,slug,display_name,tagline,bio_md,hero_image_url,reel_mux_id,press_quotes,contact_email,public&limit=1`,
+  );
+  const kit = rows?.[0];
+  if (!kit) return res.status(404).json({ error: { message: 'not found' } });
+  const isOwner = !!viewerProfileId && kit.user_id === viewerProfileId;
+  if (!kit.public && !isOwner) return res.status(404).json({ error: { message: 'private' } });
+  const { user_id, ...safe } = kit;
+  return res.json({ ...safe, owner: isOwner });
+});
 
 // ── 5.3 Mux webhook: fired on upload + asset state changes ────────────────────
 // Mux signs each request: `mux-signature: t=<ts>,v1=<hmac>`.

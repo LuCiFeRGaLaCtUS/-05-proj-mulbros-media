@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { logger } from '../lib/logger';
+import { getStytchAuthHeaders } from '../lib/stytch';
 
 /**
  * EPK kit for the signed-in user. Single row per user (user_id unique-ish).
@@ -32,20 +33,20 @@ export const useEPK = (userId) => {
 };
 
 /**
- * Anonymous fetch of a published EPK by slug. Anonymous read allowed by RLS
- * when public = true.
+ * Fetch an EPK by slug for the public page. Hits /api/epk/:slug, which returns
+ * the kit when it is published OR when the (optionally authenticated) caller
+ * owns it — so a signed-in owner can preview their own unpublished kit, while
+ * anonymous visitors only ever see published kits. Returns the kit plus an
+ * `owner` flag, or null if not found / private to others.
  */
 export const fetchPublicEPK = async (slug) => {
   if (!slug) return null;
   try {
-    const { data, error } = await supabase
-      .from('epk_kits')
-      .select('slug, display_name, tagline, bio_md, hero_image_url, reel_mux_id, press_quotes, contact_email, public')
-      .eq('slug', slug)
-      .eq('public', true)
-      .maybeSingle();
-    if (error) { logger.error('fetchPublicEPK', error); return null; }
-    return data || null;
+    const res = await fetch(`/api/epk/${encodeURIComponent(slug)}`, {
+      headers: { ...getStytchAuthHeaders() },
+    });
+    if (!res.ok) return null;
+    return await res.json();
   } catch (err) {
     logger.error('fetchPublicEPK.exception', err);
     return null;

@@ -47,6 +47,11 @@ export const EPKPublicView = () => {
 
   return (
     <div className="min-h-screen bg-zinc-50">
+      {kit.owner && !kit.public && (
+        <div className="bg-amber-100 border-b border-amber-300 text-amber-900 text-sm px-6 py-2.5 text-center">
+          <strong>Private preview</strong> — only you can see this. Say <em>“publish my EPK”</em> in chat to make this link public.
+        </div>
+      )}
       {/* Hero */}
       <header
         className="relative w-full"
