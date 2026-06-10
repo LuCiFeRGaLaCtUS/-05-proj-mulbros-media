@@ -9,7 +9,7 @@ export const STORAGE_KEYS = {
   settings:        'mulbros_settings',
   integrations:    'mulbros_integration_toggles',
   calendar:        'mulbros_calendar_v1',
-  theme:           'mulbros.theme',
+  theme:           'mulbros_theme',
 };
 
 export const SESSION = {

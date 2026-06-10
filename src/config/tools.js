@@ -120,6 +120,20 @@ export const TOOLS = [
       additionalProperties: false,
     },
   },
+  {
+    name: 'industry_contact.find',
+    description: 'Search the user\'s industry contacts by name or role. Use when the user asks to look up a contact.',
+    mode: 'auto',
+    parameters: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'Search query (name or company)' },
+        role:  { type: 'string', enum: ['casting_director','producer','agent','manager','scout','other'] },
+        limit: { type: 'integer', description: 'Max results' },
+      },
+      additionalProperties: false,
+    },
+  },
 
   // ── Submissions (Agency, HITL) ───────────────────────────────────────────
   {

@@ -100,7 +100,7 @@ export const ChatThread = () => {
       await appendMessage('assistant', (reply || (toolCalls.length ? 'Done.' : '')) + toolBlocks, sid);
       await touchSession(sid);
     } catch (err) {
-      const msg = err?.userMessage || err?.message || 'AI request failed.';
+      const msg = err instanceof Error ? err.message : 'AI request failed.';
       await appendMessage('assistant', `⚠️ ${msg}`, sid);
       toast.error(msg);
     } finally {

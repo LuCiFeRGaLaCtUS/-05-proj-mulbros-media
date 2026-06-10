@@ -824,6 +824,8 @@ app.post('/api/ai', requireAuth, aiLimiter, async (req, res) => {
         usd_cost:   usdCost,
         metadata:   wantsTools ? { tool_hops: aggregateToolCalls.length } : {},
       });
+    }).catch(err => {
+      console.warn('[cost_ledger] /api/ai fire-and-forget failed:', err.message);
     });
 
     // Langfuse — close out trace with final output + roll-up metadata
@@ -941,6 +943,8 @@ app.post('/api/ai-search', requireAuth, aiLimiter, async (req, res) => {
         usd_cost:   usdCost,
         metadata:   { tool: 'web_search_preview' },
       });
+    }).catch(err => {
+      console.warn('[cost_ledger] /api/ai-search fire-and-forget failed:', err.message);
     });
 
     res.json({ text, citations, source: 'openai-web-search' });
@@ -1666,6 +1670,8 @@ app.post('/api/email', requireAuth, emailPerUser, emailLimiter, async (req, res)
         usd_cost: recipients.length * 0.0004,
         metadata: { recipient_count: recipients.length, subject: subject.slice(0, 100) },
       });
+    }).catch(err => {
+      console.warn('[cost_ledger] resend fire-and-forget failed:', err.message);
     });
 
     res.json({ success: true, id: data?.id });
@@ -2365,10 +2371,11 @@ app.post('/api/integrations/plaid/sync-transactions', requireAuth, integrationLi
         plaid_transaction_id: t.transaction_id,
       }));
 
+    let dbOk = true;
     if (incomeRows.length > 0) {
-      await supabaseServiceInsert('income_records', incomeRows);
+      dbOk = await supabaseServiceInsert('income_records', incomeRows);
     }
-    return res.json({ mode: 'live', synced: incomeRows.length, scanned: txns.length });
+    return res.json({ mode: 'live', synced: dbOk ? incomeRows.length : 0, insert_failed: !dbOk, scanned: txns.length });
   } catch (err) {
     console.error('Plaid sync error:', err.message);
     return res.status(500).json({ error: { message: 'Plaid sync failed.' } });
@@ -2404,11 +2411,15 @@ app.get('/api/admin/overview', requireAuth, requireRole(['super_admin', 'admin']
       fetch(`${baseUrl}/rest/v1/profiles?admin_request_status=eq.pending&select=id`, { headers: { ...sbHeaders, Prefer: 'count=exact' } }),
     ]);
 
+    const safeJson = async (r, fallback = []) => {
+      try { return r.ok ? await r.json() : fallback; } catch { return fallback; }
+    };
+
     const profileCount = Number(profCountR.headers.get('content-range')?.split('/')[1] || '0');
     const pendingCount = Number(pendingR.headers.get('content-range')?.split('/')[1] || '0');
-    const roleRows     = await roleRowsR.json();
-    const costRows     = await costRowsR.json();
-    const recentRows   = await recentCostR.json();
+    const roleRows   = await safeJson(roleRowsR);
+    const costRows   = await safeJson(costRowsR);
+    const recentRows = await safeJson(recentCostR);
 
     // Role breakdown
     const roleBreakdown = roleRows.reduce((acc, r) => {
@@ -2521,20 +2532,23 @@ app.post('/api/admin/requests/:profileId/approve', requireAuth, requireRole(['su
 
   try {
     // 1. Upsert user_roles → admin (idempotent on user_id PK)
-    await fetch(`${baseUrl}/rest/v1/user_roles?user_id=eq.${profileId}`, {
+    const delR = await fetch(`${baseUrl}/rest/v1/user_roles?user_id=eq.${profileId}`, {
       method: 'DELETE', headers: sbHeaders,
     });
-    await fetch(`${baseUrl}/rest/v1/user_roles`, {
+    if (!delR.ok) throw new Error(`DELETE user_roles ${delR.status}`);
+    const postR = await fetch(`${baseUrl}/rest/v1/user_roles`, {
       method: 'POST',
       headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({ user_id: profileId, role: 'admin' }),
     });
+    if (!postR.ok) throw new Error(`POST user_roles ${postR.status}`);
 
     // 2. Append 'admin' to profiles.roles + flag approved
     const cur = await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}&select=roles`, { headers: sbHeaders });
+    if (!cur.ok) throw new Error(`GET profiles ${cur.status}`);
     const curRows = await cur.json();
     const roles = new Set([...(curRows[0]?.roles || []), 'admin']);
-    await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+    const patchR = await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
       method: 'PATCH',
       headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({
@@ -2544,6 +2558,7 @@ app.post('/api/admin/requests/:profileId/approve', requireAuth, requireRole(['su
         admin_reviewed_by: req.profileId || null,
       }),
     });
+    if (!patchR.ok) throw new Error(`PATCH profiles ${patchR.status}`);
     return res.json({ status: 'approved' });
   } catch (err) {
     console.error('admin/approve failed:', err.message);
@@ -2559,7 +2574,7 @@ app.post('/api/admin/requests/:profileId/deny', requireAuth, requireRole(['super
   const baseUrl   = process.env.VITE_SUPABASE_URL;
   const { profileId } = req.params;
   try {
-    await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
+    const patchR = await fetch(`${baseUrl}/rest/v1/profiles?id=eq.${profileId}`, {
       method: 'PATCH',
       headers: { ...sbHeaders, 'Content-Type': 'application/json', Prefer: 'return=minimal' },
       body: JSON.stringify({
@@ -2568,6 +2583,7 @@ app.post('/api/admin/requests/:profileId/deny', requireAuth, requireRole(['super
         admin_reviewed_by: req.profileId || null,
       }),
     });
+    if (!patchR.ok) throw new Error(`PATCH profiles ${patchR.status}`);
     return res.json({ status: 'denied' });
   } catch (err) {
     console.error('admin/deny failed:', err.message);
@@ -3189,7 +3205,8 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
       : slugify(args.display_name || ctx.profileId);
     if (!candidateSlug) return { ok: false, error: 'cannot derive slug — supply display_name or slug' };
 
-    const svcJwt = mintServiceJwt(ctx.profileId);
+    const svcJwt = mintServiceJwt();
+    if (!svcJwt) return { ok: false, error: 'service JWT mint failed' };
     // Try update first (by user_id) — single kit per user
     try {
       const find = await fetch(

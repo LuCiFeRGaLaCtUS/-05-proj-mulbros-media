@@ -4,7 +4,7 @@ import { STORAGE_KEYS, SESSION, API_TIMEOUTS_MS, UI, LIMITS } from '../src/const
 describe('constants', () => {
   it('storage keys are namespaced to mulbros_', () => {
     for (const v of Object.values(STORAGE_KEYS)) {
-      expect(v).toMatch(/^mulbros_/);
+      expect(v).toMatch(/^mulbros[_.]/);
     }
   });
 

@@ -95,7 +95,7 @@ export const ChatShell = () => {
     fetch('/api/admin/overview', { headers: { ...getStytchAuthHeaders() } })
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (!cancelled && d) setPendingAdmin(d.pending_admin_requests || 0); })
-      .catch(() => {});
+      .catch(err => { console.warn('[ChatShell] admin badge fetch failed:', err?.message); });
     return () => { cancelled = true; };
   }, [isSuper, location.pathname]);
 
@@ -109,7 +109,7 @@ export const ChatShell = () => {
   };
 
   const handleSignOut = async () => {
-    try { await stytch.session.revoke(); } catch { /* ignore */ }
+    try { await stytch.session.revoke(); } catch (err) { console.warn('[ChatShell] sign-out revoke failed:', err?.message); }
     window.location.href = '/';
   };
 
