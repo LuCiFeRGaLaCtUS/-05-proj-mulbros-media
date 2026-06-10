@@ -3111,7 +3111,7 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
       // Absolute, real public URL so the model never has to guess a domain.
       const epkBase = (process.env.PUBLIC_APP_URL || process.env.VITE_APP_URL || 'https://mulbros-marketing-os.onrender.com').replace(/\/$/, '');
       if (existing) {
-        const ok = await supabaseServicePatch('epk_kits', { id: existing.id }, payload);
+        const ok = await supabaseServicePatch('epk_kits', `id=eq.${existing.id}&user_id=eq.${ctx.profileId}`, payload);
         const slug = payload.slug || existing.slug;
         return ok
           ? { ok: true, epk_id: existing.id, slug, public_url: `${epkBase}/epk/${slug}`, published: !!payload.public }
@@ -3129,7 +3129,7 @@ Return ONLY a JSON object matching this schema (no markdown, no commentary):
     if (!ctx.profileId) return { ok: false, error: 'no profile' };
     const ok = await supabaseServicePatch(
       'epk_kits',
-      { user_id: ctx.profileId },
+      `user_id=eq.${ctx.profileId}`,
       { public: !!args.public, updated_at: new Date().toISOString() },
     );
     return ok ? { ok: true, public: !!args.public } : { ok: false, error: 'publish failed' };
